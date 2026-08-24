@@ -1,0 +1,105 @@
+<div class="availability-dialog">
+  <h2 class="availability-dialog__title">{{ dialogTitle }}</h2>
+
+  @if (loading()) {
+    <div class="availability-dialog__state">{{ availabilityStrings.LOADING_SLOTS }}</div>
+  } @else if (loadError()) {
+    <div class="availability-dialog__state availability-dialog__state--error">
+      {{ availabilityStrings.LOAD_ERROR }}
+    </div>
+  } @else {
+    <div class="slot-list">
+      @for (slot of slots(); track slot.slotId) {
+        <div class="slot-item">
+          <div class="slot-item__info">
+            <span class="slot-item__date">{{ slot.date | date: dateFormat }}</span>
+            <span class="slot-item__time">{{ slot.startTime }} - {{ slot.endTime }}</span>
+
+            @if (slot.isBooked) {
+              <span class="slot-badge slot-badge--booked">
+                {{ availabilityStrings.BOOKED_BADGE_LABEL }}
+              </span>
+            } @else if (slot.isCancelled) {
+              <span class="slot-badge slot-badge--cancelled">
+                {{ availabilityStrings.CANCELLED_BADGE_LABEL }}
+              </span>
+            }
+          </div>
+
+          <app-action-button
+            [label]="
+              deletingSlotId() === slot.slotId
+                ? availabilityStrings.DELETING_LABEL
+                : availabilityStrings.DELETE_LABEL
+            "
+            [icon]="icons.DELETE"
+            variant="danger"
+            [disabled]="slot.isBooked || deletingSlotId() === slot.slotId"
+            [title]="slot.isBooked ? availabilityStrings.CANNOT_DELETE_BOOKED_HINT : ''"
+            (clicked)="deleteSlot(slot)"
+          >
+          </app-action-button>
+        </div>
+      } @empty {
+        <app-empty-state [icon]="icons.AVAILABILITY" [message]="availabilityStrings.NO_SLOTS_FOUND">
+        </app-empty-state>
+      }
+    </div>
+
+    @if (deleteError()) {
+      <span class="form-error">{{ deleteError() }}</span>
+    }
+
+    <div class="slot-form">
+      <h3 class="slot-form__title">{{ availabilityStrings.ADD_SLOT_TITLE }}</h3>
+
+      <div class="slot-form__row">
+        <label class="slot-form__field">
+          <span>{{ availabilityStrings.DATE_LABEL }}</span>
+          <input
+            type="date"
+            [min]="minDate"
+            [ngModel]="date()"
+            (ngModelChange)="date.set($event)"
+          />
+        </label>
+
+        <label class="slot-form__field">
+          <span>{{ availabilityStrings.START_TIME_LABEL }}</span>
+          <input type="time" [ngModel]="startTime()" (ngModelChange)="startTime.set($event)" />
+        </label>
+
+        <label class="slot-form__field">
+          <span>{{ availabilityStrings.END_TIME_LABEL }}</span>
+          <input type="time" [ngModel]="endTime()" (ngModelChange)="endTime.set($event)" />
+        </label>
+      </div>
+
+      @if (saveError()) {
+        <span class="form-error">{{ saveError() }}</span>
+      }
+
+      <div class="slot-form__actions">
+        <app-action-button
+          [label]="
+            isSaving() ? availabilityStrings.ADDING_LABEL : availabilityStrings.ADD_SLOT_LABEL
+          "
+          [icon]="icons.ADD"
+          variant="primary"
+          [disabled]="isSaving()"
+          (clicked)="addSlot()"
+        >
+        </app-action-button>
+      </div>
+    </div>
+  }
+
+  <div class="availability-dialog__actions">
+    <app-action-button
+      [label]="availabilityStrings.CLOSE_LABEL"
+      variant="secondary"
+      (clicked)="close()"
+    >
+    </app-action-button>
+  </div>
+</div>

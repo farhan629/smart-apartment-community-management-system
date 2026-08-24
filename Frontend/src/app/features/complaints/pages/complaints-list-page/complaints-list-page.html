@@ -1,0 +1,220 @@
+<div class="complaints-page">
+  <div class="complaints-page__header">
+    <h2 class="complaints-page__title">{{ strings.COMPLAINTS }}</h2>
+
+    @if (canRaiseComplaint()) {
+      <app-action-button
+        [label]="strings.ADD_NEW"
+        [icon]="icons.ADD"
+        variant="primary"
+        (clicked)="raiseComplaint()"
+      >
+      </app-action-button>
+    }
+  </div>
+
+  @if (isStaff) {
+    <div class="complaints-page__toggle">
+      <button
+        class="complaints-page__toggle-btn"
+        [class.complaints-page__toggle-btn--active]="viewMode() === viewModeOptions.MINE"
+        (click)="setViewMode(viewModeOptions.MINE)"
+      >
+        {{ listStrings.MY_ASSIGNMENTS_TAB }}
+      </button>
+      <button
+        class="complaints-page__toggle-btn"
+        [class.complaints-page__toggle-btn--active]="viewMode() === viewModeOptions.ALL"
+        (click)="setViewMode(viewModeOptions.ALL)"
+      >
+        {{ listStrings.ALL_COMPLAINTS_TAB }}
+      </button>
+    </div>
+  }
+
+  @if (!isStaff || viewMode() === viewModeOptions.ALL) {
+    <div class="complaints-page__toolbar">
+      <app-filter-bar [dropdowns]="dropdowns()" (filterChange)="onFilterChange($event)">
+      </app-filter-bar>
+
+      <app-search-bar
+        [placeholder]="listStrings.SEARCH_PLACEHOLDER"
+        (searchChange)="onSearch($event)"
+      >
+      </app-search-bar>
+
+      @if (canRunEscalationCheck()) {
+        <app-action-button
+          [label]="
+            isRunningEscalationCheck()
+              ? escalationCheckStrings.RUNNING_LABEL
+              : escalationCheckStrings.RUN_CHECK_LABEL
+          "
+          [icon]="icons.SYNC"
+          variant="secondary"
+          [disabled]="isRunningEscalationCheck()"
+          (clicked)="runEscalationCheck()"
+        >
+        </app-action-button>
+      }
+    </div>
+
+    @if (canRunEscalationCheck() && escalationCheckMessage()) {
+      <div
+        class="complaints-page__escalation-message"
+        [class.complaints-page__escalation-message--error]="escalationCheckError()"
+      >
+        {{ escalationCheckMessage() }}
+      </div>
+    }
+  }
+
+  <div class="complaints-card">
+    @if (loading()) {
+      <div class="complaints-page__state">
+        {{ strings.LOADING }}
+      </div>
+    } @else if (error()) {
+      <div class="complaints-page__state complaints-page__state--error">
+        {{ detailStrings.LOAD_ERROR }}
+      </div>
+    } @else if (visibleComplaints().length === 0) {
+      <app-empty-state [icon]="icons.COMPLAINTS" [message]="strings.NO_COMPLAINTS">
+      </app-empty-state>
+    } @else if (isStaff && viewMode() === viewModeOptions.MINE) {
+      <table class="complaints-table">
+        <thead>
+          <tr>
+            <th>{{ listStrings.COMPLAINT_COLUMN_LABEL }}</th>
+            <th>{{ listStrings.ASSIGNMENT_STATUS_COLUMN_LABEL }}</th>
+            <th>{{ listStrings.ASSIGNED_ON_COLUMN_LABEL }}</th>
+            <th>{{ listStrings.DUE_DATE_COLUMN_LABEL }}</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (row of visibleComplaints(); track $any(row).assignmentId) {
+            <tr (click)="viewComplaint($any(row).complaintId)">
+              <td class="complaints-table__description">
+                {{ $any(row).complaintId }}
+              </td>
+
+              <td>{{ $any(row).status }}</td>
+
+              <td>{{ $any(row).assignedDate | date: dateFormat }}</td>
+
+              <td>{{ $any(row).dueDate | date: dateFormat }}</td>
+
+              <td class="complaints-table__assignment" (click)="$event.stopPropagation()">
+                @if (isPendingAssignment(row)) {
+                  <app-action-button
+                    [label]="listStrings.ACCEPT_LABEL"
+                    [icon]="icons.ACCEPT"
+                    variant="primary"
+                    (clicked)="acceptAssignment($any(row))"
+                  >
+                  </app-action-button>
+                  <app-action-button
+                    [label]="listStrings.DENY_LABEL"
+                    [icon]="icons.DENY"
+                    variant="danger"
+                    (clicked)="denyAssignment($any(row))"
+                  >
+                  </app-action-button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (totalPages() > 1) {
+        <div class="complaints-page__pagination">
+          <button
+            class="complaints-page__page-btn"
+            [disabled]="pageNumber() === 1"
+            (click)="goToPage(pageNumber() - 1)"
+          >
+            <mat-icon>{{ icons.PREV }}</mat-icon>
+          </button>
+
+          <span class="complaints-page__page-info">
+            {{ strings.PAGE_LABEL }} {{ pageNumber() }} {{ strings.OF_LABEL }} {{ totalPages() }}
+          </span>
+
+          <button
+            class="complaints-page__page-btn"
+            [disabled]="pageNumber() === totalPages()"
+            (click)="goToPage(pageNumber() + 1)"
+          >
+            <mat-icon>{{ icons.NEXT }}</mat-icon>
+          </button>
+        </div>
+      }
+    } @else {
+      <table class="complaints-table">
+        <thead>
+          <tr>
+            <th>{{ strings.DESCRIPTION_LABEL }}</th>
+            <th>{{ strings.CATEGORY_LABEL }}</th>
+            <th>{{ listStrings.PRIORITY_COLUMN_LABEL }}</th>
+            <th>{{ listStrings.STATUS_COLUMN_LABEL }}</th>
+            <th>{{ strings.RAISED_ON }}</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (complaint of visibleComplaints(); track $any(complaint).complaintId) {
+            <tr
+              (click)="viewComplaint($any(complaint).complaintId)"
+              [class.complaints-table__row--escalated]="
+                wasJustEscalated($any(complaint).complaintId)
+              "
+            >
+              <td class="complaints-table__description">
+                {{ $any(complaint).description | capitalizeFirst }}
+              </td>
+
+              <td>{{ $any(complaint).category }}</td>
+
+              <td>{{ $any(complaint).priority }}</td>
+
+              <td>
+                <app-status-badge [status]="$any(complaint).status"> </app-status-badge>
+              </td>
+
+              <td>
+                {{ $any(complaint).createdAt | date: dateFormat }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (totalPages() > 1) {
+        <div class="complaints-page__pagination">
+          <button
+            class="complaints-page__page-btn"
+            [disabled]="pageNumber() === 1"
+            (click)="goToPage(pageNumber() - 1)"
+          >
+            <mat-icon>{{ icons.PREV }}</mat-icon>
+          </button>
+
+          <span class="complaints-page__page-info">
+            {{ strings.PAGE_LABEL }} {{ pageNumber() }} {{ strings.OF_LABEL }} {{ totalPages() }}
+          </span>
+
+          <button
+            class="complaints-page__page-btn"
+            [disabled]="pageNumber() === totalPages()"
+            (click)="goToPage(pageNumber() + 1)"
+          >
+            <mat-icon>{{ icons.NEXT }}</mat-icon>
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

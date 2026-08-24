@@ -1,0 +1,12 @@
+<app-popup-dialog [title]="data.title!" width="80%" (closed)="onCancel()">
+  <p class="confirm-dialog__message">{{ data.message }}</p>
+
+  <div dialogFooter>
+    <app-action-button [label]="data.cancelLabel!" variant="secondary" (clicked)="onCancel()"></app-action-button>
+    <app-action-button
+      [label]="data.confirmLabel!"
+      [variant]="data.variant === 'danger' ? 'danger' : 'primary'"
+      (clicked)="onConfirm()"
+    ></app-action-button>
+  </div>
+</app-popup-dialog>

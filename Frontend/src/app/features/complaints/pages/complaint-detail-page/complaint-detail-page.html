@@ -1,0 +1,270 @@
+<div class="detail-page">
+  <div class="detail-page__header">
+    @if (isPanelMode) {
+      <h2 class="detail-page__panel-title">{{ detailStrings.PANEL_TITLE }}</h2>
+
+      <button type="button" class="detail-page__close" (click)="close()">
+        <mat-icon>{{ icons.CLOSE }}</mat-icon>
+      </button>
+    } @else {
+      <button class="detail-page__back" (click)="goBack()">
+        <mat-icon>{{ icons.BACK }}</mat-icon>
+        {{ detailStrings.BACK_TO_COMPLAINTS }}
+      </button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="detail-card detail-page__state">
+      {{ strings.LOADING }}
+    </div>
+  } @else if (error() || !complaint()) {
+    <div class="detail-card detail-page__state detail-page__state--error">
+      {{ detailStrings.LOAD_ERROR }}
+    </div>
+  } @else {
+    <div class="detail-card">
+      <div class="detail-page__title-row">
+        <div>
+          <h2 class="detail-page__title">
+            {{ complaint()!.description | capitalizeFirst }}
+          </h2>
+
+          <span class="detail-page__subtitle">
+            {{ detailStrings.RAISED_ON }}
+            {{ complaint()!.createdAt | date: 'mediumDate' }}
+          </span>
+        </div>
+
+        <app-status-badge [status]="complaint()!.status"> </app-status-badge>
+      </div>
+
+      <div class="detail-page__meta-grid">
+        <div class="meta-item">
+          <span class="meta-item__label">
+            {{ strings.CATEGORY_LABEL }}
+          </span>
+
+          <span class="meta-item__value">
+            {{ complaint()!.category }}
+          </span>
+        </div>
+
+        <div class="meta-item">
+          <span class="meta-item__label"> {{ detailStrings.COMPLAINT_TYPE_LABEL }} </span>
+
+          <span class="meta-item__value">
+            {{ complaint()!.complaintType }}
+          </span>
+        </div>
+
+        <div class="meta-item">
+          <span class="meta-item__label"> {{ detailStrings.PRIORITY_LABEL }} </span>
+
+          <span class="meta-item__value">
+            {{ complaint()!.priority }}
+          </span>
+        </div>
+
+        <div class="meta-item">
+          <span class="meta-item__label"> {{ detailStrings.PREFERRED_DATE_LABEL }} </span>
+
+          <span class="meta-item__value">
+            {{
+              complaint()!.scheduledDate
+                ? (complaint()!.scheduledDate | date: 'mediumDate')
+                : detailStrings.EMPTY_VALUE
+            }}
+          </span>
+        </div>
+
+        <div class="meta-item">
+          <span class="meta-item__label"> {{ detailStrings.PREFERRED_TIME_LABEL }} </span>
+
+          <span class="meta-item__value">
+            {{ complaint()!.scheduledTime ?? detailStrings.EMPTY_VALUE }}
+          </span>
+        </div>
+
+        <div class="meta-item">
+          <span class="meta-item__label"> {{ detailStrings.LAST_UPDATED_LABEL }} </span>
+
+          <span class="meta-item__value">
+            {{
+              complaint()!.updatedAt
+                ? (complaint()!.updatedAt | date: 'medium')
+                : detailStrings.EMPTY_VALUE
+            }}
+          </span>
+        </div>
+      </div>
+
+      @if (complaint()!.status === complaintStatus.CANCELLED) {
+        <div class="detail-page__banner detail-page__banner--danger">
+          <strong>{{ detailStrings.CANCELLED_LABEL }}</strong>
+
+          @if (complaint()!.cancelledAt) {
+            <span>
+              {{ detailStrings.CANCELLED_ON_PREFIX }}
+              {{ complaint()!.cancelledAt | date: 'mediumDate' }}
+            </span>
+          }
+
+          @if (complaint()!.cancellationReason) {
+            <p class="detail-page__banner-reason">
+              {{ complaint()!.cancellationReason }}
+            </p>
+          }
+        </div>
+      }
+
+      @if (latestAssignment(); as assignment) {
+        <div class="detail-page__assignment">
+          <span class="meta-item__label">{{ detailStrings.ASSIGNED_TO_LABEL }}</span>
+
+          <div class="detail-page__assignment-row">
+            <span class="meta-item__value">{{ assignment.staffName }}</span>
+            <app-status-badge [status]="assignment.status"></app-status-badge>
+          </div>
+
+          <span class="detail-page__assignment-due">
+            {{ detailStrings.DUE_PREFIX }} {{ assignment.dueDate | date: 'mediumDate' }}
+          </span>
+
+          @if (assignment.status === assignmentStatus.DENIED && assignment.denialReason) {
+            <p class="detail-page__banner-reason">
+              {{ detailStrings.DENIAL_REASON_PREFIX }} {{ assignment.denialReason }}
+            </p>
+          }
+        </div>
+      }
+
+      @if (residentFlat(); as flat) {
+        <div class="detail-page__resident">
+          <span class="meta-item__label">{{ strings.RESIDENT_DETAILS }}</span>
+
+          <div class="detail-page__meta-grid">
+            <div class="meta-item">
+              <span class="meta-item__label">{{ detailStrings.RESIDENT_NAME_LABEL }}</span>
+              <span class="meta-item__value">{{ flat.residentName }}</span>
+            </div>
+
+            <div class="meta-item">
+              <span class="meta-item__label">{{ detailStrings.RESIDENT_EMAIL_LABEL }}</span>
+              <span class="meta-item__value">{{ flat.residentEmail }}</span>
+            </div>
+
+            <div class="meta-item">
+              <span class="meta-item__label">{{ detailStrings.RESIDENT_BLOCK_LABEL }}</span>
+              <span class="meta-item__value">{{ flat.block }}</span>
+            </div>
+
+            <div class="meta-item">
+              <span class="meta-item__label">{{ detailStrings.RESIDENT_FLAT_NUMBER_LABEL }}</span>
+              <span class="meta-item__value">{{ flat.flatNumber }}</span>
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (statusError()) {
+        <span class="form-error">{{ statusError() }}</span>
+      }
+
+      @if (
+        canAssign() || canReassign() || nextStatusAction() || (canCancel() && !showCancelForm())
+      ) {
+        <div class="detail-page__actions">
+          @if (canAssign()) {
+            <app-action-button
+              [label]="detailStrings.ASSIGN_STAFF_LABEL"
+              variant="primary"
+              (clicked)="openAssignDialog(assignmentMode.ASSIGN)"
+            >
+            </app-action-button>
+          }
+
+          @if (canReassign()) {
+            <app-action-button
+              [label]="detailStrings.REASSIGN_STAFF_LABEL"
+              variant="secondary"
+              (clicked)="openAssignDialog(assignmentMode.REASSIGN)"
+            >
+            </app-action-button>
+          }
+
+          @if (nextStatusAction(); as action) {
+            <app-action-button
+              [label]="isUpdatingStatus() ? detailStrings.UPDATING_LABEL : action.label"
+              variant="primary"
+              [disabled]="isUpdatingStatus()"
+              (clicked)="updateStatus(action.value)"
+            >
+            </app-action-button>
+          }
+
+          @if (canCancel() && !showCancelForm()) {
+            <app-action-button
+              [label]="detailStrings.CANCEL_COMPLAINT_LABEL"
+              variant="danger"
+              (clicked)="openCancelForm()"
+            >
+            </app-action-button>
+          }
+        </div>
+      }
+
+      @if (showCancelForm()) {
+        <div class="cancel-form">
+          <label class="cancel-form__label" for="cancelReason">
+            {{ detailStrings.CANCEL_REASON_FIELD_LABEL }}
+          </label>
+
+          <textarea
+            id="cancelReason"
+            rows="3"
+            [ngModel]="cancelReason()"
+            (ngModelChange)="cancelReason.set($event)"
+            [placeholder]="detailStrings.CANCEL_REASON_PLACEHOLDER"
+          >
+          </textarea>
+
+          @if (cancelError()) {
+            <span class="form-error">
+              {{ cancelError() }}
+            </span>
+          }
+
+          <div class="cancel-form__actions">
+            <app-action-button
+              [label]="strings.CANCEL"
+              variant="secondary"
+              [disabled]="isCancelling()"
+              (clicked)="closeCancelForm()"
+            >
+            </app-action-button>
+
+            <app-action-button
+              [label]="
+                isCancelling()
+                  ? detailStrings.CANCELLING_LABEL
+                  : detailStrings.CONFIRM_CANCELLATION_LABEL
+              "
+              variant="danger"
+              [disabled]="isCancelling()"
+              (clicked)="confirmCancel()"
+            >
+            </app-action-button>
+          </div>
+        </div>
+      }
+
+      <app-complaint-escalation
+        [complaintId]="complaint()!.complaintId"
+        [complaintStatus]="complaint()!.status"
+      ></app-complaint-escalation>
+
+      <app-complaint-comments [complaintId]="complaint()!.complaintId"></app-complaint-comments>
+    </div>
+  }
+</div>

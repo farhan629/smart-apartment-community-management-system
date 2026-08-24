@@ -1,0 +1,135 @@
+@use '../../../../shared/styles/variables' as *;
+@use '../../../../shared/styles/mixins' as *;
+
+.availability-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  padding: $spacing-lg;
+  min-width: 20rem;
+
+  &__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  &__state {
+    @include flex-center;
+    padding: $spacing-lg 0;
+    color: $color-text-secondary;
+    font-size: 0.875rem;
+
+    &--error {
+      color: $color-danger;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: $spacing-sm;
+    border-top: 0.0625rem solid $color-border;
+  }
+}
+
+.slot-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.slot-item {
+  @include flex-between;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-sm;
+  background: $color-background;
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  &__date {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: $color-text-primary;
+  }
+
+  &__time {
+    font-size: 0.8125rem;
+    color: $color-text-secondary;
+  }
+}
+
+.slot-badge {
+  @include badge($color-background, $color-text-secondary);
+  width: fit-content;
+
+  &--booked {
+    @include badge($color-warning-light, $color-warning);
+    width: fit-content;
+  }
+
+  &--cancelled {
+    @include badge($color-danger-light, $color-danger);
+    width: fit-content;
+  }
+}
+
+.slot-form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding-top: $spacing-sm;
+  border-top: 0.0625rem solid $color-border;
+
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  &__row {
+    display: flex;
+    gap: $spacing-sm;
+  }
+
+  &__field {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+    font-size: 0.75rem;
+    color: $color-text-secondary;
+
+    input {
+      padding: $spacing-sm;
+      border-radius: $radius-sm;
+      border: 0.0625rem solid $color-border;
+      font-family: $font-family-base;
+      font-size: 0.8125rem;
+      color: $color-text-primary;
+
+      &:focus {
+        outline: none;
+        border-color: $color-primary;
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+.form-error {
+  font-size: 0.75rem;
+  color: $color-danger;
+}

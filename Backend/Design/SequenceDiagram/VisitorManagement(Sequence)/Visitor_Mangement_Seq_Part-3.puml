@@ -1,0 +1,173 @@
+@startuml Visitor_Management_Part3
+
+skinparam sequenceArrowThickness 1.2
+ 
+skinparam roundcorner 6
+ 
+skinparam sequenceBoxBorderColor #888
+ 
+skinparam sequenceLifeLineBorderColor #AAAAAA
+ 
+skinparam sequenceGroupBorderColor #888888
+ 
+skinparam sequenceGroupBackgroundColor #F5F5F5
+ 
+skinparam sequenceGroupFontSize 12
+ 
+skinparam noteFontSize 11
+ 
+skinparam sequenceParticipantFontSize 12
+ 
+skinparam sequenceParticipantBackgroundColor #EFEFEF
+ 
+skinparam sequenceParticipantBorderColor #888888
+
+actor Resident as RES
+ 
+actor "Security" as SEC
+ 
+participant "Auth Middleware" as AUTH
+ 
+participant "Visit API" as VISAPI
+ 
+participant "QR Token API" as QRAPI
+ 
+database "Database" as DB
+
+== 9. Generate QR Pass ==
+
+RES -> QRAPI : POST /visits/{id}/qr\n[Authorization: Bearer token]
+ 
+QRAPI -> AUTH : Validate JWT
+ 
+AUTH --> QRAPI : Authorized
+
+alt Unauthorized
+ 
+AUTH --> QRAPI : 401 Unauthorized
+ 
+QRAPI --> RES : 401 Unauthorized
+ 
+else Not Found
+ 
+QRAPI --> RES : 404 Not Found
+ 
+else Not Approved
+ 
+QRAPI -> DB : Check visit status
+ 
+DB --> QRAPI : status != APPROVED
+ 
+QRAPI --> RES : 422 Unprocessable Entity\n[QR can only be generated for APPROVED visits]
+ 
+else Already Exists
+ 
+QRAPI -> DB : Check for existing QR token for visit
+ 
+DB --> QRAPI : existing token record
+ 
+QRAPI --> RES : 409 Conflict\n[QR token already exists for this visit]
+ 
+else Success
+ 
+QRAPI -> DB : Fetch visit end date
+ 
+DB --> QRAPI : end_date
+ 
+QRAPI -> DB : Create QR token record (expires_at = end_date 23:59:59, active)
+ 
+DB --> QRAPI : new token record
+ 
+QRAPI --> RES : 201 Created\n{ id, visit_id, token, expires_at, is_active, created_at }
+ 
+end
+
+== 10. QR Validation (Gate Scan) ==
+
+SEC -> QRAPI : GET /visits/qr/{token}\n[Authorization: Bearer token]
+ 
+QRAPI -> AUTH : Validate JWT — check security role
+ 
+AUTH --> QRAPI : Authorized
+
+alt Unauthorized
+ 
+AUTH --> QRAPI : 401 Unauthorized
+ 
+QRAPI --> SEC : 401 Unauthorized
+ 
+else Forbidden
+ 
+QRAPI --> SEC : 403 Forbidden\n[security role required]
+ 
+else Not Found
+ 
+QRAPI -> DB : Look up QR token
+ 
+DB --> QRAPI : no record
+ 
+QRAPI --> SEC : 404 Not Found\n[no QR token found]
+ 
+else Token Expired
+ 
+QRAPI -> DB : Check token expiry and active status
+ 
+DB --> QRAPI : is_active=false OR expires_at < NOW()
+ 
+QRAPI --> SEC : 422 Unprocessable Entity\n[QR token has expired or been invalidated]
+ 
+else Success
+ 
+QRAPI -> DB : Fetch visit and visitor details linked to token
+ 
+DB --> QRAPI : full visit + visitor details
+ 
+QRAPI --> SEC : 200 OK\n[full VisitResponseDto with qr_token embedded]
+ 
+end
+
+== 11. Visitor Check-In ==
+
+SEC -> VISAPI : PATCH /visits/{id}/check-in\n[Authorization: Bearer token]
+ 
+VISAPI -> AUTH : Validate JWT — check security role
+ 
+AUTH --> VISAPI : Authorized
+
+alt Unauthorized
+ 
+AUTH --> VISAPI : 401 Unauthorized
+ 
+VISAPI --> SEC : 401 Unauthorized
+ 
+else Forbidden
+ 
+VISAPI --> SEC : 403 Forbidden\n[security staff only]
+ 
+else Not Found
+ 
+VISAPI --> SEC : 404 Not Found
+ 
+else Already Checked In
+ 
+VISAPI --> SEC : 422 Unprocessable Entity\n[visitor is already checked in]
+ 
+else Outside Date Range
+ 
+VISAPI -> DB : Check visit start and end dates
+ 
+DB --> VISAPI : dates
+ 
+VISAPI --> SEC : 422 Unprocessable Entity\n[check-in only allowed between start_date and end_date]
+ 
+else Success
+ 
+VISAPI -> DB : Update visit status to CHECKED_IN with check-in time
+ 
+DB --> VISAPI : updated
+ 
+VISAPI --> SEC : 200 OK\n{ id, status: CHECKED_IN, check_in_time, check_out_time: null }
+ 
+end
+
+@enduml

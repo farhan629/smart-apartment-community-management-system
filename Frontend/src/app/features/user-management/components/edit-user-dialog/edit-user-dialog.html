@@ -1,0 +1,49 @@
+<app-popup-dialog [title]="strings.EDIT_USER" (closed)="onCancel()">
+  <div class="edit-user">
+    @if (error()) {
+      <div class="edit-user__error">{{ error() }}</div>
+    }
+
+    <div class="edit-user__photo-section">
+      <div class="edit-user__photo-preview">
+        @if (uploading()) {
+          <div class="edit-user__photo-spinner">
+            <mat-icon>{{ icons.TIME_SLOT }}</mat-icon>
+          </div>
+        } @else if (photoUrl) {
+          <img [src]="resolvePhotoUrl(photoUrl)" alt="Photo" class="edit-user__photo-img" />
+        } @else {
+          <mat-icon class="edit-user__photo-placeholder">{{ icons.PERSON }}</mat-icon>
+        }
+      </div>
+      <label class="edit-user__photo-btn">
+        <mat-icon>{{ icons.ADD }}</mat-icon>
+        <span>{{ uploading() ? strings.UPLOADING : (photoUrl ? strings.CHANGE_PHOTO : strings.PHOTO_LABEL) }}</span>
+        <input type="file" accept="image/*" (change)="onPhotoSelected($event)" hidden />
+      </label>
+    </div>
+
+    <div class="edit-user__field">
+      <label class="edit-user__label">{{ strings.USERNAME_LABEL }}</label>
+      <input class="edit-user__input" type="text" [(ngModel)]="userName" />
+    </div>
+
+    <div class="edit-user__field">
+      <label class="edit-user__label">{{ strings.PHONE_LABEL }}</label>
+      <input class="edit-user__input" type="tel" [(ngModel)]="phone" />
+    </div>
+  </div>
+
+  <div dialogFooter>
+    <app-action-button
+      [label]="strings.CANCEL"
+      variant="secondary"
+      (clicked)="onCancel()"
+    ></app-action-button>
+    <app-action-button
+      [label]="submitting() ? strings.SAVING : strings.SAVE"
+      [disabled]="submitting()"
+      (clicked)="onSubmit()"
+    ></app-action-button>
+  </div>
+</app-popup-dialog>

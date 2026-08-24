@@ -1,0 +1,115 @@
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/typography' as *;
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding: 0 $spacing-lg;
+  background: $color-surface;
+
+  &__brand {
+    display: flex;
+    align-items: center;
+  }
+
+  &__brand-name {
+    font-size: 1.1429rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: $color-text-primary;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-lg;
+  }
+
+  &__icon-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.8571rem;
+    height: 2.8571rem;
+    border-radius: $radius-pill;
+    border: none;
+    background: $color-background;
+    color: $color-text-secondary;
+    cursor: pointer;
+
+    &:hover {
+      background: $color-border;
+    }
+  }
+
+  &__hub-dot {
+    position: absolute;
+    bottom: 0.2857rem;
+    right: 0.2857rem;
+    width: 0.5714rem;
+    height: 0.5714rem;
+    border-radius: $radius-pill;
+    background: $color-success;
+    border: 0.1429rem solid $color-surface;
+  }
+
+  &__icon-btn-dot {
+    position: absolute;
+    top: 0.5714rem;
+    right: 0.5714rem;
+    width: 0.5714rem;
+    height: 0.5714rem;
+    border-radius: $radius-pill;
+    background: $color-danger;
+    border: 0.1429rem solid $color-surface;
+  }
+
+  &__profile {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  &__profile-avatar {
+    font-size: 2.5714rem;
+    width: 2.5714rem;
+    height: 2.5714rem;
+    color: $color-text-muted;
+    border-radius: 50%;
+    object-fit: cover;
+
+    &--img {
+      border: 0.1429rem solid $color-border;
+    }
+  }
+
+  &__profile-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+  }
+
+  &__profile-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: $color-text-primary;
+  }
+
+  &__profile-role {
+    font-size: 0.8571rem;
+    color: $color-text-secondary;
+  }
+
+  &__logout {
+    margin-left: $spacing-sm;
+  }
+}

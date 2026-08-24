@@ -1,0 +1,109 @@
+@use '../../../../shared/styles/variables' as *;
+
+.visit-detail-dialog {
+  padding: 0;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-lg;
+    border-bottom: 0.0625rem solid $color-border;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.2rem;
+    color: $color-text-primary;
+  }
+
+  &__close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: $color-text-secondary;
+
+    &:hover {
+      color: $color-text-primary;
+    }
+  }
+
+  &__body {
+    padding: $spacing-lg;
+  }
+
+  &__state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-sm;
+    text-align: center;
+    padding: 3rem 0;
+    color: $color-text-secondary;
+
+    &--error {
+      color: $color-danger;
+    }
+
+    &--inline {
+      padding: $spacing-sm 0 0;
+      align-items: flex-start;
+    }
+  }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-md;
+  }
+
+  &__name {
+    margin: 0;
+    color: $color-text-primary;
+  }
+
+  &__section {
+    margin-top: $spacing-md;
+
+    p {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+      color: $color-text-primary;
+
+      mat-icon {
+        font-size: 1.125rem;
+        width: 1.125rem;
+        height: 1.125rem;
+        color: $color-text-muted;
+      }
+    }
+  }
+
+  &__reason {
+    background: $color-danger-light;
+    color: $color-danger;
+    padding: $spacing-sm $spacing-md;
+    border-radius: $radius-sm;
+  }
+
+  &__qr {
+    color: $color-success !important;
+
+    mat-icon {
+      color: $color-success !important;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-sm;
+    margin-top: $spacing-lg;
+  }
+}

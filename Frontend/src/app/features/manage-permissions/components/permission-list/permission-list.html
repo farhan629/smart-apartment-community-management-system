@@ -1,0 +1,39 @@
+<div class="perm-list">
+  @if (loading) {
+    <div class="perm-list__state">{{ strings.LOADING }}</div>
+  } @else {
+    @if (error) {
+      <div class="perm-list__state perm-list__state--error">{{ error }}</div>
+    }
+    @if (success) {
+      <div class="perm-list__state perm-list__state--success">{{ success }}</div>
+    }
+
+    <div class="perm-list__grid">
+      @for (perm of permissionsList; track perm) {
+        <div class="perm-list__item">
+          <span class="perm-list__label">{{ perm }}</span>
+          <label class="toggle" [class.toggle--on]="permissionState[perm]">
+            <input
+              type="checkbox"
+              class="toggle__input"
+              [checked]="permissionState[perm]"
+              (change)="toggle.emit(perm)"
+            />
+            <span class="toggle__slider"></span>
+          </label>
+        </div>
+      }
+    </div>
+
+    <div class="perm-list__actions">
+      <button class="perm-list__btn" [disabled]="!hasChanges || saving" (click)="update.emit()">
+        @if (saving) {
+          {{ strings.SAVING }}
+        } @else {
+          {{ strings.UPDATE_PERMISSIONS }}
+        }
+      </button>
+    </div>
+  }
+</div>

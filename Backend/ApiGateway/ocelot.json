@@ -1,0 +1,151 @@
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/gateway/auth/{everything}",
+      "DownstreamPathTemplate": "/api/auth/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5113 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/users/{everything}",
+      "DownstreamPathTemplate": "/api/users/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5113 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/role/{everything}",
+      "DownstreamPathTemplate": "/api/role/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5113 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/permission/{everything}",
+      "DownstreamPathTemplate": "/api/permission/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5113 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/flats/{everything}",
+      "DownstreamPathTemplate": "/api/flats/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5113 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/approval/{everything}",
+      "DownstreamPathTemplate": "/api/approval/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5113 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/uploads/staff/{everything}",
+      "DownstreamPathTemplate": "/uploads/staff/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5113 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/amenity/{everything}",
+      "DownstreamPathTemplate": "/api/amenity/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5146 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/uploads/amenities/{everything}",
+      "DownstreamPathTemplate": "/uploads/amenities/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5146 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/booking/{everything}",
+      "DownstreamPathTemplate": "/api/booking/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5146 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/slots/{everything}",
+      "DownstreamPathTemplate": "/api/slots/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5146 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/amenities/{everything}",
+      "DownstreamPathTemplate": "/api/amenities/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5146 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/notification/{everything}",
+      "DownstreamPathTemplate": "/api/notification/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5266 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/complaint/{everything}",
+      "DownstreamPathTemplate": "/api/complaints/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5222 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/maintenance/{everything}",
+      "DownstreamPathTemplate": "/api/complaints/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5222 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/escalations/{everything}",
+      "DownstreamPathTemplate": "/api/escalations/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5222 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/staff/{everything}",
+      "DownstreamPathTemplate": "/api/staff/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5222 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/reports/{everything}",
+      "DownstreamPathTemplate": "/api/reports/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5222 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/jobs/{everything}",
+      "DownstreamPathTemplate": "/api/jobs/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5222 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/resident/{everything}",
+      "DownstreamPathTemplate": "/api/visitors/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5064 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/visitor/{everything}",
+      "DownstreamPathTemplate": "/api/visitors/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5064 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/visits/{everything}",
+      "DownstreamPathTemplate": "/api/visits/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5064 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/visitor-types/{everything}",
+      "DownstreamPathTemplate": "/api/visitor-types/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5064 }]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/purpose-types/{everything}",
+      "DownstreamPathTemplate": "/api/purpose-types/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "localhost", "Port": 5064 }]
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:5050"
+  }
+}

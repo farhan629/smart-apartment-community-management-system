@@ -1,0 +1,148 @@
+@startuml
+title Smart Apartment System - Amenities Module (2/3: SLOT MANAGEMENT)
+
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 200
+skinparam dpi 75
+
+actor Admin as A
+actor Resident as R
+participant "Client App" as App
+participant "API Gateway" as Gateway
+participant "Amenities API" as API
+database "Database" as DB
+
+note over A, Gateway: Admin requests include: Authorization: Bearer {admin_token}
+note over R, Gateway: Resident requests include: Authorization: Bearer {resident_token}
+
+== ADMIN: CREATE SINGLE SLOT ==
+
+A -> App: Create single slot
+App -> Gateway: POST /amenities/{amenityId}/slots\n{slotLabel, slotDate, startTime, endTime, maxCapacity}
+Gateway -> API: Forward request
+API -> DB: Fetch slot type for the amenity
+DB --> API: slotType
+
+alt slotType == 'TIME'
+    API -> API: Force maxCapacity = 1
+else slotType == 'TIME_COUNT'
+    API -> API: Validate maxCapacity >= 1
+end
+
+API -> DB: Insert slot (check for duplicate time range)
+DB --> API: slot_id
+API --> Gateway: 201 Created {slotIds: [id]}
+Gateway --> App: Slot created
+App --> A: "Slot created successfully"
+
+== ADMIN: CREATE BULK SLOTS ==
+
+A -> App: Create bulk slots
+App -> Gateway: POST /amenities/{amenityId}/slots\n{slots: [{slotLabel, slotDate, startTime, endTime, maxCapacity}, ...]}
+Gateway -> API: Forward bulk request
+
+loop For each slot in array
+    API -> DB: Check for duplicate time range on same date
+    DB --> API: No conflict
+    alt slotType == 'TIME'
+        API -> API: Set maxCapacity = 1
+    end
+    API -> DB: Insert slot record
+    DB --> API: slot_id
+end
+
+API --> Gateway: 201 Created {slotIds: [id1, id2], message: "2 slots created"}
+Gateway --> App: Bulk slots created
+App --> A: "2 slots created successfully"
+
+== ADMIN: UPDATE SLOT ==
+
+A -> App: Update slot details
+App -> Gateway: PUT /slots/{slotId}\n{slotLabel, startTime, endTime, maxCapacity, isActive}
+Gateway -> API: Forward update request
+API -> DB: Fetch slot details with slot type and active booking count
+DB --> API: {slotType, activeBookings, maxCapacity}
+
+alt activeBookings == 0
+    alt slotType == 'TIME'
+        API -> API: Ensure maxCapacity = 1
+    else slotType == 'TIME_COUNT'
+        API -> API: Validate newMaxCapacity >= activeBookings
+    end
+    API -> DB: Update slot record
+    DB --> API: Updated
+    API --> Gateway: 200 OK {message}
+    Gateway --> App: Slot updated
+    App --> A: "Slot updated successfully"
+else activeBookings > 0
+    API --> Gateway: 409 Conflict\n"Cannot update slot with active bookings"
+    Gateway --> App: Error
+    App --> A: "Cannot update: Slot has active bookings"
+end
+
+== ADMIN: UPDATE SLOT - CAPACITY REDUCTION FAILURE ==
+
+A -> App: Reduce slot capacity
+App -> Gateway: PUT /slots/{slotId} {maxCapacity: 5}
+Gateway -> API: Forward request
+API -> DB: Fetch slot with current active booking count
+DB --> API: {currentBookings: 3, maxCapacity: 10}
+
+alt newMaxCapacity < currentBookings
+    API --> Gateway: 409 Conflict\n"Cannot reduce capacity below current bookings (3)"
+    Gateway --> App: Error
+    App --> A: "Cannot update: Slot has 3 active bookings"
+else newMaxCapacity >= currentBookings
+    API -> DB: Update slot capacity
+    DB --> API: Updated
+    API --> Gateway: 200 OK {message}
+    Gateway --> App: Success
+    App --> A: "Capacity updated successfully"
+end
+
+== ADMIN: DELETE SLOT ==
+
+A -> App: Delete slot
+App -> Gateway: DELETE /slots/{slotId}
+Gateway -> API: Forward request
+API -> DB: Check if any bookings exist for this slot
+DB --> API: booking_count
+
+alt booking_count == 0
+    API -> DB: Delete slot record
+    DB --> API: Deleted
+    API --> Gateway: 200 OK {message}
+    Gateway --> App: Slot deleted
+    App --> A: "Slot deleted successfully"
+else booking_count > 0
+    API --> Gateway: 400 Bad Request\n"Cannot delete slot with existing bookings"
+    Gateway --> App: Error
+    App --> A: "Cannot delete: Slot has booking history"
+end
+
+== ADMIN: VIEW ALL SLOTS ==
+
+A -> App: View all slots for amenity
+App -> Gateway: GET /amenities/{amenityId}/slots\n?pageNumber=1&pageSize=10&showInactive=true
+Gateway -> API: Forward request
+API -> DB: Fetch all slots with real-time booking counts
+DB --> API: Slots list with booking counts
+API --> Gateway: 200 OK {data, pagination}
+Gateway --> App: Display slots
+App --> A: "Showing slots with booking counts"
+
+== RESIDENT: VIEW AVAILABLE SLOTS ==
+
+R -> App: Browse available slots for a date
+App -> Gateway: GET /amenities/{amenityId}/slots/available\n?date=2024-07-20&pageNumber=1&pageSize=10
+Gateway -> API: Forward with role check
+API -> DB: Fetch active future slots with current booking counts for the date
+DB --> API: Slots with currentBookings per slot
+
+API -> API: Calculate availableSpots per slot\nTIME: availableSpots = 1 - currentBookings\nTIME_COUNT: availableSpots = maxCapacity - currentBookings\nFilter where availableSpots > 0
+
+API --> Gateway: 200 OK {amenityName, slotType, location, rules, slots: [...]}
+Gateway --> App: Display available slots
+App --> R: "Morning: 7 spots available, Afternoon: 10 spots"
+
+@enduml

@@ -1,0 +1,81 @@
+@use 'sass:color';
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/mixins' as *;
+
+.cancellation-page {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xl;
+  padding: $spacing-md 0;
+  max-width: 75rem;
+  margin: 0 auto;
+}
+
+.cancellation-header {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+
+  &__title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 0.95rem;
+    color: $color-text-secondary;
+    margin: 0;
+  }
+}
+
+
+
+.cancellation-loading, .cancellation-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xxl;
+  text-align: center;
+  color: $color-text-secondary;
+  gap: $spacing-md;
+
+  .material-icons {
+    font-size: 3rem;
+    color: $color-danger;
+  }
+}
+
+.cancellation-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0.1875rem solid rgba($color-primary, 0.2);
+  border-radius: 50%;
+  border-top-color: $color-primary;
+  animation: cancellation-spin 1s ease-in-out infinite;
+}
+
+.cancellation-back-btn {
+  background-color: $color-surface;
+  border: 0.0625rem solid $color-border;
+  border-radius: $radius-sm;
+  color: $color-text-primary;
+  cursor: pointer;
+  font-weight: 600;
+  padding: $spacing-sm $spacing-lg;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: $color-primary;
+    color: $color-primary;
+  }
+}
+
+
+
+@keyframes cancellation-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

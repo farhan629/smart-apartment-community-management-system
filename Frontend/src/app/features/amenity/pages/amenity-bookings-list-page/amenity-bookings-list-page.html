@@ -1,0 +1,19 @@
+<div class="bookings-page">
+  <div class="bookings-page__breadcrumb">
+    <span class="bookings-page__breadcrumb-item" (click)="goBack()">{{ pageStrings.BREADCRUMB_AMENITIES }}</span>
+    <span class="material-icons bookings-page__breadcrumb-separator">chevron_right</span>
+    <span class="bookings-page__breadcrumb-item bookings-page__breadcrumb-item--active">{{ pageStrings.BREADCRUMB_HISTORY }}</span>
+  </div>
+
+  <div class="bookings-page__header">
+    <button class="bookings-page__back-btn" (click)="goBack()">
+      <span class="material-icons">arrow_back</span>
+      {{ pageStrings.BACK_LINK }}
+    </button>
+    <h1 class="bookings-page__title">{{ pageStrings.PAGE_TITLE }}</h1>
+  </div>
+
+  <div class="bookings-page__content">
+    <app-amenity-booking-history></app-amenity-booking-history>
+  </div>
+</div>

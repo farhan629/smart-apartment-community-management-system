@@ -1,0 +1,150 @@
+@use 'sass:color';
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/mixins' as *;
+
+.asw-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 999;
+}
+
+.asw-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 420px;
+  height: 100vh;
+  background: $color-surface;
+  box-shadow: $shadow-lg;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.25s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.asw-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-lg;
+  border-bottom: 1px solid $color-border;
+}
+
+.asw-title {
+  margin: 0;
+  font-size: 1.2857rem;
+  font-weight: 600;
+  color: $color-text-primary;
+}
+
+.asw-close-btn {
+  @include flex-center;
+  width: 2.2857rem;
+  height: 2.2857rem;
+  border: none;
+  background: transparent;
+  color: $color-text-muted;
+  cursor: pointer;
+  border-radius: $radius-sm;
+
+  &:hover {
+    background: $color-background;
+    color: $color-text-primary;
+  }
+
+  mat-icon {
+    font-size: 1.4286rem;
+    width: 1.4286rem;
+    height: 1.4286rem;
+  }
+}
+
+.asw-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.asw-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xxl;
+  color: $color-text-muted;
+  font-size: 0.9286rem;
+}
+
+.asw-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 1px solid $color-border;
+
+  &:hover {
+    background: $color-background;
+  }
+}
+
+.asw-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.asw-item-header {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: 2px;
+}
+
+.asw-item-name {
+  font-size: 0.9286rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.asw-item-detail {
+  font-size: 0.8571rem;
+  color: $color-text-secondary;
+  line-height: 1.4;
+}
+
+.asw-approve-btn {
+  @include flex-center;
+  gap: $spacing-xs;
+  padding: 6px 14px;
+  border: none;
+  border-radius: $radius-sm;
+  background: #2e7d32;
+  color: #fff;
+  font-size: 0.8571rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: $font-family-base;
+  transition: background 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:hover {
+    background: #1b5e20;
+  }
+
+  mat-icon {
+    font-size: 1.1429rem;
+    width: 1.1429rem;
+    height: 1.1429rem;
+  }
+}

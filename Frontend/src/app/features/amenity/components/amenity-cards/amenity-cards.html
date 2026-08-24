@@ -1,0 +1,97 @@
+<div class="amenity-grid">
+  @for (amenity of amenitylist(); track amenity.id) {
+    @let details = getAmenityUIDetails(amenity);
+    <div class="amenity-card" (click)="onCardClick(amenity.id)">
+      <div class="amenity-card__image-container">
+        <img [src]="details.image" [alt]="amenity.name" class="amenity-card__img" />
+        <span class="amenity-card__status-badge" [ngClass]="details.statusClass">
+          {{ details.statusText }}
+        </span>
+
+        @if (isAdmin()) {
+          <div class="amenity-card__actions" (click)="$event.stopPropagation()">
+            <button type="button" mat-icon-button class="amenity-card__more-btn" (click)="toggleDropdown(amenity.id, $event)">
+              <span class="material-icons">more_vert</span>
+            </button>
+            @if (activeDropdownId() === amenity.id) {
+              <div class="amenity-card__dropdown">
+                <button type="button" mat-button class="dropdown-item" (click)="openUpdateDialog(amenity, $event)">
+                  <span class="material-icons">edit</span>
+                  {{ cardStrings.MENU_UPDATE }}
+                </button>
+                <button type="button" mat-button class="dropdown-item dropdown-item--danger" (click)="openDeleteDialog(amenity, $event)">
+                  <span class="material-icons">delete</span>
+                  {{ cardStrings.MENU_DELETE }}
+                </button>
+                <button type="button" mat-button class="dropdown-item" (click)="openSlotDialog(amenity, $event)">
+                  <span class="material-icons">calendar_today</span>
+                  {{ cardStrings.MENU_SLOT }}
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="amenity-card__body">
+        <h3 class="amenity-card__title">{{ amenity.name }}</h3>
+        <p class="amenity-card__description">{{ details.description }}</p>
+
+        <div class="amenity-card__footer">
+          @if (details.capacity !== undefined) {
+            <span class="amenity-card__info-item">
+              <span class="material-icons amenity-card__info-icon">groups</span>
+              {{ cardStrings.CAPACITY_PREFIX }}{{ details.capacity }}
+            </span>
+          }
+          <span class="amenity-card__info-item">
+            <span class="material-icons amenity-card__info-icon">schedule</span>
+            {{ details.hours }}
+          </span>
+        </div>
+      </div>
+    </div>
+  } @empty {
+    <div class="amenity-empty-state">
+      <span class="material-icons amenity-empty-state__icon">pool</span>
+      <p class="amenity-empty-state__text">{{ cardStrings.EMPTY_STATE }}</p>
+    </div>
+  }
+</div>
+
+<!-- Dialog Modals -->
+@if (selectedAmenityForUpdate()) {
+  <div class="dialog-overlay" (click)="closeUpdateDialog()">
+    <div class="dialog-card" (click)="$event.stopPropagation()">
+      <app-amenity-update
+        [amenity]="selectedAmenityForUpdate()!"
+        [isSubmitting]="isUpdating()"
+        (confirmUpdate)="executeUpdate($event)"
+        (close)="closeUpdateDialog()">
+      </app-amenity-update>
+    </div>
+  </div>
+}
+
+@if (selectedAmenityForDelete()) {
+  <div class="dialog-overlay" (click)="closeDeleteDialog()">
+    <div class="dialog-card" (click)="$event.stopPropagation()">
+      <app-amenity-delete
+        [amenity]="selectedAmenityForDelete()!"
+        [isSubmitting]="isDeleting()"
+        (confirm)="executeDelete()"
+        (close)="closeDeleteDialog()">
+      </app-amenity-delete>
+    </div>
+  </div>
+}
+@if(selectedAmenityForSlot()) {
+  <div class="dialog-overlay" (click)="closeSlotDialog()">
+    <div class="dialog-card dialog-card--wide" (click)="$event.stopPropagation()">
+      <app-amenity-slot  
+        [amenity]="selectedAmenityForSlot()!"
+        (close)="closeSlotDialog()">
+      </app-amenity-slot>
+    </div>
+  </div>
+}

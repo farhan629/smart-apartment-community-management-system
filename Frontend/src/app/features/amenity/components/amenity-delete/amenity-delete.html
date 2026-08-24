@@ -1,0 +1,43 @@
+<div class="delete-dialog-content">
+  <div class="delete-dialog-header">
+    <h2 class="delete-dialog-title">{{ strings.PAGE_TITLE }}</h2>
+  </div>
+
+  <div class="delete-dialog-body">
+    <div class="warning-icon-container">
+      <span class="material-icons warning-icon">warning</span>
+    </div>
+    
+    <p class="delete-message">
+      {{ strings.MESSAGE_CONFIRM }}
+    </p>
+
+    <div class="amenity-info-box">
+      <span class="amenity-info-label">{{ strings.LABEL_AMENITY }}</span>
+      <span class="amenity-info-value">{{ amenity.name }}</span>
+    </div>
+  </div>
+
+  <div class="delete-dialog-actions">
+    <button 
+      type="button" 
+      mat-stroked-button
+      class="delete-btn delete-btn--cancel" 
+      (click)="onCancel()"
+      [disabled]="isSubmitting">
+      {{ strings.BTN_CANCEL }}
+    </button>
+    <button 
+      type="button" 
+      mat-flat-button
+      class="delete-btn delete-btn--confirm" 
+      (click)="onDelete()"
+      [disabled]="isSubmitting">
+      @if (isSubmitting) {
+        {{ strings.BTN_SUBMITTING }}
+      } @else {
+        {{ strings.BTN_SUBMIT }}
+      }
+    </button>
+  </div>
+</div>

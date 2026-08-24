@@ -1,0 +1,11 @@
+export const VISITOR_FORM_RULES = {
+  NAME_MAX_LENGTH: 100,
+  PHONE_PATTERN: '^[0-9]{10}$',
+  EMAIL_MAX_LENGTH: 150,
+};
+
+export const VISITOR_SEARCH_CONFIG = {
+  MIN_CHARS: 2,
+  DEBOUNCE_MS: 300,
+  RESULT_LIMIT: 5,
+};

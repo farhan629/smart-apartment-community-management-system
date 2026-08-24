@@ -1,0 +1,58 @@
+<div class="nsw-overlay" (click)="onClose()"></div>
+<div class="nsw-panel">
+  <div class="nsw-header">
+    <h3 class="nsw-title">{{ strings.NOTIFICATIONS_TITLE }}</h3>
+    <button class="nsw-close-btn" (click)="onClose()" type="button">
+      <mat-icon>{{ icons.CLOSE }}</mat-icon>
+    </button>
+  </div>
+
+  <div class="nsw-actions">
+    @if (unreadCount > 0) {
+      <button class="nsw-action-btn" (click)="onMarkAllAsRead()" type="button">
+        <mat-icon>{{ icons.DONE_ALL }}</mat-icon>
+        {{ strings.MARK_ALL_READ }}
+      </button>
+    }
+    @if (notifications().length > 0) {
+      <button class="nsw-action-btn nsw-action-btn--danger" (click)="onDeleteAll()" type="button">
+        <mat-icon>{{ icons.DELETE_SWEEP }}</mat-icon>
+        {{ strings.DELETE_ALL }}
+      </button>
+    }
+  </div>
+
+  <div class="nsw-list">
+    @if (loading()) {
+      <div class="nsw-empty">{{ strings.LOADING }}</div>
+    } @else if (notifications().length === 0) {
+      <div class="nsw-empty">{{ strings.NO_NOTIFICATIONS }}</div>
+    } @else {
+      @for (notification of notifications(); track notification.id) {
+        <div
+          class="nsw-item"
+          [class.nsw-item--unread]="!notification.isRead"
+          (click)="onMarkAsRead(notification)"
+        >
+          <div class="nsw-item-content">
+            <div class="nsw-item-header">
+              <span class="nsw-item-title">{{ notification.title }}</span>
+              @if (!notification.isRead) {
+                <span class="nsw-item-dot"></span>
+              }
+            </div>
+            <p class="nsw-item-message">{{ notification.message }}</p>
+          </div>
+          <button
+            class="nsw-item-delete"
+            (click)="$event.stopPropagation(); onDelete(notification)"
+            type="button"
+            [title]="strings.DELETE"
+          >
+            <mat-icon>{{ icons.CLOSE }}</mat-icon>
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

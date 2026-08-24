@@ -1,0 +1,43 @@
+@if (selectedDate) {
+  <div class="downbar">
+    <div class="downbar__details">
+      <div class="downbar__detail-item">
+        <div class="downbar__icon-wrapper">
+          <span class="material-icons">calendar_today</span>
+        </div>
+        <div class="downbar__info">
+          <span class="downbar__label">{{ downbarStrings.DATE_LABEL }}</span>
+          <span class="downbar__value">{{ selectedDate | date:'mediumDate' }}</span>
+        </div>
+      </div>
+
+      <div class="downbar__divider"></div>
+
+      <div class="downbar__detail-item">
+        <div class="downbar__icon-wrapper downbar__icon-wrapper--time">
+          <span class="material-icons">schedule</span>
+        </div>
+        <div class="downbar__info">
+          <span class="downbar__label">{{ downbarStrings.TIME_LABEL }}</span>
+          <span class="downbar__value">
+            {{ selectedSlotLabel || downbarStrings.TIME_PLACEHOLDER }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="downbar__actions">
+      <button class="downbar__btn-cancel" [disabled]="!selectedSlotLabel" (click)="onCancel()">
+        {{ downbarStrings.CANCEL_BUTTON }}
+      </button>
+      <button 
+        class="downbar__btn-confirm" 
+        [disabled]="!isValid" 
+        [class.downbar__btn-confirm--disabled]="!isValid" 
+        (click)="onConfirm()">
+        {{ downbarStrings.CONFIRM_BUTTON }}
+        <span class="material-icons">arrow_forward</span>
+      </button>
+    </div>
+  </div>
+}

@@ -1,0 +1,113 @@
+<div class="visit-detail-dialog">
+  <div class="visit-detail-dialog__header">
+    <h2 class="visit-detail-dialog__title">{{ strings.MY_VISITS_TITLE }}</h2>
+    <button type="button" class="visit-detail-dialog__close" (click)="close()">
+      <mat-icon>{{ icons.CLOSE }}</mat-icon>
+    </button>
+  </div>
+
+  @if (isLoading()) {
+    <div class="visit-detail-dialog__state">
+      <mat-spinner diameter="32"></mat-spinner>
+    </div>
+  } @else if (errorMessage() && !visit()) {
+    <div class="visit-detail-dialog__state visit-detail-dialog__state--error">
+      <mat-icon>{{ icons.ERROR }}</mat-icon>
+      <p>{{ errorMessage() }}</p>
+    </div>
+  } @else if (visit(); as visit) {
+    <div class="visit-detail-dialog__body">
+      <div class="visit-detail-dialog__row">
+        <h3 class="visit-detail-dialog__name">{{ visit.visitorName }}</h3>
+        <app-status-badge [status]="getStatusLabel(visit.status)"></app-status-badge>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="visit-detail-dialog__section">
+        <p>
+          <mat-icon>{{ icons.PHONE }}</mat-icon> {{ visit.visitorPhoneNumber }}
+        </p>
+        @if (visit.visitorEmail) {
+          <p>
+            <mat-icon>{{ icons.EMAIL }}</mat-icon> {{ visit.visitorEmail }}
+          </p>
+        }
+        <p>
+          <mat-icon>{{ icons.BADGE }}</mat-icon> {{ visit.visitorType }}
+        </p>
+        <p>
+          <mat-icon>{{ icons.PURPOSE }}</mat-icon> {{ visit.purpose }}
+        </p>
+        <p>
+          <mat-icon>{{ icons.CALENDAR }}</mat-icon> {{ visit.startDate }} &ndash;
+          {{ visit.endDate }}
+        </p>
+
+        @if (visit.rejectionReason) {
+          <p class="visit-detail-dialog__reason">
+            <strong>{{ strings.REJECTION_REASON_LABEL }}:</strong> {{ visit.rejectionReason }}
+          </p>
+        }
+
+        @if (visit.approvedBy) {
+          <p>
+            <strong>{{ vm.APPROVED_BY_LABEL }}:</strong> {{ visit.approvedBy }}
+          </p>
+        }
+
+        @if (qrSent()) {
+          <p class="visit-detail-dialog__qr">
+            <mat-icon>{{ icons.QR }}</mat-icon>
+            {{ strings.QR_SENT_LABEL }}
+          </p>
+        }
+      </div>
+
+      @if (errorMessage()) {
+        <p
+          class="visit-detail-dialog__state visit-detail-dialog__state--error visit-detail-dialog__state--inline"
+        >
+          {{ errorMessage() }}
+        </p>
+      }
+
+      <div class="visit-detail-dialog__actions">
+        <app-action-button
+          [label]="strings.UPDATE"
+          [icon]="icons.UPDATE"
+          variant="secondary"
+          [disabled]="isActing()"
+          (clicked)="onUpdateVisitor()"
+        ></app-action-button>
+
+        @if (canApprove()) {
+          <app-action-button
+            [label]="strings.APPROVE"
+            [icon]="icons.APPROVE"
+            variant="primary"
+            [disabled]="isActing()"
+            (clicked)="onApproveVisit()"
+          ></app-action-button>
+          <app-action-button
+            [label]="strings.REJECT"
+            [icon]="icons.REJECT"
+            variant="danger"
+            [disabled]="isActing()"
+            (clicked)="onRejectVisit()"
+          ></app-action-button>
+        }
+
+        @if (canCancel()) {
+          <app-action-button
+            [label]="strings.CANCEL_VISIT_TITLE"
+            [icon]="icons.CANCEL_VISIT"
+            variant="danger"
+            [disabled]="isActing()"
+            (clicked)="onCancelVisit()"
+          ></app-action-button>
+        }
+      </div>
+    </div>
+  }
+</div>

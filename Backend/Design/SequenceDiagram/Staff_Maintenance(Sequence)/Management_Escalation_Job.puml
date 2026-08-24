@@ -1,0 +1,82 @@
+ 
+
+@startuml part3_management_and_escalation_job
+actor Admin
+actor Staff
+participant API
+database DB
+participant Cron
+
+== 1. Category create/update ==
+Admin -> API: POST /categories (name, description, img)
+alt name already exists
+  API --> Admin: 422 Category name already exists
+else valid
+  API -> DB: Save new category
+  API --> Admin: 201 Created
+end
+
+Admin -> API: PATCH /categories/{id}
+alt category not found
+  API --> Admin: 404 Category not found
+else valid
+  API -> DB: Update category details
+  API --> Admin: 200 OK
+end
+
+Admin -> API: DELETE /categories/{id}
+alt category referenced by staff/complaint/rule
+  API --> Admin: 422 Category in use — deactivate instead
+else valid
+  API -> DB: Remove category record
+  API --> Admin: 200 OK
+end
+
+== 2. Staff creation & self-update ==
+Admin -> API: POST /staff (name, email, password, categoryId, img)
+alt email already exists / invalid categoryId
+  API --> Admin: 422 Email exists / invalid categoryId
+else valid
+  API -> DB: Create user account with staff role
+  API -> DB: Create staff profile linked to user and category
+  API --> Admin: 201 Created
+end
+
+Staff -> API: PATCH /staff/{id} (description, details, img)
+alt staff editing another staff profile / admin-only field
+  API --> Staff: 403 Access denied
+else valid
+  API -> DB: Update staff profile details
+  API --> Staff: 200 OK
+end
+
+== 3. Availability slot creation ==
+Admin -> API: POST /staff/availability?staffId= (slots[])
+alt slot conflict (same staff, date, startTime) or invalid time range
+  API --> Admin: 422 Slot conflict / invalid time range
+else staff not found
+  API --> Admin: 404 Staff not found
+else valid
+  API -> DB: Save availability slots as unbooked and active
+  API --> Admin: 201 Created
+end
+
+== 4. Delete availability slot ==
+Admin -> API: DELETE /staff/availability/{slotId}?staffId=
+alt slot is booked
+  API --> Admin: 422 Slot is booked and cannot be deleted
+else valid
+  API -> DB: Remove availability slot record
+  API --> Admin: 200 OK
+end
+
+== 5. Daily escalation check ==
+Cron -> API: POST /jobs/escalation-check
+loop for each overdue complaint
+  API -> DB: Create escalation record for overdue complaint
+  API -> DB: Update complaint status to Escalated
+  API -> DB: Record progress log entry for Escalated status
+  API -> DB: Notify senior admin and resident
+end
+API --> Cron: 200 OK (escalated count)
+@enduml

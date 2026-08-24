@@ -1,0 +1,176 @@
+<div class="ambient-glow"><span class="g1"></span><span class="g2"></span></div>
+
+<nav class="nav" [class.scrolled]="isNavScrolled">
+  <div class="nav-logo"><span class="dot"></span>{{ brand.name }}</div>
+
+  <div class="nav-actions">
+    <a (click)="loginpage()" class="nav-btn">
+      {{ nav.ctaLabel }}
+    </a>
+
+    <a (click)="registerpage()" class="nav-btn">
+      {{ nav.ctaLabel1 }}
+    </a>
+  </div>
+</nav>
+
+<section id="hero-section">
+  <div class="hero-canvas-wrap">
+    <canvas #heroCanvas id="hero-canvas"></canvas>
+    <div class="hero-vignette"></div>
+
+    <div class="hero-overlay-layer">
+      <div class="overlay-stage hero-intro" style="opacity: 1">
+        <div class="glass-panel">
+          <div class="brand display">{{ brand.name }}</div>
+          <div class="system-name">{{ brand.systemName }}</div>
+        </div>
+      </div>
+
+      <div class="overlay-stage stage-1">
+        <h2 class="stage-headline display">{{ hero.stage1.headline }}</h2>
+        <p class="stage-subtitle">{{ hero.stage1.subtitle }}</p>
+      </div>
+
+      <div class="overlay-stage stage-2">
+        <h2 class="stage-headline display">
+          {{ hero.stage2.headlinePrefix }}<em>{{ hero.stage2.headlineEmphasis }}</em
+          >{{ hero.stage2.headlineSuffix }}
+        </h2>
+      </div>
+
+      <div class="overlay-stage stage-3">
+        <div class="stage-list">
+          <span *ngFor="let item of hero.stage3List">{{ item }}</span>
+        </div>
+      </div>
+
+      <div class="overlay-stage stage-4">
+        <h2 class="stage-headline display">
+          {{ hero.stage4.headlineLine1 }}<br />{{ hero.stage4.headlineLine2 }}
+        </h2>
+      </div>
+    </div>
+
+    <div class="hero-loader" [class.hidden]="isHeroLoaderHidden">
+      <div class="loader-ring"></div>
+      <div class="loader-text">{{ hero.loaderText }}</div>
+    </div>
+
+    <div class="scroll-cue"><span class="line"></span>{{ hero.scrollCueLabel }}</div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="container">
+    <div class="section-head center">
+      <div class="eyebrow" style="justify-content: center">{{ featuresSection.eyebrow }}</div>
+      <h2>{{ featuresSection.heading }}</h2>
+      <p>{{ featuresSection.description }}</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card" *ngFor="let feature of features">
+        <div class="feature-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            [innerHTML]="iconMarkup(feature.icon)"
+          ></svg>
+        </div>
+        <h3>{{ feature.title }}</h3>
+        <p>{{ feature.description }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- DASHBOARD -->
+<section class="dashboard-section">
+  <div class="container">
+    <div class="section-head center">
+      <div class="eyebrow" style="justify-content: center">{{ dashboardSection.eyebrow }}</div>
+      <h2>{{ dashboardSection.heading }}</h2>
+      <p>{{ dashboardSection.description }}</p>
+    </div>
+
+    <div class="dashboard-frame" id="dashFrame">
+      <div class="dashboard-topbar">
+        <span></span><span></span><span></span>
+        <div class="url">{{ dashboardSection.browserUrl }}</div>
+      </div>
+      <div class="dashboard-body">
+        <div class="dash-sidebar">
+          <div class="brand-mini">{{ dashboardSection.sidebarBrand }}</div>
+          <div class="dash-item" *ngFor="let item of dashSidebarItems" [class.active]="item.active">
+            <span class="dot"></span>{{ item.label }}
+          </div>
+        </div>
+        <div class="dash-main">
+          <h4 class="display">{{ dashboardSection.mainHeading }}</h4>
+          <div class="dash-stats">
+            <div class="dash-stat" *ngFor="let stat of dashboardStats">
+              <div class="num">{{ stat.value }}</div>
+              <div class="lbl">{{ stat.label }}</div>
+            </div>
+          </div>
+          <div class="dash-chart">
+            <div
+              class="bar"
+              *ngFor="let bar of chartBars"
+              [style.height.%]="bar.heightPercent"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<section class="tech-section">
+  <div class="container">
+    <div class="section-head center">
+      <div class="eyebrow" style="justify-content: center">{{ techSection.eyebrow }}</div>
+      <h2>{{ techSection.heading }}</h2>
+    </div>
+
+    <div class="tech-grid">
+      <div class="tech-col" *ngFor="let col of techColumns">
+        <div class="tech-index display">{{ col.index }}</div>
+        <h3 class="display">{{ col.title }}</h3>
+        <ul>
+          <li *ngFor="let item of col.items">{{ item }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section" id="cta">
+  <div class="container">
+    <div class="cta-panel">
+      <h2 class="display">{{ ctaSection.heading }}</h2>
+      <p>{{ ctaSection.description }}</p>
+      <a (click)="loginpage()" class="cta-button">{{ ctaSection.buttonLabel }}</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <div class="name display">{{ brand.name }}</div>
+      <div class="tag">{{ brand.systemName }}</div>
+    </div>
+  </div>
+</footer>

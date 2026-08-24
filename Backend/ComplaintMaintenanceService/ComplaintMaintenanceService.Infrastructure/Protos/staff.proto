@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option csharp_namespace = "StaffGrpc";
+
+package staff;
+
+// StaffService is the gRPC contract between IdentityService (client)
+// and ComplaintMaintenanceService (server).
+// Called during staff registration to persist the staff profile
+// in the ComplaintMaintenanceService database.
+service StaffService {
+  rpc CreateStaff (CreateStaffRequest) returns (CreateStaffResponse);
+}
+
+// CreateStaffRequest carries the minimum data needed to create
+// a staff profile in ComplaintMaintenanceService.
+// UserId     — the newly created identity user's ID (UUID as string)
+// CategoryId — the maintenance category the staff belongs to (UUID as string)
+message CreateStaffRequest {
+  string user_id     = 1;
+  string category_id = 2;
+}
+
+// CreateStaffResponse returns the result of the staff creation.
+// success  — true if staff was saved successfully
+// staff_id — the new Staff row ID in ComplaintMaintenanceService
+// message  — human-readable result or error detail
+message CreateStaffResponse {
+  bool   success  = 1;
+  string staff_id = 2;
+  string message  = 3;
+}

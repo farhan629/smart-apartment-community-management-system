@@ -1,0 +1,159 @@
+@startuml Auth_Part1
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
+skinparam sequenceBoxBorderColor #888
+skinparam sequenceLifeLineBorderColor #AAAAAA
+skinparam sequenceGroupBorderColor #888888
+skinparam sequenceGroupBackgroundColor #F5F5F5
+skinparam sequenceGroupFontSize 12
+skinparam noteFontSize 11
+skinparam sequenceParticipantFontSize 12
+skinparam sequenceParticipantBackgroundColor #EFEFEF
+skinparam sequenceParticipantBorderColor #888888
+
+actor Resident as RES
+actor "Admin" as ADM
+actor "Security / Staff" as SEC
+participant "Client App" as APP
+participant "API Gateway" as GW
+participant "Auth API" as API
+database "Database" as DB
+
+== 1. Signup (Resident only) ==
+RES -> APP : Fill signup form
+APP -> GW : POST /signup\n{firstName, lastName, email, password, phone}
+GW -> API : Forward request
+API -> DB : Check email/phone uniqueness
+alt Missing required fields
+    API --> GW : 400 Bad Request\n"firstName is required"
+    GW --> APP : 400
+    APP --> RES : Please fill all required fields
+else Invalid email format
+    API --> GW : 400 Bad Request\n"Invalid email format"
+    GW --> APP : 400
+    APP --> RES : Invalid email format
+else Invalid phone format
+    API --> GW : 400 Bad Request\n"Invalid phone format"
+    GW --> APP : 400
+    APP --> RES : Invalid phone number
+else Weak password
+    API --> GW : 400 Bad Request\n"Password does not meet requirements"
+    GW --> APP : 400
+    APP --> RES : Password too weak
+else Email already exists
+    API --> GW : 409 Conflict\n"User with this email already exists"
+    GW --> APP : 409
+    APP --> RES : Email already registered
+else Phone already exists
+    API --> GW : 409 Conflict\n"User with this phone already exists"
+    GW --> APP : 409
+    APP --> RES : Phone already registered
+else Server error
+    API --> GW : 500 Internal Server Error
+    GW --> APP : 500
+    APP --> RES : Something went wrong, try again
+else Valid
+    API -> DB : Create user
+    API --> GW : 201 Created
+    GW --> APP : 201 Created
+    APP --> RES : Registration successful
+end
+
+== 2. Login (Resident) ==
+RES -> APP : Enter email & password
+APP -> GW : POST /login\n{email, password}
+GW -> API : Forward request
+API -> DB : Validate credentials
+alt Missing email or password
+    API --> GW : 400 Bad Request\n"email and password are required"
+    GW --> APP : 400
+    APP --> RES : Email and password are required
+else Invalid email format
+    API --> GW : 400 Bad Request\n"Invalid email format"
+    GW --> APP : 400
+    APP --> RES : Invalid email format
+else Invalid credentials
+    API --> GW : 401 Unauthorized\n"Invalid email or password"
+    GW --> APP : 401
+    APP --> RES : Invalid email or password
+else Account deactivated
+    API --> GW : 403 Forbidden\n"Your account has been deactivated"
+    GW --> APP : 403
+    APP --> RES : Account deactivated
+else Account blocked
+    API --> GW : 403 Forbidden\n"Your account has been blocked"
+    GW --> APP : 403
+    APP --> RES : Account blocked, contact admin
+else Server error
+    API --> GW : 500 Internal Server Error
+    GW --> APP : 500
+    APP --> RES : Something went wrong, try again
+else Valid
+    API --> GW : 200 {accessToken, refreshToken}
+    GW --> APP : 200 {accessToken, refreshToken}
+    APP --> RES : Login successful
+end
+
+== 3. Login (Admin) ==
+ADM -> APP : Enter email & password
+APP -> GW : POST /login\n{email, password}
+GW -> API : Forward request
+API -> DB : Validate credentials
+alt Missing email or password
+    API --> GW : 400 Bad Request\n"email and password are required"
+    GW --> APP : 400
+    APP --> ADM : Email and password are required
+else Invalid credentials
+    API --> GW : 401 Unauthorized\n"Invalid email or password"
+    GW --> APP : 401
+    APP --> ADM : Invalid email or password
+else Account deactivated
+    API --> GW : 403 Forbidden\n"Your account has been deactivated"
+    GW --> APP : 403
+    APP --> ADM : Account deactivated
+else Account blocked
+    API --> GW : 403 Forbidden\n"Your account has been blocked"
+    GW --> APP : 403
+    APP --> ADM : Account blocked
+else Server error
+    API --> GW : 500 Internal Server Error
+    GW --> APP : 500
+    APP --> ADM : Something went wrong, try again
+else Valid
+    API --> GW : 200 {accessToken, refreshToken}
+    GW --> APP : 200 {accessToken, refreshToken}
+    APP --> ADM : Login successful
+end
+
+== 4. Login (Security / Staff) ==
+SEC -> APP : Enter email & password
+APP -> GW : POST /login\n{email, password}
+GW -> API : Forward request
+API -> DB : Validate credentials
+alt Missing email or password
+    API --> GW : 400 Bad Request\n"email and password are required"
+    GW --> APP : 400
+    APP --> SEC : Email and password are required
+else Invalid credentials
+    API --> GW : 401 Unauthorized\n"Invalid email or password"
+    GW --> APP : 401
+    APP --> SEC : Invalid email or password
+else Account deactivated
+    API --> GW : 403 Forbidden\n"Your account has been deactivated"
+    GW --> APP : 403
+    APP --> SEC : Account deactivated
+else Account blocked
+    API --> GW : 403 Forbidden\n"Your account has been blocked"
+    GW --> APP : 403
+    APP --> SEC : Account blocked
+else Server error
+    API --> GW : 500 Internal Server Error
+    GW --> APP : 500
+    APP --> SEC : Something went wrong, try again
+else Valid
+    API --> GW : 200 {accessToken, refreshToken}
+    GW --> APP : 200 {accessToken, refreshToken}
+    APP --> SEC : Login successful
+end
+
+@enduml

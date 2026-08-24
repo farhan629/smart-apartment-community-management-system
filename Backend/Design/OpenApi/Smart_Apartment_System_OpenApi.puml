@@ -1,0 +1,5030 @@
+openapi: 3.0.3
+info:
+  title: Smart Apartment Management System API
+  version: 2.1.0
+  description: >
+    Unified REST API for the Smart Apartment Management System, covering
+    User Management & Auth, Visitor Management, Amenities, and Complaint &
+    Service Management modules.
+
+    Auth is JWT-based. Roles: resident, staff, admin, security, system.
+    All IDs are UUID. All JSON request/response bodies use camelCase field
+    names except on User/Auth/Approval/Role payloads, which use the legacy
+    PascalCase fields (UserName, Role_id, Flat_id, etc.) carried over from
+    the User microservice. All date-only fields use format "date"
+    (YYYY-MM-DD) and all timestamp fields use format "date-time" (ISO 8601,
+    e.g. 2024-07-15T10:30:00Z).
+servers:
+  - url: https://api.example.com/api/v1
+    description: Production server
+  - url: https://staging-api.example.com/api/v1
+    description: Staging server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Auth
+    description: Registration, login, token refresh, and password reset
+  - name: Users
+    description: User management - CRUD operations
+  - name: Roles
+    description: >
+      Role lookup data (Occupant: Owner/Tenant, Management: Admin/Staff).
+      Used by clients to obtain a Role_id before calling /signup or
+      /register.
+  - name: Approvals
+    description: Admin approval management for user registrations
+  - name: ReferenceTerms
+    description: Manage reference/lookup terms
+  - name: Notifications
+    description: User notification management
+  - name: UserReports
+    description: Generate user activity reports
+  - name: Categories
+    description: Work categories (AC, Plumbing, Electrical, etc)
+  - name: Complaints
+    description: Create, list, view, update status, and cancel complaints
+  - name: Staff
+    description: Manage staff members
+  - name: StaffAvailability
+    description: Create, view, and delete staff availability slots
+  - name: Assignments
+    description: Assign, view, accept, deny, and reassign complaint assignments
+  - name: ProgressLog
+    description: Append-only audit trail of every complaint status change
+  - name: Comments
+    description: Resolution notes and feedback ratings
+  - name: Escalation
+    description: View and update complaint escalations
+  - name: AdminReports
+    description: Complaint/staff/resident/category/escalation reports
+  - name: BackgroundJob
+    description: Daily escalation check job
+  - name: VisitorTypes
+    description: Lookup data for visitor types and purpose types
+  - name: Visitors
+    description: Manage visitor records
+  - name: Visits
+    description: Register, approve, and track visits
+  - name: VisitQrToken
+    description: Generate and validate QR passes for approved visits
+  - name: Amenities
+    description: Manage amenities and view amenities
+  - name: AmenitySlots
+    description: Manage time slots for amenities
+  - name: AvailableSlots
+    description: View real-time available slots for booking
+  - name: Bookings
+    description: Create, view, and cancel amenity bookings
+  - name: AmenityReports
+    description: Admin analytics on amenity bookings
+
+# ══════════════════════════════════════════════════════════════
+# COMPONENTS
+# ══════════════════════════════════════════════════════════════
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 10
+        minimum: 1
+        maximum: 100
+    SortOrderParam:
+      name: sortOrder
+      in: query
+      schema:
+        type: string
+        enum: [asc, desc]
+        default: desc
+
+  responses:
+    BadRequest:
+      description: Bad Request - invalid parameters or validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 400
+            error: Bad Request
+            message: "Invalid or missing fields"
+    Unauthorized:
+      description: Unauthorized - missing or invalid JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 401
+            error: Unauthorized
+            message: "Access token is missing or invalid"
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 403
+            error: Forbidden
+            message: "You do not have permission to perform this action"
+    NotFound:
+      description: Not Found - requested resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 404
+            error: Not Found
+            message: "Resource not found"
+    Conflict:
+      description: Conflict - resource already exists or duplicate
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 409
+            error: Conflict
+            message: "Resource already exists"
+    UnprocessableEntity:
+      description: Unprocessable Entity - business rule validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 422
+            error: Unprocessable Entity
+            message: "Business rule validation failed"
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 500
+            error: Internal Server Error
+            message: "An unexpected error occurred. Please try again later."
+
+  schemas:
+    # ─── COMMON ────────────────────────────────────────────
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+        message:
+          type: string
+
+    SuccessMessage:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Operation successful
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 400
+        error:
+          type: string
+          example: Bad Request
+        message:
+          type: string
+          example: Something went wrong
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+          minimum: 1
+        limit:
+          type: integer
+          example: 10
+          minimum: 1
+          maximum: 100
+        totalCount:
+          type: integer
+          example: 45
+        totalPages:
+          type: integer
+          example: 5
+        hasPreviousPage:
+          type: boolean
+          example: false
+        hasNextPage:
+          type: boolean
+          example: true
+
+    RefTermDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Guest
+
+    # ─── AUTH / USERS / ROLES ──────────────────────────────
+    # NEW: RoleDetail (restored from the User microservice; used by both
+    # /role/occupent and /role/managment, and embedded in UserDetail)
+    RoleDetail:
+      type: object
+      properties:
+        role_id:
+          type: string
+          format: uuid
+          description: Unique identifier for the role (used as Role_id in /signup or /register)
+          example: "d4e5f6a7-b8c9-1234-efab-cd5678901234"
+        role_name:
+          type: string
+          description: Display name of the role
+          example: Owner
+        category:
+          type: string
+          enum:
+            - Occupant
+            - Management
+          description: |
+            Category the role belongs to.
+            - Occupant: Owner, Tenant
+            - Management: Admin, Staff
+          example: Occupant
+        description:
+          type: string
+          nullable: true
+          description: Optional description of the role
+          example: "Property owner with full residential access"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+
+    # UPDATED: SignupRequest now matches the current User microservice —
+    # Role_id is required (looked up via /role/occupent), Flat_id and
+    # photo_url are optional. Replaces the old Flat_no/Block_no/Floor-at-
+    # signup shape; those fields are still readable/editable on the user
+    # record itself (see UserDetail / UpdateUserRequest below).
+    SignupRequest:
+      type: object
+      required: [UserName, email, password, phone, Role_id]
+      properties:
+        UserName:
+          type: string
+          example: John
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        password:
+          type: string
+          format: password
+          example: "Secret@123"
+        phone:
+          type: string
+          example: "+919876543210"
+        Role_id:
+          type: string
+          format: uuid
+          description: |
+            UUID of the role assigned to the user.
+            Use /role/occupent to get Occupant role IDs (Owner, Tenant).
+          example: "d4e5f6a7-b8c9-1234-efab-cd5678901234"
+        Flat_id:
+          type: string
+          format: uuid
+          description: UUID of the flat being claimed by this occupant
+        photo_url:
+          type: string
+          example: "img_url"
+
+    # NEW: RegisterManagementRequest — restored /register body for
+    # Admin/Staff (management) self-registration, also pending admin
+    # approval like /signup.
+    RegisterManagementRequest:
+      type: object
+      required: [UserName, email, password, phone, Role_id]
+      properties:
+        UserName:
+          type: string
+          example: John
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        password:
+          type: string
+          format: password
+          example: "Secret@123"
+        phone:
+          type: string
+          example: "+919876543210"
+        Role_id:
+          type: string
+          format: uuid
+          description: |
+            UUID of the management role.
+            Use /role/managment to get Management role IDs (Admin, Staff).
+          example: "d4e5f6a7-b8c9-1234-efab-cd5678901234"
+        category_id:
+          type: string
+          format: uuid
+          description: Optional staff work category (e.g. Maintenance, Security)
+        photo_url:
+          type: string
+          example: "img_url"
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        password:
+          type: string
+          format: password
+          example: "Secret@123"
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Login successful
+        accessToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          example: "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4..."
+
+    RefreshTokenRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+          description: The refresh token issued at login
+          example: "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4..."
+
+    RefreshTokenResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Token refreshed successfully
+        accessToken:
+          type: string
+          description: Newly issued JWT access token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: Rotated refresh token (if refresh token rotation is enabled)
+          example: "dGhpcyBpcyBhIG5ldyByZWZyZXNoIHRva2Vu..."
+
+    SendOtpRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          example: john@example.com
+
+    VerifyOtpRequest:
+      type: object
+      required: [email, otp]
+      properties:
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        otp:
+          type: string
+          minLength: 6
+          maxLength: 6
+          pattern: '^[0-9]{6}$'
+          example: "482916"
+
+    VerifyOtpResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "OTP verified"
+        resetToken:
+          type: string
+          description: JWT token to be used for password reset
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    ResetPasswordRequest:
+      type: object
+      required: [resetToken, newPassword]
+      properties:
+        resetToken:
+          type: string
+          description: JWT token received from OTP verification
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$'
+          example: "Password@123"
+
+    # UPDATED: UserDetail now embeds the full `role` object (RoleDetail) in
+    # addition to Role_id, matching the current User microservice response.
+    UserDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        UserName:
+          type: string
+          example: John
+        email:
+          type: string
+          example: john.doe@example.com
+        phone:
+          type: string
+          example: "+919876543210"
+        Flat_no:
+          type: number
+          example: 212
+        Block_no:
+          type: string
+          example: A
+        Floor:
+          type: number
+          example: 12
+        Role_id:
+          type: string
+          format: uuid
+          example: "d4e5f6a7-b8c9-1234-efab-cd5678901234"
+        role:
+          $ref: '#/components/schemas/RoleDetail'
+        status:
+          type: string
+          enum: [active, inactive, deleted]
+          example: active
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T08:30:00Z"
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        UserName:
+          type: string
+          example: John
+        email:
+          type: string
+          example: john.doe@example.com
+        phone:
+          type: string
+          example: "+919876543210"
+        Flat_no:
+          type: number
+          example: 212
+        Block_no:
+          type: string
+          example: A
+        Floor:
+          type: number
+          example: 12
+        Role_id:
+          type: string
+          format: uuid
+          example: "d4e5f6a7-b8c9-1234-efab-cd5678901234"
+        status:
+          type: string
+          enum: [active, inactive]
+          example: active
+
+    ApprovalDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        userId:
+          type: string
+          format: uuid
+          description: The user whose registration is pending approval
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        user:
+          type: object
+          description: Basic info of the user awaiting approval
+          properties:
+            UserName:
+              type: string
+              example: John
+            email:
+              type: string
+              example: john.doe@example.com
+            phone:
+              type: string
+              example: "+919876543210"
+            Flat_no:
+              type: number
+              example: 212
+            Block_no:
+              type: string
+              example: A
+            Floor:
+              type: number
+              example: 12
+            Role_id:
+              type: string
+              format: uuid
+              example: "d4e5f6a7-b8c9-1234-efab-cd5678901234"
+            role:
+              $ref: '#/components/schemas/RoleDetail'
+        isApproved:
+          type: boolean
+          description: "true = approved, false = rejected, null = pending"
+          nullable: true
+          example: null
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+          example: pending
+        remarks:
+          type: string
+          nullable: true
+          description: Admin remarks or reason for rejection
+          example: "All documents verified. User approved."
+        reviewedBy:
+          type: object
+          nullable: true
+          description: Admin who processed this approval
+          properties:
+            adminId:
+              type: string
+              format: uuid
+              example: "9f8e7d6c-5b4a-3210-fedc-ba9876543210"
+            adminName:
+              type: string
+              example: "Super Admin"
+        createdAt:
+          type: string
+          format: date-time
+          description: When the approval request was created (on signup/register)
+          example: "2024-06-15T08:00:00Z"
+        reviewedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the admin processed the approval
+          example: "2024-06-15T10:30:00Z"
+
+    CreateRefTermRequest:
+      type: object
+      required: [termName]
+      properties:
+        termName:
+          type: string
+          example: VIP
+        description:
+          type: string
+          example: High priority visitor
+
+    UpdateRefTermRequest:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          format: uuid
+        termName:
+          type: string
+          example: "VIP Updated"
+        description:
+          type: string
+          example: "Updated description"
+
+    Notification:
+      type: object
+      properties:
+        notificationId:
+          type: string
+          format: uuid
+          example: "d4e5f6a7-b8c9-1234-efab-cd5678901234"
+        userId:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        title:
+          type: string
+          example: "New Visitor Arrived"
+        message:
+          type: string
+          example: "Jane Smith has arrived at the gate and is waiting for your approval"
+        type:
+          type: string
+          enum: [visitor, complaint, amenity, general, alert]
+          example: visitor
+        isRead:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-06-15T14:22:00Z"
+        readAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2024-06-15T15:00:00Z"
+
+    # UPDATED: flattened to match the current User microservice — no more
+    # {success, data, message} envelope.
+    NotificationListResponse:
+      type: object
+      properties:
+        totalNotifications:
+          type: integer
+          example: 15
+        unreadCount:
+          type: integer
+          example: 5
+        readCount:
+          type: integer
+          example: 10
+        notifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+
+    UserReportRequest:
+      type: object
+      properties:
+        reportType:
+          type: string
+          enum: [DATE, WEEK, MONTH, CUSTOM]
+          example: MONTH
+        date:
+          type: string
+          format: date
+          nullable: true
+          example: "2024-06-01"
+        week:
+          type: integer
+          nullable: true
+          example: 24
+        month:
+          type: integer
+          nullable: true
+          example: 6
+        year:
+          type: integer
+          nullable: true
+          example: 2024
+        fromDate:
+          type: string
+          format: date
+          nullable: true
+          example: "2024-06-01"
+        toDate:
+          type: string
+          format: date
+          nullable: true
+          example: "2024-06-30"
+
+    UserReport:
+      type: object
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+          example: "2024-06-30T10:00:00Z"
+        reportType:
+          type: string
+          example: MONTH
+        period:
+          type: object
+          properties:
+            fromDate:
+              type: string
+              format: date
+              example: "2024-06-01"
+            toDate:
+              type: string
+              format: date
+              example: "2024-06-30"
+        visitorReport:
+          type: object
+          properties:
+            totalVisitors:
+              type: integer
+              example: 1200
+            uniqueVisitors:
+              type: integer
+              example: 950
+            returningVisitors:
+              type: integer
+              example: 250
+            visitors:
+              type: array
+              items:
+                $ref: '#/components/schemas/VisitorResponse'
+        amenitiesReport:
+          type: object
+          properties:
+            totalAmenities:
+              type: integer
+              example: 12
+            totalBookings:
+              type: integer
+              example: 520
+            mostUsedAmenity:
+              type: string
+              example: "Swimming Pool"
+            leastUsedAmenity:
+              type: string
+              example: "Conference Room"
+            usageBreakdown:
+              type: array
+              items:
+                type: object
+                properties:
+                  amenityId:
+                    type: string
+                    format: uuid
+                  amenityName:
+                    type: string
+                    example: "Swimming Pool"
+                  totalUsageCount:
+                    type: integer
+                    example: 340
+                  uniqueUsers:
+                    type: integer
+                    example: 120
+                  percentage:
+                    type: number
+                    format: float
+                    example: 28.3
+        complaintReport:
+          type: object
+          properties:
+            totalComplaints:
+              type: integer
+              example: 8
+            openComplaints:
+              type: integer
+              example: 3
+            inProgressComplaints:
+              type: integer
+              example: 2
+            resolvedComplaints:
+              type: integer
+              example: 3
+            complaints:
+              type: array
+              items:
+                type: object
+                properties:
+                  complaintId:
+                    type: string
+                    format: uuid
+                  title:
+                    type: string
+                    example: "Water leakage in bathroom"
+                  description:
+                    type: string
+                    example: "Continuous water leakage from overhead tank since 3 days"
+                  status:
+                    type: string
+                    enum: [Open, "In Progress", Resolved]
+                    example: "In Progress"
+                  raisedBy:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+                        format: uuid
+                      name:
+                        type: string
+                        example: "John Doe"
+                      email:
+                        type: string
+                        example: "john.doe@example.com"
+                      phone:
+                        type: string
+                        example: "+919876543210"
+                      apartmentNo:
+                        type: string
+                        example: "B-204"
+                  assignedTo:
+                    type: object
+                    properties:
+                      staffId:
+                        type: string
+                        format: uuid
+                      name:
+                        type: string
+                        example: "Ravi Kumar"
+                      role:
+                        type: string
+                        example: "Maintenance Staff"
+                      phone:
+                        type: string
+                        example: "+919123456780"
+                  createdAt:
+                    type: string
+                    format: date-time
+                    example: "2024-06-10T09:00:00Z"
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    example: "2024-06-12T14:30:00Z"
+                  resolvedAt:
+                    type: string
+                    format: date-time
+                    nullable: true
+                    example: "2024-06-14T11:00:00Z"
+                  remarks:
+                    type: string
+                    example: "Plumber assigned and issue fixed"
+
+    # ─── CATEGORY ──────────────────────────────────────────
+    CategoryCreateRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          example: AC
+        description:
+          type: string
+          example: "Air conditioning installation, repair, and maintenance"
+        img:
+          type: string
+          format: uri
+          example: "https://cdn.example.com/categories/ac.png"
+
+    CategoryUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: AC
+        description:
+          type: string
+          example: "Air conditioning installation, repair, and maintenance"
+        img:
+          type: string
+          format: uri
+          example: "https://cdn.example.com/categories/ac.png"
+        isActive:
+          type: boolean
+
+    CategoryRecord:
+      type: object
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: AC
+        description:
+          type: string
+          nullable: true
+        img:
+          type: string
+          format: uri
+          nullable: true
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    # ─── COMPLAINT ─────────────────────────────────────────
+    ComplaintCreateRequest:
+      type: object
+      required:
+        - complaintTypeRefId
+        - categoryId
+        - priorityRefId
+        - description
+        - preferredDate
+      properties:
+        complaintTypeRefId:
+          type: string
+          format: uuid
+        categoryId:
+          type: string
+          format: uuid
+        priorityRefId:
+          type: string
+          format: uuid
+        description:
+          type: string
+          example: "AC not working in bedroom"
+        preferredDate:
+          type: string
+          format: date
+          example: "2024-07-15"
+        preferredTime:
+          type: string
+          example: "10:00"
+
+    ComplaintSummary:
+      type: object
+      properties:
+        complaintId:
+          type: string
+          format: uuid
+        residentId:
+          type: string
+          format: uuid
+        description:
+          type: string
+        complaintType:
+          type: string
+          example: "Service Request"
+        category:
+          type: string
+          example: AC
+        categoryId:
+          type: string
+          format: uuid
+        categoryImg:
+          type: string
+          format: uri
+          nullable: true
+        priority:
+          type: string
+          example: Urgent
+        status:
+          type: string
+          example: Assigned
+        scheduledDate:
+          type: string
+          format: date
+          nullable: true
+        scheduledTime:
+          type: string
+          example: "10:00"
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    ComplaintDetail:
+      allOf:
+        - $ref: '#/components/schemas/ComplaintSummary'
+        - type: object
+          properties:
+            scheduledSlotId:
+              type: string
+              format: uuid
+              nullable: true
+            cancelledAt:
+              type: string
+              format: date-time
+              nullable: true
+            cancellationReason:
+              type: string
+              nullable: true
+            updatedAt:
+              type: string
+              format: date-time
+              nullable: true
+
+    ComplaintStatusUpdateRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: ["In Progress", Resolved]
+
+    ComplaintCancelRequest:
+      type: object
+      required: [cancellationReason]
+      properties:
+        cancellationReason:
+          type: string
+          example: "Issue resolved on its own"
+
+    # ─── STAFF ─────────────────────────────────────────────
+    StaffCreateRequest:
+      type: object
+      required: [name, email, password, categoryId]
+      properties:
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        phone:
+          type: string
+          example: "+60123456789"
+        password:
+          type: string
+          format: password
+          example: "StrongPass@123"
+        categoryId:
+          type: string
+          format: uuid
+        description:
+          type: string
+          example: "Senior AC technician with 5 years experience"
+        details:
+          type: string
+          example: "Available Mon-Fri. Carries own tools."
+        img:
+          type: string
+          format: uri
+          example: "https://cdn.example.com/staff/john-doe.png"
+
+    StaffUpdateRequest:
+      type: object
+      properties:
+        description:
+          type: string
+          example: "Lead AC technician"
+        details:
+          type: string
+          example: "Available weekdays only."
+        img:
+          type: string
+          format: uri
+          example: "https://cdn.example.com/staff/john-doe.png"
+        categoryId:
+          type: string
+          format: uuid
+        isActive:
+          type: boolean
+
+    StaffRecord:
+      type: object
+      properties:
+        staffId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          example: john@example.com
+        phone:
+          type: string
+          example: "+60123456789"
+        category:
+          type: string
+          example: AC
+        categoryId:
+          type: string
+          format: uuid
+        description:
+          type: string
+          nullable: true
+        details:
+          type: string
+          nullable: true
+        img:
+          type: string
+          format: uri
+          nullable: true
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    # ─── STAFF AVAILABILITY ────────────────────────────────
+    AvailabilitySlot:
+      type: object
+      properties:
+        slotId:
+          type: string
+          format: uuid
+        staffId:
+          type: string
+          format: uuid
+        staffName:
+          type: string
+        category:
+          type: string
+          example: AC
+        categoryId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+          example: "09:00"
+        endTime:
+          type: string
+          example: "10:00"
+        isBooked:
+          type: boolean
+        isCancelled:
+          type: boolean
+        complaintId:
+          type: string
+          format: uuid
+          nullable: true
+
+    AvailabilityCreateRequest:
+      type: object
+      required: [slots]
+      properties:
+        slots:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [date, startTime, endTime]
+            properties:
+              date:
+                type: string
+                format: date
+                example: "2024-07-15"
+              startTime:
+                type: string
+                example: "09:00"
+              endTime:
+                type: string
+                example: "10:00"
+
+    # ─── ASSIGNMENT ────────────────────────────────────────
+    AssignmentRecord:
+      type: object
+      properties:
+        assignmentId:
+          type: string
+          format: uuid
+        complaintId:
+          type: string
+          format: uuid
+        staffId:
+          type: string
+          format: uuid
+        staffName:
+          type: string
+        assignedBy:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: ["Pending Acceptance", Active, Denied, Reassigned, Completed, Cancelled]
+        assignedDate:
+          type: string
+          format: date-time
+        acceptedDate:
+          type: string
+          format: date-time
+          nullable: true
+        deniedDate:
+          type: string
+          format: date-time
+          nullable: true
+        denialReason:
+          type: string
+          nullable: true
+        dueDate:
+          type: string
+          format: date
+
+    AssignRequest:
+      type: object
+      properties:
+        staffId:
+          type: string
+          format: uuid
+        slotId:
+          type: string
+          format: uuid
+        dueDate:
+          type: string
+          format: date
+
+    DenyRequest:
+      type: object
+      required: [denialReason]
+      properties:
+        denialReason:
+          type: string
+          example: "I am on leave that day"
+
+    ReassignRequest:
+      type: object
+      required: [newStaffId, newSlotId, newDueDate]
+      properties:
+        newStaffId:
+          type: string
+          format: uuid
+        newSlotId:
+          type: string
+          format: uuid
+        newDueDate:
+          type: string
+          format: date
+
+    # ─── PROGRESS LOG ──────────────────────────────────────
+    ProgressLogEntry:
+      type: object
+      properties:
+        logId:
+          type: string
+          format: uuid
+        complaintId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          example: Assigned
+        remarks:
+          type: string
+          nullable: true
+        changedBy:
+          type: string
+          format: uuid
+        changedByName:
+          type: string
+        changedAt:
+          type: string
+          format: date-time
+
+    # ─── COMMENT ───────────────────────────────────────────
+    CommentCreateRequest:
+      type: object
+      required: [commentTypeRefId, commentText]
+      properties:
+        commentTypeRefId:
+          type: string
+          format: uuid
+        commentText:
+          type: string
+          example: "Staff was very professional and on time"
+        staffRating:
+          type: integer
+          minimum: 1
+          maximum: 5
+
+    CommentRecord:
+      type: object
+      properties:
+        commentId:
+          type: string
+          format: uuid
+        complaintId:
+          type: string
+          format: uuid
+        commentType:
+          type: string
+          example: Feedback
+        commentText:
+          type: string
+        staffRating:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 5
+        commentedBy:
+          type: string
+          format: uuid
+        commentedByName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # ─── ESCALATION ────────────────────────────────────────
+    EscalationRecord:
+      type: object
+      properties:
+        escalationId:
+          type: string
+          format: uuid
+        complaintId:
+          type: string
+          format: uuid
+        escalatedBy:
+          type: string
+        escalatedTo:
+          type: string
+          format: uuid
+        escalationReason:
+          type: string
+          example: "No staff accepted"
+        escalationDate:
+          type: string
+          format: date-time
+        resolvedAfterEscalation:
+          type: boolean
+          default: false
+        resolutionDate:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    EscalationUpdateRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [Resolved]
+
+    # ─── VISITOR MODULE ────────────────────────────────────
+    CreateVisitorRequest:
+      type: object
+      required: [name, phoneNumber, visitorTypeId]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Ramesh Kumar"
+        phoneNumber:
+          type: string
+          pattern: "^[0-9]{10}$"
+          example: "9876543210"
+        email:
+          type: string
+          format: email
+          nullable: true
+          maxLength: 255
+          example: ramesh@gmail.com
+        visitorTypeId:
+          type: string
+          format: uuid
+
+    UpdateVisitorRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        phoneNumber:
+          type: string
+          pattern: "^[0-9]{10}$"
+        email:
+          type: string
+          format: email
+          nullable: true
+          maxLength: 255
+        visitorTypeId:
+          type: string
+          format: uuid
+
+    VisitorResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Ramesh Kumar"
+        phoneNumber:
+          type: string
+          example: "9876543210"
+        email:
+          type: string
+          nullable: true
+          example: ramesh@gmail.com
+        visitorTypeId:
+          type: string
+          format: uuid
+        visitorType:
+          type: string
+          example: Guest
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-03-20T14:00:00Z"
+
+    CreateVisitRequest:
+      type: object
+      required: [purposeTypeId, startDate, endDate]
+      properties:
+        visitorId:
+          type: string
+          format: uuid
+          nullable: true
+        visitor:
+          $ref: '#/components/schemas/CreateVisitorRequest'
+        purposeTypeId:
+          type: string
+          format: uuid
+        startDate:
+          type: string
+          format: date
+          example: "2025-04-01"
+        endDate:
+          type: string
+          format: date
+          example: "2025-04-03"
+
+    UpdateVisitRequest:
+      type: object
+      properties:
+        purposeTypeId:
+          type: string
+          format: uuid
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+
+    RejectVisitRequest:
+      type: object
+      required: [rejectionReason]
+      properties:
+        rejectionReason:
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: "Host resident is not available on those dates"
+
+    VisitQrTokenEmbed:
+      type: object
+      nullable: true
+      properties:
+        token:
+          type: string
+          example: "f3b1c9a0-7e2d-4e5a-9c1a-8b6d2e4f1a3c"
+        expiresAt:
+          type: string
+          format: date-time
+          example: "2025-04-03T23:59:59Z"
+        isActive:
+          type: boolean
+          example: true
+
+    VisitResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        visitorId:
+          type: string
+          format: uuid
+        visitorName:
+          type: string
+          example: "Ramesh Kumar"
+        visitorPhoneNumber:
+          type: string
+          example: "9876543210"
+        visitorEmail:
+          type: string
+          nullable: true
+          example: ramesh@gmail.com
+        visitorType:
+          type: string
+          example: Guest
+        hostUserId:
+          type: string
+          format: uuid
+        hostName:
+          type: string
+          example: Priya
+        flatId:
+          type: string
+          format: uuid
+        flatNumber:
+          type: string
+          example: A-101
+        purposeTypeId:
+          type: string
+          format: uuid
+        purpose:
+          type: string
+          example: "Guest Visit"
+        statusId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED, CHECKED_IN, CHECKED_OUT, EXPIRED, CANCELLED]
+          example: APPROVED
+        startDate:
+          type: string
+          format: date
+          example: "2025-04-01"
+        endDate:
+          type: string
+          format: date
+          example: "2025-04-03"
+        checkInTime:
+          type: string
+          format: date-time
+          nullable: true
+        checkOutTime:
+          type: string
+          format: date-time
+          nullable: true
+        approvedBy:
+          type: string
+          format: uuid
+          nullable: true
+        approvedDate:
+          type: string
+          format: date-time
+          nullable: true
+        rejectionReason:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-03-28T09:00:00Z"
+        isActive:
+          type: boolean
+          example: true
+        qrToken:
+          $ref: '#/components/schemas/VisitQrTokenEmbed'
+
+    VisitCreateResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          example: PENDING
+        visitorName:
+          type: string
+          example: "Ramesh Kumar"
+        flatNumber:
+          type: string
+          example: A-101
+        purpose:
+          type: string
+          example: "Guest Visit"
+        startDate:
+          type: string
+          format: date
+          example: "2025-04-01"
+        endDate:
+          type: string
+          format: date
+          example: "2025-04-03"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-03-28T09:00:00Z"
+
+    ApproveRejectVisitResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [APPROVED, REJECTED]
+          example: APPROVED
+
+    CheckInOutResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [CHECKED_IN, CHECKED_OUT]
+          example: CHECKED_IN
+        checkInTime:
+          type: string
+          format: date-time
+          nullable: true
+        checkOutTime:
+          type: string
+          format: date-time
+          nullable: true
+
+    VisitQrTokenResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        visitId:
+          type: string
+          format: uuid
+        token:
+          type: string
+          example: "f3b1c9a0-7e2d-4e5a-9c1a-8b6d2e4f1a3c"
+        expiresAt:
+          type: string
+          format: date-time
+          example: "2025-04-03T23:59:59Z"
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-03-29T11:00:00Z"
+
+    # ─── AMENITIES MODULE ──────────────────────────────────
+    Amenity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Badminton Court"
+        slotType:
+          type: string
+          example: TIME
+        status:
+          type: string
+          example: AVAILABLE
+        location:
+          type: string
+          example: "Level 2, South Wing"
+        rules:
+          type: string
+          example: "First come first serve. 1 hour max."
+        imageUrl:
+          type: string
+          example: "/uploads/amenities/badminton-court.jpg"
+        isActive:
+          type: boolean
+          example: true
+
+    AmenityDetail:
+      allOf:
+        - $ref: '#/components/schemas/Amenity'
+        - type: object
+          properties:
+            createdAt:
+              type: string
+              format: date-time
+              example: "2024-01-15T09:00:00Z"
+            updatedAt:
+              type: string
+              format: date-time
+              example: "2024-01-20T14:30:00Z"
+
+    CreateAmenityRequest:
+      type: object
+      required: [name, slotTypeId, statusId, location]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: "Badminton Court"
+        slotTypeId:
+          type: string
+          format: uuid
+        statusId:
+          type: string
+          format: uuid
+        location:
+          type: string
+          maxLength: 255
+          example: "Level 2, South Wing"
+        rules:
+          type: string
+          maxLength: 2000
+          example: "First come first serve. 1 hour max."
+        imageUrl:
+          type: string
+          maxLength: 500
+          example: "/uploads/amenities/badminton-court.jpg"
+
+    UpdateAmenityRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        slotTypeId:
+          type: string
+          format: uuid
+        statusId:
+          type: string
+          format: uuid
+        location:
+          type: string
+          maxLength: 255
+        rules:
+          type: string
+          maxLength: 2000
+        imageUrl:
+          type: string
+          maxLength: 500
+        isActive:
+          type: boolean
+
+    AmenitySlot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        slotLabel:
+          type: string
+          example: "Morning Session"
+        slotDate:
+          type: string
+          format: date
+          example: "2024-07-20"
+        startTime:
+          type: string
+          example: "09:00"
+        endTime:
+          type: string
+          example: "10:00"
+        maxCapacity:
+          type: integer
+          example: 1
+          minimum: 1
+        currentBookings:
+          type: integer
+          example: 0
+          minimum: 0
+        isActive:
+          type: boolean
+          example: true
+
+    CreateAmenitySlotRequest:
+      type: object
+      required: [slotLabel, slotDate, startTime, endTime, maxCapacity]
+      properties:
+        slotLabel:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Morning Session"
+        slotDate:
+          type: string
+          format: date
+          example: "2024-07-20"
+        startTime:
+          type: string
+          pattern: "^([0-1][0-9]|2[0-3]):[0-5][0-9]$"
+          example: "09:00"
+        endTime:
+          type: string
+          pattern: "^([0-1][0-9]|2[0-3]):[0-5][0-9]$"
+          example: "10:00"
+        maxCapacity:
+          type: integer
+          minimum: 1
+          maximum: 999
+          example: 1
+
+    CreateAmenitySlotsBulkRequest:
+      type: object
+      required: [slots]
+      properties:
+        slots:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/CreateAmenitySlotRequest'
+
+    UpdateAmenitySlotRequest:
+      type: object
+      properties:
+        slotLabel:
+          type: string
+          minLength: 1
+          maxLength: 100
+        startTime:
+          type: string
+          pattern: "^([0-1][0-9]|2[0-3]):[0-5][0-9]$"
+        endTime:
+          type: string
+          pattern: "^([0-1][0-9]|2[0-3]):[0-5][0-9]$"
+        maxCapacity:
+          type: integer
+          minimum: 1
+          maximum: 999
+        isActive:
+          type: boolean
+
+    AvailableAmenitySlot:
+      type: object
+      properties:
+        slotId:
+          type: string
+          format: uuid
+        slotLabel:
+          type: string
+        slotDate:
+          type: string
+          format: date
+        startTime:
+          type: string
+        endTime:
+          type: string
+        maxCapacity:
+          type: integer
+        currentBookings:
+          type: integer
+        availableSpots:
+          type: integer
+          example: 1
+
+    AvailableAmenitySlotsResponse:
+      type: object
+      properties:
+        amenityId:
+          type: string
+          format: uuid
+        amenityName:
+          type: string
+        slotType:
+          type: string
+        location:
+          type: string
+        rules:
+          type: string
+        imageUrl:
+          type: string
+        slots:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailableAmenitySlot'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    CreateBookingRequest:
+      type: object
+      required: [slotId]
+      properties:
+        slotId:
+          type: string
+          format: uuid
+        peopleCount:
+          type: integer
+          minimum: 1
+          maximum: 50
+          example: 2
+
+    Booking:
+      type: object
+      properties:
+        bookingId:
+          type: string
+          format: uuid
+        amenityName:
+          type: string
+        slotType:
+          type: string
+        slotLabel:
+          type: string
+        slotDate:
+          type: string
+          format: date
+        startTime:
+          type: string
+        endTime:
+          type: string
+        peopleCount:
+          type: integer
+        status:
+          type: string
+          enum: [BOOKED, CANCELLED, COMPLETED]
+        bookedAt:
+          type: string
+          format: date-time
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    AmenityReportResponse:
+      type: object
+      properties:
+        filters:
+          type: object
+          properties:
+            amenityId:
+              type: string
+              format: uuid
+              nullable: true
+            amenityName:
+              type: string
+              nullable: true
+            slotType:
+              type: string
+              nullable: true
+            fromDate:
+              type: string
+              format: date
+              nullable: true
+            toDate:
+              type: string
+              format: date
+              nullable: true
+        summary:
+          type: object
+          properties:
+            totalBookings:
+              type: integer
+              example: 150
+            totalPeople:
+              type: integer
+              example: 320
+            activeBookings:
+              type: integer
+              example: 45
+            cancelledBookings:
+              type: integer
+              example: 12
+            completedBookings:
+              type: integer
+              example: 93
+            utilizationRate:
+              type: number
+              format: float
+              example: 68.5
+
+# ══════════════════════════════════════════════════════════════
+# PATHS
+# ══════════════════════════════════════════════════════════════
+paths:
+
+  # ════════════════════════════ AUTH ════════════════════════
+  /signup:
+    post:
+      tags: [Auth]
+      summary: Register a new occupant user (Owner/Tenant)
+      description: >
+        Registers a new occupant user. Look up the Occupant Role_id via
+        GET /role/occupent first. On success, creates a pending approval
+        record that admin must review before the user can log in.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        "201":
+          description: User registered successfully — pending admin approval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "409":
+          $ref: '#/components/responses/Conflict'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # NEW: restored from the User microservice
+  /register:
+    post:
+      tags: [Auth]
+      summary: Register a new management user (Admin/Staff)
+      description: >
+        Registers a new management user. Look up the Management Role_id via
+        GET /role/managment first. On success, creates a pending approval
+        record that admin must review before the user can log in.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterManagementRequest'
+      responses:
+        "201":
+          description: Management user registered successfully — pending admin approval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "409":
+          $ref: '#/components/responses/Conflict'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /login:
+    post:
+      tags: [Auth]
+      summary: User login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/refresh-token:
+    post:
+      tags: [Auth]
+      summary: Generate new access token using refresh token
+      description: >
+        Accepts a valid refresh token and returns a new access token.
+        Optionally rotates the refresh token if refresh token rotation is enabled.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        "200":
+          description: New access token generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          description: Forbidden - refresh token has been revoked or reused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 403
+                error: Forbidden
+                message: "Refresh token has been revoked"
+        "410":
+          description: Gone - refresh token has expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 410
+                error: Gone
+                message: "Refresh token has expired. Please log in again"
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/forgot-password/send-otp:
+    post:
+      tags: [Auth]
+      summary: Send OTP for password reset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendOtpRequest'
+      responses:
+        "200":
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "429":
+          description: Too many requests - rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 429
+                error: Too Many Requests
+                message: "Too many OTP requests. Please try again later"
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/forgot-password/verify-otp:
+    post:
+      tags: [Auth]
+      summary: Verify OTP for password reset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyOtpRequest'
+      responses:
+        "200":
+          description: OTP verified successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyOtpResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "410":
+          description: OTP expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 410
+                error: Gone
+                message: "OTP expired"
+        "429":
+          description: Too many verification attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 429
+                error: Too Many Requests
+                message: "Too many verification attempts. Please request a new OTP"
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/forgot-password/reset-password:
+    post:
+      tags: [Auth]
+      summary: Reset password using reset token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        "200":
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/forgot-password/resend-otp:
+    post:
+      tags: [Auth]
+      summary: Resend OTP for password reset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendOtpRequest'
+      responses:
+        "200":
+          description: OTP resent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "429":
+          description: Too many resend attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 429
+                error: Too Many Requests
+                message: "Too many resend attempts. Please try again later"
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ USERS ═══════════════════════
+  /user:
+    get:
+      tags: [Users]
+      summary: Get all users or single user by query param
+      x-roles: [admin]
+      parameters:
+        - name: id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: role
+          in: query
+          required: false
+          description: Filter users by role
+          schema:
+            type: string
+            enum: [admin, resident, staff, security]
+      responses:
+        "200":
+          description: Returns all users or single user
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/UserDetail'
+                  - $ref: '#/components/schemas/UserDetail'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /user/{id}:
+    put:
+      tags: [Users]
+      summary: Update user by ID
+      x-roles: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        "200":
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Users]
+      summary: Delete user by ID
+      x-roles: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ ROLES (restored) ════════════
+  /role/occupent:
+    get:
+      tags: [Roles]
+      summary: Get all Occupant roles
+      description: |
+        Returns all roles under the **Occupant** category.
+        Occupant covers: **Owner** and **Tenant**.
+        Use the returned `role_id` in the /signup request body.
+        Public — callers haven't signed up yet, so no JWT is required.
+      security: []
+      responses:
+        "200":
+          description: List of Occupant roles retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  category:
+                    type: string
+                    example: Occupant
+                  description:
+                    type: string
+                    example: "Covers Owner and Tenant roles"
+                  roles:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RoleDetail'
+              example:
+                success: true
+                category: Occupant
+                description: "Covers Owner and Tenant roles"
+                roles:
+                  - role_id: "d4e5f6a7-b8c9-1234-efab-cd5678901234"
+                    role_name: Owner
+                    category: Occupant
+                    description: "Property owner with full residential access"
+                    createdAt: "2024-01-01T00:00:00Z"
+                  - role_id: "e5f6a7b8-c9d0-2345-fabc-de6789012345"
+                    role_name: Tenant
+                    category: Occupant
+                    description: "Tenant/renter with residential access"
+                    createdAt: "2024-01-01T00:00:00Z"
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /role/managment:
+    get:
+      tags: [Roles]
+      summary: Get all Management roles
+      description: |
+        Returns all roles under the **Management** category.
+        Management covers: **Admin** and **Staff**.
+        Use the returned `role_id` in the /register request body.
+        Public — callers haven't registered yet, so no JWT is required.
+      security: []
+      responses:
+        "200":
+          description: List of Management roles retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  category:
+                    type: string
+                    example: Management
+                  description:
+                    type: string
+                    example: "Covers Admin and Staff roles"
+                  roles:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RoleDetail'
+              example:
+                success: true
+                category: Management
+                description: "Covers Admin and Staff roles"
+                roles:
+                  - role_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    role_name: Admin
+                    category: Management
+                    description: "Full system access and user management"
+                    createdAt: "2024-01-01T00:00:00Z"
+                  - role_id: "b2c3d4e5-f6a7-8901-bcde-fa2345678901"
+                    role_name: Staff
+                    category: Management
+                    description: "Operational staff with limited administrative access"
+                    createdAt: "2024-01-01T00:00:00Z"
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ APPROVALS ═══════════════════
+  /approval:
+    get:
+      tags: [Approvals]
+      summary: Get all approvals or single approval by query param
+      description: >
+        Admin can fetch all pending/approved/rejected user registration approvals.
+        Optionally filter by approval ID, user ID, or status.
+      x-roles: [admin]
+      parameters:
+        - name: id
+          in: query
+          required: false
+          description: UUID of the approval record. If provided returns a single approval.
+          schema:
+            type: string
+            format: uuid
+            example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        - name: userId
+          in: query
+          required: false
+          description: UUID of the user. Returns all approvals belonging to this user.
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+        - name: status
+          in: query
+          required: false
+          description: Filter approvals by status
+          schema:
+            type: string
+            enum: [pending, approved, rejected]
+            example: pending
+      responses:
+        "200":
+          description: Returns all approvals or a single approval
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - description: List of approvals (id not provided)
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApprovalDetail'
+                  - description: Single approval (id provided)
+                    $ref: '#/components/schemas/ApprovalDetail'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /approval/{id}:
+    put:
+      tags: [Approvals]
+      summary: Approve or reject a user registration
+      description: >
+        Admin reviews a pending user registration (from /signup or /register)
+        and sets the approval status. Once approved, the user gains access to
+        the system. Once rejected, the user is notified and blocked.
+      x-roles: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the approval record to update
+          schema:
+            type: string
+            format: uuid
+            example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [isApproved]
+              properties:
+                isApproved:
+                  type: boolean
+                  description: "true = approved, false = rejected"
+                  example: true
+                remarks:
+                  type: string
+                  description: Optional admin remarks or reason for rejection
+                  example: "All documents verified. User approved."
+      responses:
+        "200":
+          description: Approval status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User has been approved successfully"
+                  approval:
+                    $ref: '#/components/schemas/ApprovalDetail'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          description: Conflict - approval has already been processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 409
+                error: Conflict
+                message: "This approval request has already been processed"
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ REFERENCE TERMS ═════════════
+  /refterm:
+    post:
+      tags: [ReferenceTerms]
+      summary: Create reference term
+      x-roles: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRefTermRequest'
+      responses:
+        "201":
+          description: Reference term created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "409":
+          $ref: '#/components/responses/Conflict'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags: [ReferenceTerms]
+      summary: Update reference term
+      x-roles: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRefTermRequest'
+      responses:
+        "200":
+          description: Reference term updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ NOTIFICATIONS ═══════════════
+  /notification:
+    get:
+      tags: [Notifications]
+      summary: Get all notifications for a user
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: isRead
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        "200":
+          description: List of notifications for the user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationListResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /notification/mark-all-read:
+    put:
+      tags: [Notifications]
+      summary: Mark all notifications as read for a user
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: All notifications marked as read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /notification/delete-all:
+    delete:
+      tags: [Notifications]
+      summary: Delete all notifications for a user
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: All notifications deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /notification/{id}:
+    put:
+      tags: [Notifications]
+      summary: Mark notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Notification marked as read successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Notifications]
+      summary: Delete a single notification by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Notification deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ USER REPORTS ════════════════
+  /userreport:
+    post:
+      tags: [UserReports]
+      summary: Generate report for a single user
+      x-roles: [admin, resident, staff]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserReportRequest'
+      responses:
+        "200":
+          description: Full report generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserReport'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ CATEGORIES ══════════════════
+  /categories:
+    post:
+      tags: [Categories]
+      summary: Create a new work category
+      x-roles: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryCreateRequest'
+      responses:
+        "201":
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      tags: [Categories]
+      summary: List all categories
+      x-roles: [resident, staff, admin]
+      parameters:
+        - in: query
+          name: isActive
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Categories fetched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /categories/{categoryId}:
+    get:
+      tags: [Categories]
+      summary: Get a single category
+      x-roles: [resident, staff, admin]
+      parameters:
+        - in: path
+          name: categoryId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Category fetched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      tags: [Categories]
+      summary: Update a category
+      x-roles: [admin]
+      parameters:
+        - in: path
+          name: categoryId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryUpdateRequest'
+      responses:
+        "200":
+          description: Category updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Categories]
+      summary: Delete a category
+      x-roles: [admin]
+      parameters:
+        - in: path
+          name: categoryId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Category deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ COMPLAINTS ══════════════════
+  /complaints:
+    post:
+      tags: [Complaints]
+      summary: Submit a new complaint or service request
+      x-roles: [resident]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComplaintCreateRequest'
+      responses:
+        "201":
+          description: Complaint submitted. Auto-assignment triggered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      tags: [Complaints]
+      summary: List complaints with optional filters
+      x-roles: [resident, staff, admin]
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [Open, Assigned, "In Progress", Resolved, Closed, Cancelled, Escalated]
+        - in: query
+          name: priority
+          schema:
+            type: string
+            enum: [Urgent, General, Moderate]
+        - in: query
+          name: categoryId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: fromDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: toDate
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        "200":
+          description: Complaints fetched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /complaints/{complaintId}:
+    get:
+      tags: [Complaints]
+      summary: Get full detail of a single complaint
+      x-roles: [resident, staff, admin]
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Complaint fetched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /complaints/{complaintId}/status:
+    patch:
+      tags: [Complaints]
+      summary: Update the status of a complaint
+      x-roles: [staff, admin]
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComplaintStatusUpdateRequest'
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /complaints/{complaintId}/cancel:
+    patch:
+      tags: [Complaints]
+      summary: Resident cancels a complaint
+      x-roles: [resident]
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComplaintCancelRequest'
+      responses:
+        "200":
+          description: Complaint cancelled, slot freed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ STAFF ═══════════════════════
+  /staff:
+    post:
+      tags: [Staff]
+      summary: Create a new staff member
+      x-roles: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffCreateRequest'
+      responses:
+        "201":
+          description: Staff member created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      tags: [Staff]
+      summary: List all staff members
+      x-roles: [admin]
+      parameters:
+        - in: query
+          name: categoryId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: isActive
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Staff list fetched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /staff/{staffId}:
+    get:
+      tags: [Staff]
+      summary: Get a single staff member's detail
+      x-roles: [staff, admin]
+      parameters:
+        - in: path
+          name: staffId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Staff detail fetched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      tags: [Staff]
+      summary: Update a staff member's profile
+      x-roles: [staff, admin]
+      parameters:
+        - in: path
+          name: staffId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffUpdateRequest'
+      responses:
+        "200":
+          description: Staff profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ STAFF AVAILABILITY ══════════
+  /staff/availability:
+    get:
+      tags: [StaffAvailability]
+      summary: Query availability slots — by staff member or by date and category
+      x-roles: [staff, admin, system]
+      parameters:
+        - in: query
+          name: staffId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: categoryId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: isBooked
+          schema:
+            type: boolean
+        - in: query
+          name: fromDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: toDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: startTime
+          schema:
+            type: string
+          example: "09:00"
+        - in: query
+          name: endTime
+          schema:
+            type: string
+          example: "12:00"
+      responses:
+        "200":
+          description: Slots fetched (empty array if none found)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [StaffAvailability]
+      summary: Create availability slots for a staff member
+      x-roles: [admin]
+      parameters:
+        - in: query
+          name: staffId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityCreateRequest'
+      responses:
+        "201":
+          description: Slots created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /staff/availability/{slotId}:
+    get:
+      tags: [StaffAvailability]
+      summary: Get a single availability slot
+      x-roles: [staff, admin]
+      parameters:
+        - in: path
+          name: slotId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: staffId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Slot fetched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [StaffAvailability]
+      summary: Delete an availability slot
+      x-roles: [admin]
+      parameters:
+        - in: path
+          name: slotId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: staffId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Slot deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ ASSIGNMENTS ═════════════════
+  /complaints/{complaintId}/assign:
+    post:
+      tags: [Assignments]
+      summary: Assign a complaint to a staff member
+      x-roles: [admin, system]
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRequest'
+      responses:
+        "201":
+          description: Assignment created with Pending Acceptance status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /complaints/{complaintId}/assignments:
+    get:
+      tags: [Assignments]
+      summary: Get assignment history or a single assignment for a complaint
+      x-roles: [staff, admin]
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: assignmentId
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Assignment data fetched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /complaints/{complaintId}/assignments/{assignmentId}/accept:
+    patch:
+      tags: [Assignments]
+      summary: Staff accepts a job assignment
+      x-roles: [staff]
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: assignmentId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Assignment accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /complaints/{complaintId}/assignments/{assignmentId}/deny:
+    patch:
+      tags: [Assignments]
+      summary: Staff denies a job assignment
+      x-roles: [staff]
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: assignmentId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DenyRequest'
+      responses:
+        "200":
+          description: Assignment denied. Next action taken automatically.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /complaints/{complaintId}/assignments/{assignmentId}/reassign:
+    patch:
+      tags: [Assignments]
+      summary: Admin manually reassigns a complaint after escalation
+      x-roles: [admin]
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: assignmentId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReassignRequest'
+      responses:
+        "200":
+          description: Complaint reassigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ PROGRESS LOG ════════════════
+  /complaints/{complaintId}/progress-log:
+    get:
+      tags: [ProgressLog]
+      summary: Get full audit log for a complaint
+      x-roles: [resident, staff, admin]
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Progress log fetched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ COMMENTS ════════════════════
+  /complaints/{complaintId}/comments:
+    post:
+      tags: [Comments]
+      summary: Add a resolution note (staff) or feedback with rating (resident)
+      x-roles: [staff, resident]
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreateRequest'
+      responses:
+        "201":
+          description: Comment added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      tags: [Comments]
+      summary: Get all comments on a complaint
+      x-roles: [resident, staff, admin]
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Comments fetched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ ESCALATION ══════════════════
+  /complaints/{complaintId}/escalation:
+    get:
+      tags: [Escalation]
+      summary: Get escalation details for a complaint
+      x-roles: [admin]
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Escalation details fetched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      tags: [Escalation]
+      summary: Update an escalation record for a complaint
+      x-roles: [admin]
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EscalationUpdateRequest'
+      responses:
+        "200":
+          description: Escalation updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ ADMIN REPORTS ═══════════════
+  /reports:
+    get:
+      tags: [AdminReports]
+      summary: Admin reports — complaint volume, staff performance, residents, categories, escalations
+      x-roles: [admin]
+      parameters:
+        - in: query
+          name: type
+          required: true
+          schema:
+            type: string
+            enum: [complaints, staff, residents, staff-categories, escalations]
+        - in: query
+          name: groupBy
+          schema:
+            type: string
+            enum: [day, week, month]
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            enum: [rating, accepted_count, complaint_count, job_count]
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: categoryId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: resolvedAfterEscalation
+          schema:
+            type: boolean
+        - in: query
+          name: fromDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: toDate
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Report fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ BACKGROUND JOB ══════════════
+  /jobs/escalation-check:
+    post:
+      tags: [BackgroundJob]
+      summary: Run the daily overdue escalation check
+      x-roles: [admin, system]
+      responses:
+        "200":
+          description: Escalation check completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          description: Job execution failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ════════════════════════════ VISITOR REFERENCE ═══════════
+  /visitor-types:
+    get:
+      tags: [VisitorTypes]
+      summary: Get all visitor types
+      responses:
+        "200":
+          description: List of visitor types fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RefTermDto'
+                  message:
+                    type: string
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /purpose-types:
+    get:
+      tags: [VisitorTypes]
+      summary: Get all purpose types
+      responses:
+        "200":
+          description: List of purpose types fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RefTermDto'
+                  message:
+                    type: string
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ VISITORS ════════════════════
+  /visitors:
+    get:
+      tags: [Visitors]
+      summary: Get all visitors
+      parameters:
+        - name: id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SortOrderParam'
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [name, phoneNumber, createdAt]
+      responses:
+        "200":
+          description: Visitors fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "204":
+          description: No visitors found matching the given filters
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Visitors]
+      summary: Create a new visitor record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVisitorRequest'
+      responses:
+        "201":
+          description: Visitor created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags: [Visitors]
+      summary: Update an existing visitor record
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVisitorRequest'
+      responses:
+        "200":
+          description: Visitor updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Visitors]
+      summary: Deactivate a visitor (soft delete)
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Visitor deactivated successfully
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ VISITS ══════════════════════
+  /visits:
+    get:
+      tags: [Visits]
+      summary: Get all visits (admin view)
+      x-roles: [admin, staff]
+      parameters:
+        - name: id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: visitorId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: hostUserId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: flatId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [PENDING, APPROVED, REJECTED, CHECKED_IN, CHECKED_OUT, EXPIRED, CANCELLED]
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SortOrderParam'
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [startDate, endDate, status, createdAt]
+      responses:
+        "200":
+          description: Visits fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "204":
+          description: No visits found matching the given filters
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Visits]
+      summary: Register a new visit
+      x-roles: [resident]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVisitRequest'
+      responses:
+        "201":
+          description: Visit registered successfully. Awaiting approval.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags: [Visits]
+      summary: Update a pending visit
+      x-roles: [resident]
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVisitRequest'
+      responses:
+        "200":
+          description: Visit updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Visits]
+      summary: Cancel a visit
+      x-roles: [resident]
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Visit cancelled successfully
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /visits/{id}/approve:
+    patch:
+      tags: [Visits]
+      summary: Approve a visit request
+      x-roles: [resident, staff]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Visit approved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /visits/{id}/reject:
+    patch:
+      tags: [Visits]
+      summary: Reject a visit request
+      x-roles: [resident, staff]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectVisitRequest'
+      responses:
+        "200":
+          description: Visit rejected successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /visits/{id}/check-in:
+    patch:
+      tags: [Visits]
+      summary: Mark visitor check-in
+      x-roles: [security]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Visitor checked in successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /visits/{id}/check-out:
+    patch:
+      tags: [Visits]
+      summary: Mark visitor check-out
+      x-roles: [security]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Visitor checked out successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ VISIT QR TOKEN ══════════════
+  /visits/{id}/qr:
+    post:
+      tags: [VisitQrToken]
+      summary: Generate a QR pass for an approved visit
+      x-roles: [resident]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "201":
+          description: QR token generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /visits/qr/{token}:
+    get:
+      tags: [VisitQrToken]
+      summary: Validate QR token and fetch visit details (gate scan)
+      x-roles: [security]
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Token valid — full visit and visitor details returned for gate display
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ AMENITIES ═══════════════════
+  /amenities:
+    get:
+      tags: [Amenities]
+      summary: Get all amenities
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: searchName
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+        - name: slotType
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [TIME_COUNT, TIME]
+      responses:
+        "200":
+          description: Successfully retrieved amenities list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Amenity'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Amenities]
+      summary: Create new amenity
+      x-roles: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAmenityRequest'
+      responses:
+        "201":
+          description: Amenity created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /amenities/{amenityId}:
+    get:
+      tags: [Amenities]
+      summary: Get amenity by ID
+      parameters:
+        - name: amenityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successfully retrieved amenity details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmenityDetail'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags: [Amenities]
+      summary: Update amenity
+      x-roles: [admin]
+      parameters:
+        - name: amenityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAmenityRequest'
+      responses:
+        "200":
+          description: Amenity updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Amenities]
+      summary: Delete amenity
+      x-roles: [admin]
+      parameters:
+        - name: amenityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Amenity deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        "400":
+          description: Cannot delete amenity with existing slots or bookings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ AMENITY SLOTS ═══════════════
+  /amenities/{amenityId}/slots:
+    get:
+      tags: [AmenitySlots]
+      summary: Get all slots for an amenity
+      parameters:
+        - name: amenityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: showInactive
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Successfully retrieved slots list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AmenitySlot'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [AmenitySlots]
+      summary: Create slots for an amenity (single or bulk)
+      x-roles: [admin]
+      parameters:
+        - name: amenityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/CreateAmenitySlotRequest'
+                - $ref: '#/components/schemas/CreateAmenitySlotsBulkRequest'
+      responses:
+        "201":
+          description: Slot(s) created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  slotIds:
+                    type: array
+                    items:
+                      type: string
+                      format: uuid
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /amenities/{amenityId}/slots/available:
+    get:
+      tags: [AvailableSlots]
+      summary: View available slots for an amenity
+      parameters:
+        - name: amenityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        "200":
+          description: Successfully retrieved available slots
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailableAmenitySlotsResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /amenity-slots/{slotId}:
+    put:
+      tags: [AmenitySlots]
+      summary: Update slot
+      x-roles: [admin]
+      parameters:
+        - name: slotId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAmenitySlotRequest'
+      responses:
+        "200":
+          description: Slot updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [AmenitySlots]
+      summary: Delete slot
+      x-roles: [admin]
+      parameters:
+        - name: slotId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Slot deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        "400":
+          description: Cannot delete slot with existing bookings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ BOOKINGS ════════════════════
+  /bookings:
+    get:
+      tags: [Bookings]
+      summary: Get my booking history
+      x-roles: [resident]
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [BOOKED, CANCELLED, COMPLETED]
+        - name: fromDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        "200":
+          description: Successfully retrieved booking history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Booking'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Bookings]
+      summary: Book a slot
+      x-roles: [resident]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+      responses:
+        "201":
+          description: Booking created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  bookingId:
+                    type: string
+                    format: uuid
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          description: Forbidden - already booked or overlapping
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          description: Conflict - slot is full or already booked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  /bookings/{bookingId}:
+    delete:
+      tags: [Bookings]
+      summary: Cancel booking
+      x-roles: [resident, admin]
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Booking cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        "400":
+          description: Cannot cancel - already cancelled or past slot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          description: Forbidden - not your booking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+  # ════════════════════════════ AMENITY REPORTS ═════════════
+  /reports/amenity-bookings:
+    get:
+      tags: [AmenityReports]
+      summary: Generate amenity booking report
+      x-roles: [admin]
+      parameters:
+        - name: amenityId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: slotType
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [TIME_COUNT, TIME]
+        - name: fromDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Report generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmenityReportResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalServerError'

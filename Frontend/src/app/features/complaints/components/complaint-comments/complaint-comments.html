@@ -1,0 +1,126 @@
+<div class="comments-section">
+  <h3 class="comments-section__title">{{ sectionStrings.SECTION_TITLE }}</h3>
+
+  <div class="comments-section__toggle">
+    <button
+      type="button"
+      class="comments-section__toggle-btn"
+      [class.comments-section__toggle-btn--active]="activeTab() === tabs.COMMENTS"
+      (click)="setTab(tabs.COMMENTS)"
+    >
+      {{ sectionStrings.COMMENTS_TAB_LABEL }}
+    </button>
+
+    <button
+      type="button"
+      class="comments-section__toggle-btn"
+      [class.comments-section__toggle-btn--active]="activeTab() === tabs.PROGRESS"
+      (click)="setTab(tabs.PROGRESS)"
+    >
+      {{ sectionStrings.PROGRESS_TAB_LABEL }}
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="comments-section__state">{{ strings.LOADING }}</div>
+  } @else if (loadError()) {
+    <div class="comments-section__state comments-section__state--error">
+      {{ sectionStrings.LOAD_COMMENTS_ERROR }}
+    </div>
+  } @else if (activeTab() === tabs.COMMENTS) {
+    <div class="comment-list">
+      @for (comment of comments(); track comment.commentId) {
+        <div class="comment-item" [class.comment-item--self]="isAuthorSelf(comment.commentedBy)">
+          <div class="comment-item__meta">
+            <span class="comment-item__author">{{ authorLabel(comment.commentedBy) }}</span>
+            <span class="comment-item__date">{{ comment.createdAt | date: dateTimeFormat }}</span>
+          </div>
+
+          <p class="comment-item__text">{{ comment.commentText }}</p>
+
+          @if (comment.staffRating) {
+            <div class="comment-item__rating">
+              <span>{{ sectionStrings.RATING_PREFIX }}</span>
+              @for (star of ratingOptions; track star) {
+                <mat-icon
+                  class="comment-item__star"
+                  [class.comment-item__star--filled]="star <= comment.staffRating"
+                >
+                  {{ star <= comment.staffRating ? icons.STAR : icons.STAR_OUTLINE }}
+                </mat-icon>
+              }
+            </div>
+          }
+        </div>
+      } @empty {
+        <app-empty-state [icon]="icons.COMMENT" [message]="sectionStrings.NO_COMMENTS_MESSAGE">
+        </app-empty-state>
+      }
+    </div>
+
+    @if (canComment) {
+      <div class="comment-form">
+        <textarea
+          rows="3"
+          [maxlength]="commentMaxLength"
+          [ngModel]="commentText()"
+          (ngModelChange)="commentText.set($event)"
+          [placeholder]="sectionStrings.ADD_COMMENT_PLACEHOLDER"
+        >
+        </textarea>
+
+        <div class="comment-form__rating">
+          <span class="comment-form__rating-label">{{ sectionStrings.RATING_LABEL }}</span>
+
+          <div class="comment-form__stars">
+            @for (star of ratingOptions; track star) {
+              <button type="button" class="comment-form__star-btn" (click)="selectRating(star)">
+                <mat-icon
+                  class="comment-item__star"
+                  [class.comment-item__star--filled]="!!rating() && star <= rating()!"
+                >
+                  {{ !!rating() && star <= rating()! ? icons.STAR : icons.STAR_OUTLINE }}
+                </mat-icon>
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (postError()) {
+          <span class="form-error">{{ postError() }}</span>
+        }
+
+        <div class="comment-form__actions">
+          <app-action-button
+            [label]="isPosting() ? sectionStrings.POSTING_LABEL : sectionStrings.POST_LABEL"
+            [icon]="icons.SEND"
+            variant="primary"
+            [disabled]="isPosting()"
+            (clicked)="submitComment()"
+          >
+          </app-action-button>
+        </div>
+      </div>
+    }
+  } @else {
+    <div class="progress-list">
+      @for (entry of progressLog(); track entry.logId) {
+        <div class="progress-item">
+          <div class="progress-item__marker"></div>
+
+          <div class="progress-item__meta">
+            <span class="progress-item__status">{{ entry.status }}</span>
+            <span class="progress-item__date">{{ entry.changedDate | date: dateTimeFormat }}</span>
+          </div>
+
+          @if (entry.remarks) {
+            <p class="progress-item__remarks">{{ entry.remarks }}</p>
+          }
+        </div>
+      } @empty {
+        <app-empty-state [icon]="icons.TIME_SLOT" [message]="sectionStrings.NO_PROGRESS_MESSAGE">
+        </app-empty-state>
+      }
+    </div>
+  }
+</div>

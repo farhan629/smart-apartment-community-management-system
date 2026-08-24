@@ -1,0 +1,38 @@
+<div class="assigned-list">
+  <h2 class="assigned-list__title">{{ strings.ASSIGNED_LIST_TITLE }}</h2>
+
+  @if (assignments.length === 0) {
+    <p class="assigned-list__empty">{{ strings.ASSIGNED_LIST_EMPTY }}</p>
+  } @else {
+    <table class="assigned-list__table">
+      <thead>
+        <tr>
+          <th>{{ strings.COMPLAINT_COLUMN }}</th>
+          <th>{{ strings.STATUS_COLUMN }}</th>
+          <th>{{ strings.ASSIGNED_ON_COLUMN }}</th>
+          <th>{{ strings.DUE_DATE_COLUMN }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (assignment of assignments; track assignment.assignmentId) {
+          <tr>
+            <td class="assigned-list__id">#{{ assignment.complaintId.slice(0, 8) }}</td>
+            <td><app-status-badge [status]="assignment.status" /></td>
+            <td>{{ assignment.assignedDate | date: 'MMM d, y' }}</td>
+            <td>{{ assignment.dueDate | date: 'MMM d, y' }}</td>
+            <td>
+              <button
+                type="button"
+                class="assigned-list__view-btn"
+                (click)="viewComplaint(assignment.complaintId)"
+              >
+                {{ strings.VIEW_COMPLAINT }}
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

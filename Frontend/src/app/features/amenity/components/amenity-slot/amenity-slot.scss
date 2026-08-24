@@ -1,0 +1,631 @@
+@use 'sass:color';
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/mixins' as *;
+
+.slot-manager {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+  width: 100%;
+  position: relative;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 0.0625rem solid $color-border;
+    padding-bottom: $spacing-md;
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 0.85rem;
+    color: $color-text-secondary;
+    margin: 0.125rem 0 0 0;
+  }
+
+  &__close-btn {
+    &.mat-mdc-icon-button {
+      color: $color-text-secondary !important;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: $color-background !important;
+        color: $color-text-primary !important;
+      }
+    }
+  }
+
+  &__tabs {
+    display: flex;
+    gap: $spacing-md;
+    border-bottom: 0.0625rem solid $color-border;
+    padding-bottom: $spacing-sm;
+  }
+
+  &__tab {
+    background: none;
+    border: none;
+    font-family: $font-family-base;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: $color-text-secondary;
+    padding: 0.5rem $spacing-sm;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: $color-primary;
+    }
+
+    &--active {
+      color: $color-primary;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -0.5625rem;
+        left: 0;
+        width: 100%;
+        height: 0.125rem;
+        background-color: $color-primary;
+        border-radius: $radius-pill;
+      }
+    }
+  }
+
+  &__loader-bar {
+    position: absolute;
+    top: 3.75rem;
+    left: 0;
+    right: 0;
+    height: 0.1875rem;
+    background-color: rgba($color-primary, 0.1);
+    overflow: hidden;
+  }
+
+  &__loader-progress {
+    width: 30%;
+    height: 100%;
+    background-color: $color-primary;
+    animation: loading-slide 1s infinite linear;
+  }
+
+  &__content {
+    min-height: 25rem;
+  }
+}
+
+.tab-create {
+  &__layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $spacing-xl;
+
+    @media (max-width: 48rem) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+    background-color: $color-surface;
+    padding: $spacing-md;
+    border-radius: $radius-md;
+    border: 0.0625rem solid $color-border;
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      width: 100%;
+    }
+
+    .form-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: $color-text-primary;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 0.0625rem solid $color-border;
+      border-radius: $radius-sm;
+      font-family: $font-family-base;
+      font-size: 0.85rem;
+      color: $color-text-primary;
+      background-color: $color-background;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+      &:focus {
+        border-color: $color-primary;
+        box-shadow: 0 0 0 0.1875rem rgba($color-primary, 0.1);
+      }
+    }
+
+    .form-field-date {
+      width: 100%;
+      
+      &.mat-mdc-form-field {
+        --mdc-outlined-text-field-container-shape: #{$radius-sm} !important;
+        --mdc-outlined-text-field-outline-color: #{$color-border} !important;
+        --mdc-outlined-text-field-focus-outline-color: #{$color-primary} !important;
+        --mdc-outlined-text-field-outline-width: 0.0625rem !important;
+        --mdc-outlined-text-field-focus-outline-width: 0.0625rem !important;
+        font-size: 0.85rem !important;
+
+        .mat-mdc-text-field-wrapper {
+          background-color: $color-background !important;
+          height: 2.375rem !important;
+          padding: 0 0.5rem !important;
+          display: flex !important;
+          align-items: center !important;
+        }
+
+        .mat-mdc-form-field-flex {
+          align-items: center !important;
+          height: 100% !important;
+        }
+
+        .mat-mdc-form-field-infix {
+          padding: 0 !important;
+          min-height: auto !important;
+          display: flex !important;
+          align-items: center !important;
+        }
+
+        input {
+          font-family: $font-family-base !important;
+          color: $color-text-primary !important;
+          height: 100% !important;
+          padding: 0 !important;
+        }
+
+        .mat-mdc-form-field-subscript-wrapper {
+          display: none !important;
+        }
+
+        .mat-datepicker-toggle {
+          margin-top: 0 !important;
+          
+          .mat-mdc-icon-button {
+            width: 2rem !important;
+            height: 2rem !important;
+            padding: 0 !important;
+            color: $color-text-secondary !important;
+          }
+        }
+      }
+    }
+  }
+
+  &__section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: $color-text-primary;
+    margin: 0 0 $spacing-sm 0;
+  }
+
+  &__queue {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+    border: 0.0625rem solid $color-border;
+    border-radius: $radius-md;
+    padding: $spacing-lg;
+    background-color: $color-surface;
+  }
+}
+
+.queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  max-height: 18.75rem;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.queue-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-sm $spacing-md;
+  background-color: $color-background;
+  border: 0.0625rem solid $color-border;
+  border-radius: $radius-sm;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: $color-primary;
+    box-shadow: $shadow-sm;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: $color-text-primary;
+  }
+
+  &__meta {
+    font-size: 0.75rem;
+    color: $color-text-secondary;
+  }
+
+  &__remove-btn {
+    &.mat-mdc-icon-button {
+      color: $color-text-secondary !important;
+      
+      &:hover {
+        color: $color-danger !important;
+      }
+    }
+  }
+}
+
+.queue-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xxl 0;
+  text-align: center;
+  color: $color-text-muted;
+
+  &__icon {
+    font-size: 2.5rem;
+    margin-bottom: $spacing-sm;
+    color: rgba($color-text-muted, 0.4);
+  }
+
+  &__text {
+    font-size: 0.875rem;
+    margin: 0;
+    max-width: 18.75rem;
+    line-height: 1.4;
+  }
+}
+
+.queue-actions {
+  margin-top: auto;
+  border-top: 0.0625rem solid $color-border;
+  padding-top: $spacing-md;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.action-btn-custom {
+  &.mat-mdc-button-base {
+    font-family: $font-family-base !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    padding: 0.625rem 1.25rem !important;
+    border-radius: $radius-sm !important;
+    height: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.25rem !important;
+    transition: all 0.25s ease !important;
+  }
+
+  &--add {
+    &.mat-mdc-outlined-button, &.mat-mdc-stroked-button {
+      border: 0.0625rem solid $color-primary !important;
+      color: $color-primary !important;
+
+      &:hover:not(:disabled) {
+        background-color: rgba($color-primary, 0.05) !important;
+      }
+    }
+  }
+
+  &--submit {
+    &.mat-mdc-unelevated-button, &.mat-mdc-flat-button {
+      background-color: $color-primary !important;
+      color: $color-white !important;
+
+      &:hover:not(:disabled) {
+        background-color: $color-primary-dark !important;
+        box-shadow: 0 0.25rem 0.75rem rgba($color-primary, 0.25) !important;
+      }
+    }
+  }
+}
+
+.tab-manage {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.table-container {
+  border: 0.0625rem solid $color-border;
+  border-radius: $radius-md;
+  overflow: hidden;
+  background-color: $color-surface;
+}
+
+.slot-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+
+  th {
+    background-color: $color-background;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $color-text-secondary;
+    padding: $spacing-md;
+    border-bottom: 0.0625rem solid $color-border;
+  }
+
+  td {
+    padding: $spacing-md;
+    font-size: 0.875rem;
+    color: $color-text-primary;
+    border-bottom: 0.0625rem solid $color-border;
+    vertical-align: middle;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  &__row--editing {
+    background-color: rgba($color-primary, 0.02);
+  }
+
+  &__label-badge {
+    background-color: $color-primary-light;
+    color: $color-primary;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: $radius-sm;
+  }
+
+  &__actions-cell {
+    width: 7.5rem;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.25rem;
+    justify-content: flex-end;
+  }
+
+  &__btn-edit, &__btn-save {
+    &.mat-mdc-icon-button {
+      color: $color-text-secondary !important;
+      &:hover {
+        color: $color-primary !important;
+      }
+    }
+  }
+
+  &__btn-delete, &__btn-cancel {
+    &.mat-mdc-icon-button {
+      color: $color-text-secondary !important;
+      &:hover {
+        color: $color-danger !important;
+      }
+    }
+  }
+}
+
+.inline-input {
+  height: 2.25rem;
+  padding: 0 0.5rem;
+  border-radius: $radius-sm;
+  border: 0.0625rem solid $color-border;
+  font-family: $font-family-base;
+  font-size: 0.85rem;
+  width: 100%;
+  outline: none;
+  background-color: $color-background;
+
+  &:focus {
+    border-color: $color-primary;
+  }
+
+  &--num {
+    max-width: 5rem;
+  }
+
+  &--time {
+    width: 6.5rem;
+    padding: 0 0.25rem;
+  }
+}
+
+.inline-time-fields {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.inline-time-separator {
+  color: $color-text-secondary;
+}
+
+.slot-pagination {
+  @include flex-center;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  border-top: 0.0625rem solid $color-border;
+  background-color: $color-background;
+
+  &__btn {
+    &.mat-mdc-icon-button {
+      color: $color-text-secondary !important;
+      
+      &:hover:not(:disabled) {
+        color: $color-primary !important;
+      }
+    }
+  }
+
+  &__info {
+    font-size: 0.85rem;
+    font-weight: 550;
+    color: $color-text-secondary;
+  }
+}
+
+.slots-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xxl;
+  text-align: center;
+  color: $color-text-muted;
+
+  &__icon {
+    font-size: 3rem;
+    margin-bottom: $spacing-sm;
+    color: rgba($color-text-muted, 0.4);
+  }
+
+  &__text {
+    font-size: 0.95rem;
+    margin: 0;
+  }
+}
+
+@keyframes loading-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(330%); }
+}
+
+// Custom Datepicker & Calendar Overrides (using only rem, matching the theme)
+::ng-deep {
+  .mat-datepicker-popup {
+    border-radius: 0.75rem !important;
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .mat-datepicker-content {
+    background-color: $color-surface !important;
+    color: $color-text-primary !important;
+    border-radius: 0.75rem !important;
+    border: 0.0625rem solid $color-border !important;
+    padding: 0.5rem !important;
+
+    .mat-calendar {
+      font-family: $font-family-base !important;
+      width: 18.5rem !important;
+      height: auto !important;
+    }
+
+    .mat-calendar-header {
+      padding: 0.5rem 0.5rem 0 0.5rem !important;
+      margin-bottom: 0.5rem !important;
+    }
+
+    .mat-calendar-controls {
+      margin: 0 !important;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mat-calendar-arrow {
+      fill: $color-text-primary !important;
+    }
+
+    .mat-calendar-previous-button,
+    .mat-calendar-next-button {
+      color: $color-text-secondary !important;
+      
+      &:hover {
+        background-color: $color-background !important;
+        color: $color-primary !important;
+      }
+    }
+
+    .mat-calendar-table-header {
+      color: $color-text-secondary !important;
+      font-weight: 600 !important;
+      font-size: 0.75rem !important;
+      
+      th {
+        padding: 0.25rem 0 !important;
+      }
+    }
+
+    .mat-calendar-body-label {
+      font-size: 0.85rem !important;
+      font-weight: 700 !important;
+      color: $color-text-primary !important;
+      padding: 0.5rem !important;
+    }
+
+    .mat-calendar-body-cell-content {
+      border-radius: 0.375rem !important;
+      font-size: 0.85rem !important;
+      color: $color-text-primary !important;
+      border: none !important;
+      
+      &:hover {
+        background-color: $color-primary-light !important;
+        color: $color-primary !important;
+      }
+    }
+
+    .mat-calendar-body-today {
+      border: 0.0625rem solid $color-primary !important;
+      background-color: transparent !important;
+      color: $color-primary !important;
+    }
+
+    .mat-calendar-body-selected {
+      background-color: $color-primary !important;
+      color: $color-white !important;
+      font-weight: 600 !important;
+      box-shadow: 0 0.125rem 0.375rem rgba($color-primary, 0.25) !important;
+
+      &:hover {
+        background-color: $color-primary-dark !important;
+        color: $color-white !important;
+      }
+    }
+
+    // Actions panel at the bottom of the datepicker
+    .mat-datepicker-actions {
+      border-top: 0.0625rem solid $color-border !important;
+      padding: 0.5rem !important;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem !important;
+
+      .mat-mdc-button-base {
+        font-family: $font-family-base !important;
+        font-size: 0.8rem !important;
+        font-weight: 600 !important;
+        border-radius: 0.375rem !important;
+      }
+    }
+  }
+}
+

@@ -1,0 +1,234 @@
+<div class="settings-page">
+  <h1 class="settings-page__title">{{ strings.SETTINGS_TITLE }}</h1>
+
+  <div class="settings-page__container">
+    <div class="settings-page__tabs">
+      <button
+        class="settings-page__tab"
+        [class.active]="activeTab() === 'profile'"
+        (click)="activeTab.set('profile')"
+      >
+        <mat-icon>person</mat-icon>
+        {{ strings.TAB_PROFILE }}
+      </button>
+      <button
+        class="settings-page__tab"
+        [class.active]="activeTab() === 'appearance'"
+        (click)="activeTab.set('appearance')"
+      >
+        <mat-icon>palette</mat-icon>
+        {{ strings.TAB_APPEARANCE }}
+      </button>
+      <button
+        class="settings-page__tab"
+        [class.active]="activeTab() === 'security'"
+        (click)="activeTab.set('security')"
+      >
+        <mat-icon>lock</mat-icon>
+        {{ strings.TAB_SECURITY }}
+      </button>
+    </div>
+
+    <div class="settings-page__content">
+      @if (activeTab() === 'profile') {
+        @if (isProfileLoading) {
+          <div class="settings-page__loading">{{ strings.LOADING }}</div>
+        } @else {
+          <div class="settings-page__section">
+            <div class="profile-section">
+              <div class="profile-section__photo">
+                <div class="profile-section__avatar">
+                  @if (photoUrl) {
+                    <img
+                      [src]="photoUrl"
+                      alt="Profile"
+                      class="profile-section__img"
+                      (error)="handleImageError()"
+                    />
+                  } @else {
+                    <mat-icon class="profile-section__placeholder">account_circle</mat-icon>
+                  }
+                </div>
+                <label class="profile-section__upload">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    (change)="onPhotoSelected($event)"
+                    hidden
+                  />
+                  <span class="profile-section__upload-btn">
+                    @if (isUploadingPhoto) {
+                      {{ strings.UPLOADING }}
+                    } @else {
+                      {{ strings.CHANGE_PHOTO }}
+                    }
+                  </span>
+                </label>
+              </div>
+
+              <form [formGroup]="profileForm" class="profile-section__form">
+                <div class="profile-section__field">
+                  <label for="userName">{{ strings.USERNAME_LABEL }}</label>
+                  <input
+                    id="userName"
+                    type="text"
+                    formControlName="userName"
+                    class="settings-page__input"
+                  />
+                  @if (profileForm.get('userName')?.invalid && profileForm.get('userName')?.touched) {
+                    <span class="settings-page__error">{{ strings.USERNAME_VALIDATION }}</span>
+                  }
+                </div>
+
+                <div class="profile-section__field">
+                  <label for="email">{{ strings.EMAIL_LABEL }}</label>
+                  <input
+                    id="email"
+                    type="email"
+                    [value]="userEmail"
+                    class="settings-page__input settings-page__input--readonly"
+                    readonly
+                  />
+                </div>
+
+                <div class="profile-section__field">
+                  <label for="phone">{{ strings.PHONE_LABEL }}</label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    formControlName="phone"
+                    class="settings-page__input"
+                  />
+                  @if (profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched) {
+                    @if (profileForm.get('phone')?.errors?.['required']) {
+                      <span class="settings-page__error">{{ strings.PHONE_REQUIRED }}</span>
+                    } @else {
+                      <span class="settings-page__error">{{ strings.PHONE_VALIDATION }}</span>
+                    }
+                  }
+                </div>
+
+                @if (profileForm.dirty) {
+                  <button
+                    type="button"
+                    class="settings-page__btn settings-page__btn--primary"
+                    (click)="onUpdateProfile()"
+                    [disabled]="isSubmittingProfile"
+                  >
+                    {{ isSubmittingProfile ? strings.SAVING : strings.UPDATE }}
+                  </button>
+                }
+              </form>
+            </div>
+          </div>
+        }
+      } @else if (activeTab() === 'appearance') {
+        <div class="settings-page__section">
+          <h2 class="settings-page__section-title">{{ strings.APPEARANCE_THEME_TITLE }}</h2>
+          <div class="appearance-row">
+            @for (mode of themeModes; track mode.key) {
+              <button
+                class="appearance-btn"
+                [class.selected]="preference().mode === mode.key"
+                (click)="onSelectMode(mode.key)"
+              >
+                <mat-icon>{{ mode.icon }}</mat-icon>
+                {{ mode.label }}
+              </button>
+            }
+          </div>
+
+          <h2 class="settings-page__section-title">{{ strings.APPEARANCE_COLOR_TITLE }}</h2>
+          <div class="appearance-row">
+            @for (color of colorPalette; track color.key) {
+              <button
+                class="color-swatch"
+                [class.selected]="preference().color === color.key"
+                [style.background]="color.value"
+                (click)="onSelectColor(color.key)"
+                [title]="color.label"
+              ></button>
+            }
+          </div>
+
+          <h2 class="settings-page__section-title">{{ strings.APPEARANCE_FONT_TITLE }}</h2>
+          <div class="appearance-row">
+            @for (font of fontFamilies; track font.key) {
+              <button
+                class="appearance-btn"
+                [class.selected]="preference().font === font.key"
+                [style.font-family]="font.value"
+                (click)="onSelectFont(font.key)"
+              >
+                {{ font.label }}
+              </button>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="settings-page__section">
+          <form [formGroup]="securityForm" class="security-section">
+            <div class="security-section__field">
+              <label for="currentPassword">{{ strings.CURRENT_PASSWORD_LABEL }}</label>
+              <input
+                id="currentPassword"
+                type="password"
+                formControlName="currentPassword"
+                class="settings-page__input"
+              />
+              @if (securityForm.get('currentPassword')?.invalid && securityForm.get('currentPassword')?.touched) {
+                <span class="settings-page__error">{{ strings.CURRENT_PASSWORD_REQUIRED }}</span>
+              }
+            </div>
+
+            <div class="security-section__field">
+              <label for="newPassword">{{ strings.NEW_PASSWORD_LABEL }}</label>
+              <input
+                id="newPassword"
+                type="password"
+                formControlName="newPassword"
+                class="settings-page__input"
+              />
+              @if (securityForm.get('newPassword')?.invalid && securityForm.get('newPassword')?.touched) {
+                @if (securityForm.get('newPassword')?.errors?.['required']) {
+                  <span class="settings-page__error">{{ strings.PASSWORD_REQUIRED }}</span>
+                } @else {
+                  <span class="settings-page__error">{{ strings.PASSWORD_VALIDATION }}</span>
+                }
+              }
+            </div>
+
+            <div class="security-section__field">
+              <label for="confirmPassword">{{ strings.CONFIRM_PASSWORD }}</label>
+              <input
+                id="confirmPassword"
+                type="password"
+                formControlName="confirmPassword"
+                class="settings-page__input"
+              />
+              @if (securityForm.get('confirmPassword')?.invalid && securityForm.get('confirmPassword')?.touched) {
+                <span class="settings-page__error">{{ strings.CONFIRM_PASSWORD_REQUIRED }}</span>
+              }
+            </div>
+
+            @if (securityForm.errors?.['passwordsMismatch'] && securityForm.touched) {
+              <span class="settings-page__error">{{ strings.PASSWORDS_MISMATCH }}</span>
+            }
+            @if (securityForm.errors?.['newPasswordSameAsCurrent'] && securityForm.touched) {
+              <span class="settings-page__error">{{ strings.PASSWORD_MUST_DIFFER }}</span>
+            }
+
+            <button
+              type="button"
+              class="settings-page__btn settings-page__btn--primary"
+              (click)="onChangePassword()"
+              [disabled]="isChangingPassword"
+            >
+              {{ isChangingPassword ? strings.SAVING : strings.SUBMIT }}
+            </button>
+          </form>
+        </div>
+      }
+    </div>
+  </div>
+</div>

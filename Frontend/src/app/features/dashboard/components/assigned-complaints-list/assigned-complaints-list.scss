@@ -1,0 +1,63 @@
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/mixins' as *;
+
+.assigned-list {
+  @include card;
+
+  &__title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: $color-text-primary;
+    margin: 0 0 $spacing-md 0;
+  }
+
+  &__empty {
+    font-size: 0.875rem;
+    color: $color-text-secondary;
+    margin: 0;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th {
+      text-align: left;
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: $color-text-secondary;
+      padding: $spacing-sm $spacing-sm;
+      border-bottom: 1px solid $color-border;
+    }
+
+    td {
+      padding: $spacing-sm;
+      font-size: 0.875rem;
+      color: $color-text-primary;
+      border-bottom: 1px solid $color-border;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  &__id {
+    font-weight: 600;
+  }
+
+  &__view-btn {
+    background: none;
+    border: 1px solid $color-primary;
+    color: $color-primary;
+    border-radius: $radius-sm;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    cursor: pointer;
+
+    &:hover {
+      background: $color-primary-light;
+    }
+  }
+}

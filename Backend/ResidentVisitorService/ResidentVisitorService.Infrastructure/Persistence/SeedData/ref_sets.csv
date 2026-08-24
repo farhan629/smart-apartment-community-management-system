@@ -1,0 +1,4 @@
+Id,Code,Description
+f1a00001-0000-0000-0000-000000000001,VISITOR_TYPE,Visitor type lookup values
+f1a00001-0000-0000-0000-000000000002,PURPOSE_TYPE,Purpose of visit lookup values
+f1a00001-0000-0000-0000-000000000003,VISIT_STATUS,Visit lifecycle status values

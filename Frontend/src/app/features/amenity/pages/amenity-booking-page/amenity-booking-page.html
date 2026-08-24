@@ -1,0 +1,60 @@
+<div class="booking-page">
+
+  <div class="booking-header">
+    <h1 class="booking-header__title">{{ amenityName() }}{{ pageStrings.BOOKING_TITLE_SUFFIX }}</h1>
+    <p class="booking-header__subtitle">
+      {{ pageStrings.HEADER_SUBTITLE }}
+    </p>
+  </div>
+
+  <div class="booking-layout">
+    <div class="booking-layout__left">
+      <app-amenity-calender 
+        [selectedDate]="selectedDate" 
+        (dateSelected)="onDateSelected($event)">
+      </app-amenity-calender>
+
+      <div class="policy-card">
+        <div class="policy-card__icon-wrapper">
+          <span class="material-icons">info</span>
+        </div>
+        <div class="policy-card__content">
+          <h4 class="policy-card__title">{{ pageStrings.POLICY_TITLE }}</h4>
+          <p class="policy-card__text">
+            {{ pageStrings.POLICY_TEXT }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="booking-layout__right">
+      <app-amenity-booking
+        [morningSlots]="morningSlots"
+        [afternoonSlots]="afternoonSlots"
+        [eveningSlots]="eveningSlots"
+        [selectedSlot]="selectedSlot"
+        [selectedDate]="selectedDate"
+        [loadingSlots]="loadingSlots()"
+        (slotSelected)="onSlotSelected($event)">
+      </app-amenity-booking>
+    </div>
+  </div>
+
+  <app-amenity-downbar 
+    [selectedDate]="selectedDate" 
+    [selectedSlotLabel]="selectedSlot?.slotLabel ?? null" 
+    [isValid]="selectedSlot !== null"
+    (confirm)="confirmBooking()"
+    (cancel)="cancelSelection()">
+  </app-amenity-downbar>
+
+  @if (showConfirmDialog()) {
+    <app-amenity-action-dialog
+      mode="confirm"
+      [bookingDetails]="bookingDetailsForDialog"
+      [isSubmitting]="isSubmittingConfirm()"
+      (confirm)="executeBookingConfirm()"
+      (close)="showConfirmDialog.set(false)">
+    </app-amenity-action-dialog>
+  }
+</div>

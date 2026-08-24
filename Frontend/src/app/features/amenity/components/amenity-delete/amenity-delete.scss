@@ -1,0 +1,122 @@
+@use 'sass:color';
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/mixins' as *;
+
+.delete-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.delete-dialog-header {
+  border-bottom: 0.0625rem solid $color-border;
+  padding-bottom: $spacing-md;
+}
+
+.delete-dialog-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: $color-text-primary;
+  margin: 0;
+}
+
+.delete-dialog-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: $spacing-md;
+  padding: $spacing-sm 0;
+}
+
+.warning-icon-container {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background-color: rgba($color-danger, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.warning-icon {
+  font-size: 2rem;
+  color: $color-danger;
+}
+
+.delete-message {
+  font-size: 0.95rem;
+  color: $color-text-primary;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.amenity-info-box {
+  background-color: $color-background;
+  border: 0.0625rem solid $color-border;
+  border-radius: $radius-sm;
+  padding: $spacing-sm $spacing-md;
+  display: flex;
+  gap: $spacing-xs;
+  font-size: 0.9rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.amenity-info-label {
+  font-weight: 600;
+  color: $color-text-secondary;
+}
+
+.amenity-info-value {
+  font-weight: 700;
+  color: $color-text-primary;
+}
+
+.delete-dialog-actions {
+  display: flex;
+  gap: $spacing-md;
+  justify-content: flex-end;
+  border-top: 0.0625rem solid $color-border;
+  padding-top: $spacing-lg;
+}
+
+.delete-btn {
+  &.mat-mdc-button-base, &.mat-button-base, &.mat-mdc-button, &.mat-mdc-unelevated-button, &.mat-mdc-outlined-button, &.mat-mdc-stroked-button {
+    font-family: $font-family-base !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    padding: 0.625rem 1.5rem !important;
+    border-radius: $radius-md !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    height: auto !important;
+  }
+
+  &--cancel {
+    border: 0.0625rem solid $color-border !important;
+    background-color: $color-surface !important;
+    color: $color-text-primary !important;
+
+    &:hover:not(:disabled) {
+      border-color: $color-primary !important;
+      color: $color-primary !important;
+      background-color: rgba($color-primary, 0.04) !important;
+    }
+  }
+
+  &--confirm {
+    background-color: $color-danger !important;
+    color: $color-white !important;
+
+    &:hover:not(:disabled) {
+      background-color: color.scale($color-danger, $lightness: -10%) !important;
+      box-shadow: 0 0.25rem 0.75rem rgba($color-danger, 0.25) !important;
+      transform: translateY(-0.0625rem);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

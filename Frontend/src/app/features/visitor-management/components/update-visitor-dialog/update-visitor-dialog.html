@@ -1,0 +1,79 @@
+<app-popup-dialog [title]="vm.UPDATE_VISITOR_TITLE" width="32rem" (closed)="onCancel()">
+  <div class="update-visitor-dialog__body">
+    <form [formGroup]="form" class="update-visitor-form">
+      <mat-form-field appearance="outline" class="update-visitor-form__field">
+        <mat-label>{{ strings.VISITOR_NAME_LABEL }}</mat-label>
+        <mat-icon matPrefix>{{ icons.PERSON }}</mat-icon>
+        <input matInput formControlName="name" />
+        @if (form.controls.name.invalid && form.controls.name.touched) {
+          <mat-error>{{ vm.NAME_REQUIRED }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="update-visitor-form__field">
+        <mat-label>{{ strings.VISITOR_PHONE_LABEL }}</mat-label>
+        <mat-icon matPrefix>{{ icons.PHONE }}</mat-icon>
+        <input matInput formControlName="phoneNumber" />
+        @if (form.controls.phoneNumber.invalid && form.controls.phoneNumber.touched) {
+          <mat-error>{{ vm.PHONE_REQUIRED }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="update-visitor-form__field">
+        <mat-label>{{ strings.VISITOR_EMAIL_LABEL }}</mat-label>
+        <mat-icon matPrefix>{{ icons.EMAIL }}</mat-icon>
+        <input matInput formControlName="email" />
+        @if (form.controls.email.invalid && form.controls.email.touched) {
+          <mat-error>{{ vm.EMAIL_INVALID }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="update-visitor-form__field">
+        <mat-label>{{ strings.VISITOR_TYPE_LABEL }}</mat-label>
+        <mat-icon matPrefix>{{ icons.BADGE }}</mat-icon>
+        <mat-select formControlName="visitorTypeId">
+          @for (type of visitorTypes(); track type.id) {
+            <mat-option [value]="type.id">{{ type.name }}</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.visitorTypeId.invalid && form.controls.visitorTypeId.touched) {
+          <mat-error>{{ vm.VISITOR_TYPE_REQUIRED }}</mat-error>
+        }
+      </mat-form-field>
+    </form>
+
+    @if (isLoading()) {
+      <div class="update-visitor-dialog__overlay">
+        <mat-spinner diameter="32"></mat-spinner>
+        <p>{{ vm.LOADING_VISITOR }}</p>
+      </div>
+    }
+
+    @if (errorMessage() && !isLoading()) {
+      <p class="update-visitor-form__error">
+        <mat-icon>{{ icons.ERROR }}</mat-icon>
+        {{ errorMessage() }}
+        @if (!form.enabled) {
+          <button type="button" class="update-visitor-form__retry" (click)="onRetry()">
+            {{ vm.RETRY }}
+          </button>
+        }
+      </p>
+    }
+  </div>
+
+  <div dialogFooter>
+    <app-action-button
+      [label]="strings.CANCEL"
+      variant="secondary"
+      [disabled]="isSaving()"
+      (clicked)="onCancel()"
+    ></app-action-button>
+    <app-action-button
+      [label]="isSaving() ? strings.SAVING : strings.SAVE"
+      variant="primary"
+      [disabled]="isSaving() || isLoading() || form.disabled"
+      (clicked)="onSave()"
+    ></app-action-button>
+  </div>
+</app-popup-dialog>

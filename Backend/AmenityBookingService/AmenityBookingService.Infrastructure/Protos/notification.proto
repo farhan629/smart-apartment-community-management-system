@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+option csharp_namespace = "NotificationService.API.Grpc";
+
+package notification;
+
+service NotificationGrpc {
+  rpc PushNotification (PushNotificationRequest) returns (PushNotificationResponse);
+  rpc GetTemplateIdByType (GetTemplateIdRequest) returns (GetTemplateIdResponse);
+  rpc CancelScheduledNotifications (CancelScheduledNotificationsRequest) returns (CancelScheduledNotificationsResponse);
+}
+
+message PushNotificationRequest {
+  string userId = 1;
+  string templateId = 2;
+  string title = 3;
+  string message = 4;
+  string notificationType = 5;
+  string visitId = 6;
+  string complaintId = 7;
+  string amenityBookingId = 8;
+  string recipientEmail = 9;   
+  string recipientName = 10;
+  string scheduledFor = 11;
+}
+
+message PushNotificationResponse {
+  bool success = 1;
+  string notificationId = 2;
+}
+
+message GetTemplateIdRequest {
+  string notificationType = 1;
+}
+
+message GetTemplateIdResponse {
+  bool found = 1;
+  string templateId = 2;
+}
+
+message CancelScheduledNotificationsRequest {
+  string amenityBookingId = 1;
+}
+
+message CancelScheduledNotificationsResponse {
+  bool success = 1;
+  int32 cancelledCount = 2;
+}

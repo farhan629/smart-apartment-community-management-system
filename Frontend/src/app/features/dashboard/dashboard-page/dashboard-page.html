@@ -1,0 +1,281 @@
+@if (isStaffRole) {
+  <div class="dashboard">
+    <div class="dashboard__banner">
+      <h1 class="dashboard__banner-title">{{ staffStrings.WELCOME_BACK }}, {{ userName }}</h1>
+      <p class="dashboard__banner-subtitle">{{ staffStrings.SUBTITLE }}</p>
+    </div>
+
+    @if (staffLoading()) {
+      <p class="dashboard__status">{{ staffStrings.LOADING }}</p>
+    } @else if (staffError()) {
+      <p class="dashboard__status dashboard__status--error">{{ staffStrings.ERROR_MESSAGE }}</p>
+    } @else {
+      <app-staff-stat-cards [cards]="staffStatCards()" />
+      <app-assigned-complaints-list [assignments]="staffAssignmentsPreview()" />
+      <app-recent-activity [comments]="staffComments()" />
+    }
+  </div>
+} @else {
+  <div class="dashboard">
+    <div class="dashboard__banner">
+      <h1 class="dashboard__banner-title">{{ strings.WELCOME_BACK }}, {{ userName }}</h1>
+      <p class="dashboard__banner-subtitle">{{ strings.DASHBOARD_SUBTITLE }}</p>
+    </div>
+
+    @if (overviewLoading()) {
+      <p class="dashboard__status">{{ overviewStrings.LOADING }}</p>
+    } @else if (overviewError()) {
+      <p class="dashboard__status dashboard__status--error">{{ overviewStrings.ERROR_MESSAGE }}</p>
+    } @else {
+      <div class="dashboard__stats">
+        @for (card of statCards(); track card.label) {
+          <div class="stat-card">
+            <div class="stat-card__icon" [ngClass]="'stat-card__icon--' + card.accent">
+              <mat-icon>{{ card.icon }}</mat-icon>
+            </div>
+            <div class="stat-card__info">
+              <span class="stat-card__label">{{ card.label }}</span>
+              <span class="stat-card__value">{{ card.value }}</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="dashboard__charts">
+        @if (isAdminRole) {
+          <!-- Admin: Show booking report and summary from set-2 + visitor trends from set-1 -->
+          <div class="chart-card chart-card--bar">
+            <div class="chart-card__header">
+              <h3 class="chart-card__title">{{ strings.VISITOR_TRENDS_TITLE }}</h3>
+            </div>
+            <div class="bar-chart">
+              @for (point of visitorTrend(); track point.day) {
+                <div
+                  class="bar-chart__col"
+                  (mouseenter)="hoveredTrendPoint.set(point)"
+                  (mouseleave)="hoveredTrendPoint.set(null)"
+                  (click)="hoveredTrendPoint.set(point)"
+                >
+                  <div
+                    class="bar-chart__tooltip-wrapper"
+                    [style.bottom.%]="(point.value / maxTrendValue()) * 100"
+                  >
+                    @if (hoveredTrendPoint() === point) {
+                      <span class="bar-chart__tooltip">{{ point.value }}</span>
+                    }
+                  </div>
+                  <div
+                    class="bar-chart__bar"
+                    [class.bar-chart__bar--hovered]="hoveredTrendPoint() === point"
+                    [style.height.%]="(point.value / maxTrendValue()) * 100"
+                  ></div>
+                  <span class="bar-chart__label">{{ point.day }}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Admin Booking Components from set-2 -->
+          <div class="chart-card">
+            <app-booking-report
+              [bookings]="adminBookings"
+              [loading]="bookingLoading()"
+              [error]="bookingError()"
+            />
+          </div>
+          @if (adminSummary) {
+            <div class="chart-card">
+              <app-booking-summary [summary]="adminSummary" />
+            </div>
+          }
+
+          <!-- Donut chart from set-1 (admin view) -->
+          <div class="chart-card chart-card--donut">
+            <div class="chart-card__header">
+              <h3 class="chart-card__title">{{ strings.RESOLUTION_PERFORMANCE }}</h3>
+            </div>
+
+            <div class="donut">
+              <svg viewBox="0 0 120 120" class="donut__svg">
+                <circle class="donut__track" cx="60" cy="60" r="50" />
+
+                <circle
+                  class="donut__progress donut__progress--resolved"
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  [attr.stroke-dasharray]="getDonutDashArray(314)"
+                  transform="rotate(-90 60 60)"
+                  (mouseenter)="hoveredDonutSegment.set('resolved')"
+                  (mouseleave)="hoveredDonutSegment.set(null)"
+                  (click)="hoveredDonutSegment.set('resolved')"
+                />
+
+                <circle
+                  class="donut__progress donut__progress--pending"
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  [attr.stroke-dasharray]="getPendingDashArray(314)"
+                  [attr.stroke-dashoffset]="getPendingDashOffset(314)"
+                  transform="rotate(-90 60 60)"
+                  (mouseenter)="hoveredDonutSegment.set('pending')"
+                  (mouseleave)="hoveredDonutSegment.set(null)"
+                  (click)="hoveredDonutSegment.set('pending')"
+                />
+              </svg>
+
+              <div class="donut__center">
+                @if (hoveredDonutSegment() === 'resolved') {
+                  <span class="donut__percent">{{ resolvedCount() }}</span>
+                  <span class="donut__caption">{{ strings.RESOLVED_LABEL }}</span>
+                } @else if (hoveredDonutSegment() === 'pending') {
+                  <span class="donut__percent">{{ pendingCount() }}</span>
+                  <span class="donut__caption">{{ strings.PENDING_LABEL }}</span>
+                } @else {
+                  <span class="donut__percent">{{ resolvedPercent() }}%</span>
+                  <span class="donut__caption">{{ strings.RESOLVED_LABEL }}</span>
+                }
+              </div>
+            </div>
+
+            <div class="donut-legend">
+              <div
+                class="donut-legend__row"
+                (mouseenter)="hoveredDonutSegment.set('resolved')"
+                (mouseleave)="hoveredDonutSegment.set(null)"
+              >
+                <span class="donut-legend__dot donut-legend__dot--resolved"></span>
+                <span class="donut-legend__label">{{ strings.RESOLVED_LABEL }}</span>
+                <span class="donut-legend__value">{{ resolvedCount() }}</span>
+              </div>
+              <div
+                class="donut-legend__row"
+                (mouseenter)="hoveredDonutSegment.set('pending')"
+                (mouseleave)="hoveredDonutSegment.set(null)"
+              >
+                <span class="donut-legend__dot donut-legend__dot--pending"></span>
+                <span class="donut-legend__label">{{ strings.PENDING_LABEL }}</span>
+                <span class="donut-legend__value">{{ pendingCount() }}</span>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <!-- Non-admin: Show timeline and donut chart from set-1 -->
+          <div class="chart-card chart-card--timeline">
+            <div class="chart-card__header">
+              <h3 class="chart-card__title">{{ strings.MY_COMPLAINTS_TITLE }}</h3>
+              <a class="chart-card__view-all" [routerLink]="[routes.COMPLAINTS]">{{
+                strings.VIEW_ALL
+              }}</a>
+            </div>
+
+            @if (residentComplaintsTimeline().length === 0) {
+              <p class="complaints-timeline__empty">{{ strings.NO_COMPLAINTS }}</p>
+            } @else {
+              <div class="complaints-timeline">
+                @for (
+                  item of residentComplaintsTimeline();
+                  track item.complaintId
+                ) {
+                  <div class="complaints-timeline__row">
+                    <span
+                      class="complaints-timeline__dot"
+                      [ngClass]="'complaints-timeline__dot--' + statusColorKey(item.status)"
+                    ></span>
+                    <div class="complaints-timeline__content">
+                      <div class="complaints-timeline__top">
+                        <span class="complaints-timeline__title">{{ item.title }}</span>
+                        <app-status-badge [status]="item.status"></app-status-badge>
+                      </div>
+                      <span class="complaints-timeline__meta">
+                        {{ item.category }} &middot; {{ item.updatedLabel }}
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="chart-card chart-card--donut chart-card--donut-compact">
+            <div class="chart-card__header">
+              <h3 class="chart-card__title">{{ strings.RESOLUTION_PERFORMANCE }}</h3>
+            </div>
+
+            <div class="donut">
+              <svg viewBox="0 0 120 120" class="donut__svg">
+                <circle class="donut__track" cx="60" cy="60" r="50" />
+
+                <circle
+                  class="donut__progress donut__progress--resolved"
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  [attr.stroke-dasharray]="getDonutDashArray(314)"
+                  transform="rotate(-90 60 60)"
+                  (mouseenter)="hoveredDonutSegment.set('resolved')"
+                  (mouseleave)="hoveredDonutSegment.set(null)"
+                  (click)="hoveredDonutSegment.set('resolved')"
+                />
+
+                <circle
+                  class="donut__progress donut__progress--pending"
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  [attr.stroke-dasharray]="getPendingDashArray(314)"
+                  [attr.stroke-dashoffset]="getPendingDashOffset(314)"
+                  transform="rotate(-90 60 60)"
+                  (mouseenter)="hoveredDonutSegment.set('pending')"
+                  (mouseleave)="hoveredDonutSegment.set(null)"
+                  (click)="hoveredDonutSegment.set('pending')"
+                />
+              </svg>
+
+              <div class="donut__center">
+                @if (hoveredDonutSegment() === 'resolved') {
+                  <span class="donut__percent">{{ resolvedCount() }}</span>
+                  <span class="donut__caption">{{ strings.RESOLVED_LABEL }}</span>
+                } @else if (hoveredDonutSegment() === 'pending') {
+                  <span class="donut__percent">{{ pendingCount() }}</span>
+                  <span class="donut__caption">{{ strings.PENDING_LABEL }}</span>
+                } @else {
+                  <span class="donut__percent">{{ resolvedPercent() }}%</span>
+                  <span class="donut__caption">{{ strings.RESOLVED_LABEL }}</span>
+                }
+              </div>
+            </div>
+
+            <div class="donut-legend">
+              <div
+                class="donut-legend__row"
+                (mouseenter)="hoveredDonutSegment.set('resolved')"
+                (mouseleave)="hoveredDonutSegment.set(null)"
+              >
+                <span class="donut-legend__dot donut-legend__dot--resolved"></span>
+                <span class="donut-legend__label">{{ strings.RESOLVED_LABEL }}</span>
+                <span class="donut-legend__value">{{ resolvedCount() }}</span>
+              </div>
+              <div
+                class="donut-legend__row"
+                (mouseenter)="hoveredDonutSegment.set('pending')"
+                (mouseleave)="hoveredDonutSegment.set(null)"
+              >
+                <span class="donut-legend__dot donut-legend__dot--pending"></span>
+                <span class="donut-legend__label">{{ strings.PENDING_LABEL }}</span>
+                <span class="donut-legend__value">{{ pendingCount() }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Booking History for non-admin from set-2 -->
+          <div class="chart-card chart-card--full">
+            <app-booking-history />
+          </div>
+        }
+      </div>
+
+    }
+  </div>
+}

@@ -1,0 +1,167 @@
+@use '../../../../shared/styles/variables' as *;
+@use '../../../../shared/styles/mixins' as *;
+
+.complaints-page {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+
+  &__header {
+    @include flex-between;
+  }
+
+  &__title {
+    font-size: 22px;
+    font-weight: 700;
+    color: $color-text-primary;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  &__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-md;
+  }
+
+  &__state {
+    @include flex-center;
+    padding: $spacing-xxl 0;
+    color: $color-text-secondary;
+    font-size: 0.875rem;
+
+    &--error {
+      color: $color-danger;
+    }
+  }
+
+  &__escalation-message {
+    font-size: 0.875rem;
+    color: $color-success;
+
+    &--error {
+      color: $color-danger;
+    }
+  }
+
+  &__pagination {
+    @include flex-center;
+    gap: $spacing-md;
+    padding-top: $spacing-lg;
+  }
+
+  &__page-btn {
+    @include flex-center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: $radius-sm;
+    border: 0.0625rem solid $color-border;
+    background: $color-surface;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: $color-background;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  &__page-info {
+    font-size: 0.8125rem;
+    color: $color-text-secondary;
+  }
+
+  &__toggle {
+    display: flex;
+    gap: $spacing-sm;
+  }
+
+  &__toggle-btn {
+    padding: $spacing-sm $spacing-md;
+    border-radius: $radius-sm;
+    border: 0.0625rem solid $color-border;
+    background: $color-surface;
+    color: $color-text-secondary;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: $color-background;
+    }
+
+    &--active {
+      background: $color-text-primary;
+      color: $color-surface;
+      border-color: $color-text-primary;
+    }
+  }
+}
+
+.complaints-card {
+  @include card;
+}
+
+.complaints-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    text-align: left;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: $color-text-muted;
+    padding: $spacing-sm $spacing-sm;
+    border-bottom: 0.0625rem solid $color-border;
+  }
+
+  td {
+    padding: $spacing-md $spacing-sm;
+    border-bottom: 0.0625rem solid $color-border;
+    color: $color-text-primary;
+    font-size: 0.875rem;
+  }
+
+  tbody tr {
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: $color-background;
+    }
+
+    &:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  &__row--escalated {
+    background: rgba($color-success, 0.08);
+
+    &:hover {
+      background: rgba($color-success, 0.14);
+    }
+  }
+
+  &__description {
+    max-width: 20rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__assignment {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    white-space: nowrap;
+  }
+}

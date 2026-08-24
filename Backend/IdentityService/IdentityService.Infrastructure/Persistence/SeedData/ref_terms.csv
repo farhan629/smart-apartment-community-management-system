@@ -1,0 +1,6 @@
+Id,TermValue,Description,RefSetId
+aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa,Resident,Occupant who owns a flat (Owner),22222222-2222-2222-2222-222222222222
+bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb,Tenant,Occupant who rents a flat,22222222-2222-2222-2222-222222222222
+cccccccc-cccc-cccc-cccc-cccccccccccc,Admin,Management administrator,11111111-1111-1111-1111-111111111111
+dddddddd-dddd-dddd-dddd-dddddddddddd,Staff,Management staff / maintenance personnel,11111111-1111-1111-1111-111111111111
+eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee,Security,Management security / maintenance personnel,11111111-1111-1111-1111-111111111111

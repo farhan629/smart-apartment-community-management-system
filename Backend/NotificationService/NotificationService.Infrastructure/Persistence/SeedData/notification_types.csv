@@ -1,0 +1,26 @@
+clsCode,DisplayName
+VISITOR_REGISTERED,Visitor Registered
+VISITOR_APPROVED,Visitor Approved
+VISITOR_REJECTED,Visitor Rejected
+VISITOR_CHECKED_IN,Visitor Checked In
+VISITOR_CHECKED_OUT,Visitor Checked Out
+COMPLAINT_RAISED,Complaint Raised
+COMPLAINT_ASSIGNED,Complaint Assigned
+COMPLAINT_IN_PROGRESS,Complaint In Progress
+COMPLAINT_RESOLVED,Complaint Resolved
+COMPLAINT_CLOSED,Complaint Closed
+COMPLAINT_ESCALATED,Complaint Escalated
+BOOKING_CREATED,Booking Created
+BOOKING_APPROVED,Booking Approved
+BOOKING_CANCELLED,Booking Cancelled
+BOOKING_REMINDER,Booking Reminder
+GENERAL_ALERT,General AlertCOMPLAINT_ACCEPTED,Complaint Accepted
+COMPLAINT_DENIED,Complaint Denied
+COMPLAINT_RATING_SUBMITTED,Complaint Rating Submitted
+COMPLAINT_RATING_REQUEST,Complaint Rating Request
+booking_confirmed,Booking Confirmed
+booking_cancelled,Booking Cancelled
+booking_reminder,Booking Reminder
+admin_booking_notification,Admin Booking Notification
+admin_booking_cancelled,Admin Booking Cancelled
+GENERAL_ALERT,General Alert

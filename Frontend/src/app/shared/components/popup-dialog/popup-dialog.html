@@ -1,0 +1,21 @@
+<div class="popup-dialog" [style.max-width]="width">
+  <div class="popup-dialog__header">
+    <h2 class="popup-dialog__title">{{ title }}</h2>
+
+    <button
+      type="button"
+      class="popup-dialog__close"
+      (click)="onClose()"
+      aria-label="Close">
+      <mat-icon>{{ icons.CLOSE }}</mat-icon>
+    </button>
+  </div>
+
+  <div class="popup-dialog__body">
+    <ng-content></ng-content>
+  </div>
+
+  <div class="popup-dialog__footer">
+    <ng-content select="[dialogFooter]"></ng-content>
+  </div>
+</div>

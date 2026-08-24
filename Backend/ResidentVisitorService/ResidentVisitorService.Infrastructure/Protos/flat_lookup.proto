@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option csharp_namespace = "Shared.Grpc";
+
+package flat;
+
+service FlatLookupGrpcService {
+  rpc GetFlatByBlockAndNumber (FlatLookupRequest)   returns (FlatLookupResponse);
+  rpc GetFlatByUserId         (FlatByUserIdRequest) returns (FlatLookupResponse);
+}
+
+message FlatLookupRequest {
+  string block       = 1;
+  string flat_number = 2;
+}
+
+message FlatByUserIdRequest {
+  string user_id = 1;
+}
+
+message FlatLookupResponse {
+  string flat_id       = 1;
+  string host_user_id  = 2;
+  string resident_name = 3;
+  string block         = 4;
+  string flat_number   = 5;
+  string resident_email = 6; 
+}

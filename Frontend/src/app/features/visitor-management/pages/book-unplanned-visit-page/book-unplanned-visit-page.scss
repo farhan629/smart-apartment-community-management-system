@@ -1,0 +1,96 @@
+@use '../../../../shared/styles/variables' as *;
+
+.unplanned-visit-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: $spacing-xl;
+
+  h2 {
+    font-family: $font-family-base;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: $color-text-primary;
+    margin-bottom: $spacing-lg;
+  }
+}
+
+.unplanned-visit-form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  box-shadow: $shadow-sm;
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-sm;
+    margin-top: $spacing-md;
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: $spacing-md;
+
+  @media (max-width: $breakpoint-tablet) {
+    flex-direction: column;
+  }
+
+  .form-field {
+    flex: 1;
+  }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: $color-text-secondary;
+  }
+
+  input,
+  select {
+    font-family: $font-family-base;
+    font-size: 0.9375rem;
+    color: $color-text-primary;
+    background: $color-white;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+    padding: $spacing-sm $spacing-md;
+    outline: none;
+    transition: border-color 0.15s ease;
+
+    &:focus {
+      border-color: $color-primary;
+    }
+  }
+}
+
+.form-error {
+  font-size: 0.8125rem;
+  color: $color-danger;
+}
+
+.form-banner {
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-sm;
+  font-size: 0.875rem;
+
+  &--error {
+    background: $color-danger-light;
+    color: $color-danger;
+  }
+
+  &--success {
+    background: $color-success-light;
+    color: $color-success;
+  }
+}

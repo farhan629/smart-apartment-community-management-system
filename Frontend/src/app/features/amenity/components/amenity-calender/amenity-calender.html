@@ -1,0 +1,37 @@
+<div class="calendar-card">
+  <div class="calendar-card__header">
+    <h3 class="calendar-card__title">{{ calenderStrings.TITLE }}</h3>
+    <div class="calendar-card__nav">
+      <button mat-icon-button class="calendar-card__nav-btn" [disabled]="!canGoPrev()" (click)="prevMonth()">
+        <span class="material-icons">chevron_left</span>
+      </button>
+      <span class="calendar-card__month-label">{{ currentMonth | date:'MMMM yyyy' }}</span>
+      <button mat-icon-button class="calendar-card__nav-btn" (click)="nextMonth()">
+        <span class="material-icons">chevron_right</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="calendar-grid">
+    @for (weekDay of weekDays; track weekDay) {
+      <span class="calendar-grid__weekday">{{ weekDay }}</span>
+    }
+
+    @for (blank of blankDays; track $index) {
+      <span class="calendar-grid__day calendar-grid__day--blank"></span>
+    }
+
+    @for (day of daysInMonth; track day) {
+      <button 
+        mat-button
+        class="calendar-grid__day" 
+        [class.calendar-grid__day--today]="day | isToday:currentMonth" 
+        [class.calendar-grid__day--selected]="day | isSelectedDay:currentMonth:selectedDate" 
+        [class.calendar-grid__day--disabled]="day | isPast:currentMonth"
+        [disabled]="day | isPast:currentMonth"
+        (click)="selectDate(day)">
+        {{ day }}
+      </button>
+    }
+  </div>
+</div>

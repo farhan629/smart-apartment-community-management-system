@@ -1,0 +1,81 @@
+ 
+
+@startuml part2_status_lifecycle_and_cancellation
+actor Resident
+actor Staff
+actor Admin
+participant API
+database DB
+
+== 1. Status update (In Progress / Resolved) ==
+Staff -> API: PATCH /complaints/{id}/status
+alt staff not assigned to complaint
+  API --> Staff: 403 Staff not assigned to this complaint
+else invalid status transition
+  API --> Staff: 422 Invalid status transition
+else valid
+  API -> DB: Update complaint status
+  API -> DB: Record progress log entry for new status
+  API -> DB: Notify resident and admin
+  API --> Staff: 200 OK
+end
+
+== 2. Resolution comment (staff) ==
+Staff -> API: POST /complaints/{id}/comments (Resolution)
+alt complaint not Resolved
+  API --> Staff: 422 Complaint not Resolved
+else valid
+  API -> DB: Save resolution comment
+  API --> Staff: 201 Created
+end
+
+== 3. Feedback comment (resident) → auto-close ==
+Resident -> API: POST /complaints/{id}/comments (Feedback, staffRating)
+alt rating missing or out of range 1-5
+  API --> Resident: 422 Rating missing/out of range
+else feedback already submitted
+  API --> Resident: 422 Feedback already submitted
+else valid
+  API -> DB: Save feedback comment with staff rating
+  API -> DB: Update complaint status to Closed
+  API -> DB: Record progress log entry for Closed status
+  API -> DB: Notify admin and staff
+  API --> Resident: 201 Created (complaintStatus=Closed)
+end
+
+== 4. Resident cancellation ==
+Resident -> API: PATCH /complaints/{id}/cancel (cancellationReason)
+alt complaint not Assigned or already cancelled
+  API --> Resident: 422 Complaint not in Assigned status / already cancelled
+else valid
+  API -> DB: Mark complaint as Cancelled with reason and timestamp
+  API -> DB: Release availability slot and unlink from complaint
+  API -> DB: Record progress log entry for Cancelled status
+  API -> DB: Notify staff and admin
+  API --> Resident: 200 OK (slotFreed=true)
+end
+
+== 5. Admin reassign after escalation ==
+Admin -> API: PATCH /complaints/{id}/assignments/{aid}/reassign
+alt new slot already booked / assignment not reassignable
+  API --> Admin: 422 New slot booked / not reassignable
+else new staff or slot not found
+  API --> Admin: 404 New staff or slot not found
+else valid
+  API -> DB: Mark existing assignment as Reassigned
+  API -> DB: Create new assignment for replacement staff with Pending Acceptance status
+  API -> DB: Notify new staff, resident, and admin
+  API --> Admin: 200 OK
+end
+
+== 6. Admin resolves escalation ==
+Admin -> API: PATCH /complaints/{id}/escalation (status=Resolved)
+alt escalation already resolved or complaint not Closed
+  API --> Admin: 422 Already resolved / complaint not Closed
+else no escalation record found
+  API --> Admin: 404 No escalation record found
+else valid
+  API -> DB: Mark escalation as resolved with resolution date
+  API --> Admin: 200 OK
+end
+@enduml

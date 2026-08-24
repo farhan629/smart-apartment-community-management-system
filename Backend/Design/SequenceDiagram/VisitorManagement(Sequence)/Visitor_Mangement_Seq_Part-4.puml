@@ -1,0 +1,137 @@
+@startuml Visitor_Management_Part4
+skinparam sequenceArrowThickness 1.2
+ 
+skinparam roundcorner 6
+ 
+skinparam sequenceBoxBorderColor #888
+ 
+skinparam sequenceLifeLineBorderColor #AAAAAA
+ 
+skinparam sequenceGroupBorderColor #888888
+ 
+skinparam sequenceGroupBackgroundColor #F5F5F5
+ 
+skinparam sequenceGroupFontSize 12
+ 
+skinparam noteFontSize 11
+ 
+skinparam sequenceParticipantFontSize 12
+ 
+skinparam sequenceParticipantBackgroundColor #EFEFEF
+ 
+skinparam sequenceParticipantBorderColor #888888
+actor Resident as RES
+ 
+actor "Admin/Manager" as ADM
+ 
+actor "Security" as SEC
+ 
+participant "Auth Middleware" as AUTH
+ 
+participant "Visit API" as VISAPI
+ 
+database "Database" as DB
+== 12. Visitor Check-Out ==
+SEC -> VISAPI : PATCH /visits/{id}/check-out\n[Authorization: Bearer token]
+ 
+VISAPI -> AUTH : Validate JWT — check security role
+ 
+AUTH --> VISAPI : Authorized
+alt Unauthorized
+ 
+AUTH --> VISAPI : 401 Unauthorized
+ 
+VISAPI --> SEC : 401 Unauthorized
+ 
+else Forbidden
+ 
+VISAPI --> SEC : 403 Forbidden\n[security staff only]
+ 
+else Not Found
+ 
+VISAPI --> SEC : 404 Not Found
+ 
+else Not Checked In
+ 
+VISAPI --> SEC : 422 Unprocessable Entity\n[visitor has not checked in yet]
+ 
+else Already Checked Out
+ 
+VISAPI --> SEC : 422 Unprocessable Entity\n[visitor is already checked out]
+ 
+else Success
+ 
+VISAPI -> DB : Update visit status to CHECKED_OUT with check-out time
+ 
+DB --> VISAPI : updated
+ 
+VISAPI --> SEC : 200 OK\n{ id, status: CHECKED_OUT, check_in_time, check_out_time }
+ 
+end
+== 13. Get My Visits (Resident) ==
+RES -> VISAPI : GET /visits/my?status=?&page=1&limit=10\n[Authorization: Bearer token]
+ 
+VISAPI -> AUTH : Validate JWT — extract host_user_id
+ 
+AUTH --> VISAPI : Authorized
+alt Unauthorized
+ 
+AUTH --> VISAPI : 401 Unauthorized
+ 
+VISAPI --> RES : 401 Unauthorized
+ 
+else No results
+ 
+VISAPI -> DB : Fetch visits for host user
+ 
+DB --> VISAPI : empty
+ 
+VISAPI --> RES : 204 No Content
+ 
+else Success
+ 
+VISAPI -> DB : Fetch visits with visitor and QR token details for host user (filtered, paginated)
+ 
+DB --> VISAPI : visit rows with joins
+ 
+VISAPI --> RES : 200 OK\n{ total, page, limit, total_pages, visits[] }
+ 
+end
+== 14. Get Visit History (for a Visitor) ==
+ADM -> VISAPI : GET /visits/history?visitor_id={id}&page=1&limit=10\n[Authorization: Bearer token]
+ 
+VISAPI -> AUTH : Validate JWT — check Admin/Manager role
+ 
+AUTH --> VISAPI : Authorized
+alt Unauthorized
+ 
+AUTH --> VISAPI : 401 Unauthorized
+ 
+VISAPI --> ADM : 401 Unauthorized
+ 
+else Forbidden
+ 
+VISAPI --> ADM : 403 Forbidden
+ 
+else Not Found
+ 
+VISAPI --> ADM : 404 Not Found\n[visitor_id not found]
+ 
+else No History
+ 
+VISAPI -> DB : Fetch visit history for visitor
+ 
+DB --> VISAPI : empty
+ 
+VISAPI --> ADM : 204 No Content
+ 
+else Success
+ 
+VISAPI -> DB : Fetch visit history with visitor details (paginated)
+ 
+DB --> VISAPI : visit history rows
+ 
+VISAPI --> ADM : 200 OK\n{ total, page, limit, total_pages, visits[] }
+ 
+end
+@enduml

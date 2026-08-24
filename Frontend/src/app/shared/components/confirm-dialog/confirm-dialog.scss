@@ -1,0 +1,14 @@
+@use 'app/shared/styles/variables' as *;
+
+[dialogFooter] {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.confirm-dialog__message {
+  font-size: 0.875rem;
+  color: $color-text-secondary;
+  margin: 0;
+  line-height: 1.6;
+}

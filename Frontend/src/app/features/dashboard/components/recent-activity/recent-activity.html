@@ -1,0 +1,18 @@
+<div class="recent-activity">
+  <h2 class="recent-activity__title">{{ strings.RECENT_ACTIVITY_TITLE }}</h2>
+
+  @if (comments.length === 0) {
+    <p class="recent-activity__empty">{{ strings.RECENT_ACTIVITY_EMPTY }}</p>
+  } @else {
+    <ul class="recent-activity__list">
+      @for (comment of comments; track comment.commentId) {
+        <li class="recent-activity__item">
+          <p class="recent-activity__text">{{ comment.commentText }}</p>
+          <span class="recent-activity__meta">{{
+            comment.createdAt | date: 'MMM d, y, h:mm a'
+          }}</span>
+        </li>
+      }
+    </ul>
+  }
+</div>

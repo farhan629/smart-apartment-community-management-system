@@ -1,0 +1,203 @@
+<div class="slot-manager">
+  @if (loading() || submitting()) {
+    <div class="slot-manager__loader-bar">
+      <div class="slot-manager__loader-progress"></div>
+    </div>
+  }
+
+  <div class="slot-manager__header">
+    <div>
+      <h2 class="slot-manager__title">{{ slotStrings.TITLE_MANAGE }}</h2>
+      <p class="slot-manager__subtitle">{{ amenity.name }}</p>
+    </div>
+    <button type="button" mat-icon-button class="slot-manager__close-btn" (click)="onClose()">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+
+  <div class="slot-manager__tabs">
+    <button type="button" class="slot-manager__tab" [class.slot-manager__tab--active]="activeTab() === 'create'" (click)="setTab('create')">
+      {{ slotStrings.TAB_CREATE }}
+    </button>
+    <button type="button" class="slot-manager__tab" [class.slot-manager__tab--active]="activeTab() === 'manage'" (click)="setTab('manage')">
+      {{ slotStrings.TAB_MANAGE }}
+    </button>
+  </div>
+
+  <div class="slot-manager__content">
+    @if (activeTab() === 'create') {
+      <div class="tab-create__layout">
+        <form class="tab-create__form" (submit)="$event.preventDefault(); addSlotToQueue()">
+          <h3 class="tab-create__section-title">{{ slotStrings.FORM_TITLE }}</h3>
+
+          <div class="form-group">
+            <label class="form-label">{{ slotStrings.LABEL_SLOT_LABEL }}</label>
+            <input type="text" class="form-input" [(ngModel)]="newSlot.slotLabel" name="slotLabel" [placeholder]="slotStrings.PLACEHOLDER_SLOT_LABEL" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ slotStrings.LABEL_DATE }}</label>
+            <mat-form-field appearance="outline" class="form-field-date">
+              <input matInput [matDatepicker]="picker" [(ngModel)]="newSlot.slotDate" name="slotDate" required readonly (click)="picker.open()" />
+              <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ slotStrings.LABEL_START_TIME }}</label>
+            <input type="time" class="form-input" [(ngModel)]="newSlot.startTime" name="startTime" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ slotStrings.LABEL_END_TIME }}</label>
+            <input type="time" class="form-input" [(ngModel)]="newSlot.endTime" name="endTime" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ slotStrings.LABEL_MAX_CAPACITY }}</label>
+            <input type="number" class="form-input" [(ngModel)]="newSlot.maxCapacity" name="maxCapacity" required min="1" />
+          </div>
+
+          <button type="submit" mat-stroked-button class="action-btn-custom action-btn-custom--add">
+            <span class="material-icons">add</span> {{ slotStrings.BTN_ADD_QUEUE }}
+          </button>
+        </form>
+
+        <div class="tab-create__queue">
+          <h3 class="tab-create__section-title">{{ slotStrings.TITLE_QUEUE }}</h3>
+
+          <div class="queue-list">
+            @for (item of queue(); track $index) {
+              <div class="queue-item">
+                <div class="queue-item__info">
+                  <span class="queue-item__title">{{ item.slotLabel || 'Unnamed Slot' }}</span>
+                  <span class="queue-item__meta">
+                    {{ item.slotDate | date:'mediumDate' }} | {{ item.startTime | formatTime }} - {{ item.endTime | formatTime }} | Capacity: {{ item.maxCapacity }}
+                  </span>
+                </div>
+                <button type="button" mat-icon-button class="queue-item__remove-btn" (click)="removeFromQueue($index)">
+                  <span class="material-icons">delete</span>
+                </button>
+              </div>
+            } @empty {
+              <div class="queue-empty">
+                <span class="material-icons queue-empty__icon">hourglass_empty</span>
+                <p class="queue-empty__text">{{ slotStrings.EMPTY_QUEUE }}</p>
+              </div>
+            }
+          </div>
+
+          @if (queue().length > 0) {
+            <div class="queue-actions">
+              <button type="button" mat-flat-button class="action-btn-custom action-btn-custom--submit" [disabled]="submitting()" (click)="submitQueue()">
+                {{ slotStrings.BTN_SUBMIT_QUEUE }}
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    } @else if (activeTab() === 'manage') {
+      <div class="tab-manage">
+        @if (slots().length > 0) {
+          <div class="table-container">
+            <table class="slot-table">
+              <thead>
+                <tr>
+                  <th>{{ slotStrings.COL_LABEL }}</th>
+                  <th>{{ slotStrings.COL_DATE }}</th>
+                  <th>{{ slotStrings.COL_TIME_RANGE }}</th>
+                  <th>{{ slotStrings.COL_CAPACITY }}</th>
+                  <th>{{ slotStrings.COL_BOOKINGS }}</th>
+                  <th class="slot-table__actions-cell"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (slot of slots(); track slot.id) {
+                  <tr [class.slot-table__row--editing]="editingSlotId() === slot.id">
+                    <!-- Label Column -->
+                    <td>
+                      @if (editingSlotId() === slot.id) {
+                        <input type="text" class="inline-input" [(ngModel)]="editForm.slotLabel" placeholder="Label" />
+                      } @else {
+                        <span class="slot-table__label-badge">{{ slot.slotLabel || 'Slot' }}</span>
+                      }
+                    </td>
+
+                    <!-- Date Column -->
+                    <td>
+                      {{ slot.slotDate | date:'mediumDate' }}
+                    </td>
+
+                    <!-- Time Range Column -->
+                    <td>
+                      @if (editingSlotId() === slot.id) {
+                        <div class="inline-time-fields">
+                          <input type="time" class="inline-input inline-input--time" [(ngModel)]="editForm.startTime" />
+                          <span class="inline-time-separator">-</span>
+                          <input type="time" class="inline-input inline-input--time" [(ngModel)]="editForm.endTime" />
+                        </div>
+                      } @else {
+                        {{ slot.startTime | formatTime }} - {{ slot.endTime | formatTime }}
+                      }
+                    </td>
+
+                    <!-- Capacity Column -->
+                    <td>
+                      @if (editingSlotId() === slot.id) {
+                        <input type="number" class="inline-input inline-input--num" [(ngModel)]="editForm.maxCapacity" min="1" />
+                      } @else {
+                        {{ slot.maxCapacity }}
+                      }
+                    </td>
+
+                    <td>
+                      {{ slot.currentBookings ?? 0 }}
+                    </td>
+
+=                    <td class="slot-table__actions-cell">
+                      <div class="slot-table__actions">
+                        @if (editingSlotId() === slot.id) {
+                          <button type="button" mat-icon-button class="slot-table__btn-save" (click)="saveEdit(slot.id!)" [disabled]="submitting()">
+                            <span class="material-icons">save</span>
+                          </button>
+                          <button type="button" mat-icon-button class="slot-table__btn-cancel" (click)="cancelEdit()">
+                            <span class="material-icons">close</span>
+                          </button>
+                        } @else {
+                          <button type="button" mat-icon-button class="slot-table__btn-edit" (click)="startEdit(slot)">
+                            <span class="material-icons">edit</span>
+                          </button>
+                          <button type="button" mat-icon-button class="slot-table__btn-delete" (click)="deleteSlot(slot.id!)" [disabled]="submitting()">
+                            <span class="material-icons">delete</span>
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="slot-pagination">
+            <button type="button" mat-icon-button class="slot-pagination__btn" (click)="prevPage()" [disabled]="pageNumber() === 1 || loading()">
+              <span class="material-icons">chevron_left</span>
+            </button>
+            <span class="slot-pagination__info">
+              Page {{ pageNumber() }} of {{ totalPages() }}
+            </span>
+            <button type="button" mat-icon-button class="slot-pagination__btn" (click)="nextPage()" [disabled]="pageNumber() === totalPages() || loading()">
+              <span class="material-icons">chevron_right</span>
+            </button>
+          </div>
+        } @else {
+          <div class="slots-empty">
+            <span class="material-icons slots-empty__icon">calendar_today</span>
+            <p class="slots-empty__text">{{ slotStrings.EMPTY_SLOTS }}</p>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

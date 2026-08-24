@@ -1,0 +1,49 @@
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/mixins' as *;
+
+$sidebar-width: 260px;
+$header-height: 64px;
+
+.layout {
+  display: flex;
+  height: 100vh;
+  background: $color-background;
+
+  &__sidebar {
+    flex: 0 0 $sidebar-width;
+    width: $sidebar-width;
+    height: 100vh;
+    background: $color-sidebar;
+    border-right: 1px solid $color-border;
+    overflow-y: auto;
+  }
+
+  &__main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100vh;
+  }
+
+  &__header {
+    flex: 0 0 $header-height;
+    height: $header-height;
+    border-bottom: 1px solid $color-border;
+  }
+
+  &__content {
+    flex: 1;
+    overflow-y: auto;
+    padding: $spacing-lg;
+  }
+}
+
+@media (max-width: $breakpoint-tablet) {
+  .layout {
+    &__sidebar {
+      flex-basis: 72px;
+      width: 72px;
+    }
+  }
+}

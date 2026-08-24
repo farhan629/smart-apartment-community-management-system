@@ -1,0 +1,520 @@
+@startuml
+!define TABLE(name,desc) class name as "desc" << (T,#AAAAFF) >>
+
+hide methods
+hide stereotypes
+skinparam classAttributeIconSize 0
+skinparam classBorderColor #555555
+skinparam classBackgroundColor #FAFAFA
+skinparam classArrowColor #333333
+skinparam classFontSize 12
+skinparam defaultFontSize 11
+skinparam linetype ortho
+
+' ─────────────────────────────────────────────────────────────
+' REFERENCE DATA
+' ─────────────────────────────────────────────────────────────
+TABLE(RefSet, "RefSet") {
+    + Id         : uuid <<PK>>
+    --
+    Code         : varchar <<unique>>
+    Description  : text
+    DateCreated  : timestamp
+    DateUpdated  : timestamp
+    CreatedBy    : uuid
+    UpdatedBy    : uuid
+    IsActive     : boolean
+}
+
+TABLE(RefTerm, "RefTerm") {
+    + Id          : uuid <<PK>>
+    --
+    # RefSetId    : uuid <<FK>>
+    Code          : varchar
+    DisplayName   : varchar
+    DateCreated   : timestamp
+    DateUpdated   : timestamp
+    CreatedBy     : uuid
+    UpdatedBy     : uuid
+    IsActive      : boolean
+}
+
+' ─────────────────────────────────────────────────────────────
+' USER & PERMISSIONS
+' ─────────────────────────────────────────────────────────────
+TABLE(User, "User") {
+    + Id          : uuid <<PK>>
+    --
+    Name          : varchar
+    Email         : varchar <<unique>>
+    PasswordHash  : varchar
+    PhotoUrl      : varchar
+    PhoneNo       : varchar
+    DateCreated   : timestamp
+    DateUpdated   : timestamp
+    CreatedBy     : uuid
+    UpdatedBy     : uuid
+    IsActive      : boolean
+}
+
+TABLE(UserPasswordSecurity, "UserPasswordSecurity") {
+    + Id          : uuid <<PK>>
+    --
+    # UserId      : uuid <<FK>>
+    PasswordHash  : varchar
+    DateCreated   : timestamp
+    DateUpdated   : timestamp
+    CreatedBy     : uuid
+    UpdatedBy     : uuid
+    IsActive      : boolean
+}
+
+TABLE(RolePolicy, "RolePolicy") {
+    + Id           : uuid <<PK>>
+    --
+    # RoleId       : uuid <<FK>>
+    PermissionCode : varchar
+    Description    : text
+    isAllowed      : boolean
+    DateCreated    : timestamp
+    DateUpdated    : timestamp
+    CreatedBy      : uuid
+    UpdatedBy      : uuid
+    IsActive       : boolean
+}
+
+TABLE(UserPolicy, "UserPolicy") {
+    + Id           : uuid <<PK>>
+    --
+    # UserId       : uuid <<FK>>
+    PermissionCode : varchar
+    isAllowed      : boolean
+    DateCreated    : timestamp
+    DateUpdated    : timestamp
+    CreatedBy      : uuid
+    UpdatedBy      : uuid
+    IsActive       : boolean
+}
+
+' ─────────────────────────────────────────────────────────────
+' RESIDENT / FLAT
+' ─────────────────────────────────────────────────────────────
+TABLE(Flat, "Flat") {
+    + Id          : uuid <<PK>>
+    --
+    Number        : varchar
+    Block         : varchar
+    Floor         : int
+    DateCreated   : timestamp
+    DateUpdated   : timestamp
+    CreatedBy     : uuid
+    UpdatedBy     : uuid
+    IsActive      : boolean
+}
+
+TABLE(FlatOccupancy, "FlatOccupancy") {
+    + Id            : uuid <<PK>>
+    --
+    # UserId        : uuid <<FK>>
+    # FlatId        : uuid <<FK>>
+    # ResidentTypeId: uuid <<FK>>
+    IsApproved      : boolean
+    DateCreated     : timestamp
+    DateUpdated     : timestamp
+    CreatedBy       : uuid
+    UpdatedBy       : uuid
+    IsActive        : boolean
+}
+
+' ─────────────────────────────────────────────────────────────
+' VISITOR
+' ─────────────────────────────────────────────────────────────
+TABLE(Visitor, "Visitor") {
+    + Id           : uuid <<PK>>
+    --
+    # VisitorTypeId: uuid <<FK>>
+    Name           : varchar
+    PhoneNumber    : varchar
+    Email          : varchar NULL
+    PhotoUrl       : varchar NULL
+    DateCreated    : timestamp
+    DateUpdated    : timestamp
+    CreatedBy      : uuid
+    UpdatedBy      : uuid
+    IsActive       : boolean
+}
+
+TABLE(Visit, "Visit") {
+    + Id           : uuid <<PK>>
+    --
+    # VisitorId    : uuid <<FK>>
+    # HostUserId   : uuid <<FK>>
+    # FlatId       : uuid <<FK>>
+    # PurposeTypeId: uuid <<FK>>
+    # StatusId     : uuid <<FK>>
+    StartDate      : date
+    EndDate        : date
+    CheckInTime    : timestamp NULL
+    CheckOutTime   : timestamp NULL
+    ApprovedBy     : uuid NULL
+    ApprovedDate   : timestamp NULL
+    RejectionReason: text NULL
+    DateCreated    : timestamp
+    DateUpdated    : timestamp
+    CreatedBy      : uuid
+    UpdatedBy      : uuid
+    IsActive       : boolean
+}
+
+TABLE(VisitQrToken, "VisitQrToken") {
+    + Id          : uuid <<PK>>
+    --
+    # VisitId     : uuid <<FK>>
+    Token          : varchar
+    DateCreated    : timestamp
+    DateUpdated    : timestamp
+    CreatedBy      : uuid
+    UpdatedBy      : uuid
+    IsActive       : boolean
+}
+
+' ─────────────────────────────────────────────────────────────
+' STAFF
+' ─────────────────────────────────────────────────────────────
+TABLE(Category, "Category") {
+    + Id          : uuid <<PK>>
+    --
+    Name          : varchar <<unique>>
+    Description   : text
+    Img           : varchar
+    DateCreated   : timestamp
+    DateUpdated   : timestamp
+    CreatedBy     : uuid
+    UpdatedBy     : uuid
+    IsActive      : boolean
+}
+
+TABLE(Staff, "Staff") {
+    + Id          : uuid <<PK>>
+    --
+    # UserId      : uuid <<FK>>
+    # CategoryId  : uuid <<FK>>
+    Description   : text
+    Details       : text
+    Img           : varchar
+    DateCreated   : timestamp
+    DateUpdated   : timestamp
+    CreatedBy     : uuid
+    UpdatedBy     : uuid
+    IsActive      : boolean
+}
+
+TABLE(StaffAvailability, "StaffAvailability") {
+    + Id            : uuid <<PK>>
+    --
+    # StaffId       : uuid <<FK>>
+    # ComplaintId   : uuid <<FK>> NULL
+    AvailableDate   : date
+    SlotStartTime   : time
+    SlotEndTime     : time
+    IsBooked        : boolean
+    IsCancelled     : boolean
+    DateCreated     : timestamp
+    DateUpdated     : timestamp
+    CreatedBy       : uuid
+    IsActive        : boolean
+}
+
+' ─────────────────────────────────────────────────────────────
+' COMPLAINT
+' ─────────────────────────────────────────────────────────────
+TABLE(Complaint, "Complaint") {
+    + Id              : uuid <<PK>>
+    --
+    # ResidentId      : uuid <<FK>>
+    # ComplaintTypeId : uuid <<FK>>
+    # CategoryId      : uuid <<FK>>
+    # PriorityId      : uuid <<FK>>
+    # StatusId        : uuid <<FK>>
+    # ScheduledSlotId : uuid <<FK>> NULL
+    Description       : text
+    ScheduledDate     : date NULL
+    ScheduledTime     : time NULL
+    CancelledAt       : timestamp NULL
+    CancellationReason: text NULL
+    DateCreated       : timestamp
+    DateUpdated       : timestamp
+    CreatedBy         : uuid
+    UpdatedBy         : uuid
+    IsActive          : boolean
+}
+
+TABLE(ComplaintAssignment, "ComplaintAssignment") {
+    + Id           : uuid <<PK>>
+    --
+    # ComplaintId  : uuid <<FK>>
+    # StaffId      : uuid <<FK>>
+    # AssignedBy   : uuid <<FK>>
+    # StatusId     : uuid <<FK>>
+    AssignedDate   : timestamp
+    AcceptedDate   : timestamp NULL
+    DeniedDate     : timestamp NULL
+    DenialReason   : text NULL
+    DueDate        : date
+    DateCreated    : timestamp
+    DateUpdated    : timestamp
+    CreatedBy      : uuid
+    UpdatedBy      : uuid
+    IsActive       : boolean
+}
+
+TABLE(ComplaintProgressLog, "ComplaintProgressLog") {
+    + Id          : uuid <<PK>>
+    --
+    # ComplaintId : uuid <<FK>>
+    # ChangedBy   : uuid <<FK>>
+    # StatusId    : uuid <<FK>>
+    Remarks       : text NULL
+    ChangedDate   : timestamp
+    DateCreated   : timestamp
+    DateUpdated   : timestamp
+    CreatedBy     : uuid
+    UpdatedBy     : uuid
+    IsActive      : boolean
+}
+
+TABLE(ComplaintComment, "ComplaintComment") {
+    + Id           : uuid <<PK>>
+    --
+    # ComplaintId  : uuid <<FK>>
+    # CommentedBy  : uuid <<FK>>
+    CommentText    : text
+    StaffRating    : int NULL
+    DateCreated    : timestamp
+    DateUpdated    : timestamp
+    CreatedBy      : uuid
+    UpdatedBy      : uuid
+    IsActive       : boolean
+}
+
+TABLE(ComplaintEscalation, "ComplaintEscalation") {
+    + Id                  : uuid <<PK>>
+    --
+    # ComplaintId         : uuid <<FK>>
+    # EscalatedBy         : uuid <<FK>>
+    # EscalatedTo         : uuid <<FK>>
+    EscalationReason      : text
+    EscalationDate        : timestamp
+    ResolvedAfterEscalation: boolean
+    ResolutionDate        : timestamp NULL
+    DateCreated           : timestamp
+    DateUpdated           : timestamp
+    CreatedBy             : uuid
+    UpdatedBy             : uuid
+    IsActive              : boolean
+}
+
+TABLE(AutoAssignmentRule, "AutoAssignmentRule") {
+    + Id                  : uuid <<PK>>
+    --
+    # CategoryId          : uuid <<FK>>
+    # PriorityId          : uuid <<FK>>
+    # StaffId             : uuid <<FK>>
+    # FallbackStaffId     : uuid <<FK>> NULL
+    ServiceDurationMinutes: int
+    AllowResidentTimePick : boolean
+    TimeWindowStart       : time NULL
+    TimeWindowEnd         : time NULL
+    IsActive              : boolean
+    DateCreated           : timestamp
+    DateUpdated           : timestamp
+    CreatedBy             : uuid
+    UpdatedBy             : uuid
+}
+
+' ─────────────────────────────────────────────────────────────
+' AMENITY
+' ─────────────────────────────────────────────────────────────
+TABLE(Amenity, "Amenity") {
+    + Id          : uuid <<PK>>
+    --
+    Name          : varchar
+    # SlotTypeId  : uuid <<FK>>
+    # StatusId    : uuid <<FK>>
+    Location      : varchar
+    Rules         : text
+    ImageUrl      : varchar
+    DateCreated   : timestamp
+    DateUpdated   : timestamp
+    CreatedBy     : uuid
+    UpdatedBy     : uuid
+    IsActive      : boolean
+}
+
+TABLE(AmenitySlot, "AmenitySlot") {
+    + Id          : uuid <<PK>>
+    --
+    # AmenityId   : uuid <<FK>>
+    SlotLabel     : varchar
+    SlotDate      : date
+    StartTime     : time
+    EndTime       : time
+    MaxCapacity   : int
+    DateCreated   : timestamp
+    DateUpdated   : timestamp
+    CreatedBy     : uuid
+    UpdatedBy     : uuid
+    IsActive      : boolean
+}
+
+TABLE(AmenityBooking, "AmenityBooking") {
+    + Id              : uuid <<PK>>
+    --
+    # AmenitySlotId   : uuid <<FK>>
+    # UserId          : uuid <<FK>>
+    # BookingStatusId : uuid <<FK>>
+    PeopleCount       : int
+    CancelledAt       : timestamp NULL
+    DateCreated       : timestamp
+    DateUpdated       : timestamp
+    CreatedBy         : uuid
+    UpdatedBy         : uuid
+    IsActive          : boolean
+}
+
+' ─────────────────────────────────────────────────────────────
+' NOTIFICATIONS & EMAIL
+' ─────────────────────────────────────────────────────────────
+TABLE(NotificationTemplate, "NotificationTemplate") {
+    + Id               : uuid <<PK>>
+    --
+    NotificationType   : varchar
+    Title              : varchar
+    MessageTemplate    : text
+    DateCreated        : timestamp
+    DateUpdated        : timestamp
+    CreatedBy          : uuid
+    UpdatedBy          : uuid
+    IsActive           : boolean
+}
+
+TABLE(Notification, "Notification") {
+    + Id               : uuid <<PK>>
+    --
+    # TemplateId       : uuid <<FK>>
+    # UserId           : uuid <<FK>>
+    # VisitId          : uuid <<FK>> NULL
+    # ComplaintId      : uuid <<FK>> NULL
+    # AmenityBookingId : uuid <<FK>> NULL
+    Title              : varchar
+    Message            : text
+    Status             : varchar
+    IsRead             : boolean
+    NotificationType   : varchar
+    ScheduledFor       : timestamp NULL
+    IsReminderSent     : boolean
+    SentAt             : timestamp NULL
+    ReadAt             : timestamp NULL
+    DateCreated        : timestamp
+    DateUpdated        : timestamp
+    CreatedBy          : uuid
+    UpdatedBy          : uuid
+    IsActive           : boolean
+}
+
+TABLE(EmailTemplate, "EmailTemplate") {
+    + Id          : uuid <<PK>>
+    --
+    EmailType     : varchar
+    Subject       : varchar
+    BodyTemplate  : text
+    DateCreated   : timestamp
+    DateUpdated   : timestamp
+    CreatedBy     : uuid
+    UpdatedBy     : uuid
+    IsActive      : boolean
+}
+
+TABLE(EmailLog, "EmailLog") {
+    + Id           : uuid <<PK>>
+    --
+    # TemplateId   : uuid <<FK>>
+    # UserId       : uuid <<FK>>
+    EmailAddress   : varchar
+    Subject        : varchar
+    Body           : text
+    Status         : varchar
+    ErrorMessage   : text NULL
+    SentAt         : timestamp NULL
+    DateCreated    : timestamp
+    DateUpdated    : timestamp
+    CreatedBy      : uuid
+    UpdatedBy      : uuid
+    IsActive       : boolean
+}
+
+' ─────────────────────────────────────────────────────────────
+' RELATIONSHIPS
+' ─────────────────────────────────────────────────────────────
+
+RefSet ||--o{ RefTerm
+
+RefTerm ||--o{ FlatOccupancy
+RefTerm ||--o{ Visitor
+RefTerm ||--o{ Visit
+RefTerm ||--o{ Complaint
+RefTerm ||--o{ ComplaintAssignment
+RefTerm ||--o{ ComplaintProgressLog
+RefTerm ||--o{ AutoAssignmentRule
+RefTerm ||--o{ Amenity
+RefTerm ||--o{ AmenityBooking
+RefTerm ||--{ RolePolicy
+
+User ||--|| UserPasswordSecurity
+User ||--o{ FlatOccupancy
+User ||--o{ Visit
+User ||--o{ ComplaintAssignment
+User ||--o{ ComplaintProgressLog
+User ||--o{ ComplaintComment
+User ||--o{ ComplaintEscalation
+User ||--o{ AmenityBooking
+User ||--o{ Complaint
+User ||--|| Staff
+User ||--o{ Notification
+User ||--o{ EmailLog
+User ||--{ UserPolicy
+
+Flat ||--o{ FlatOccupancy
+Flat ||--o{ Visit
+
+Visitor ||--o{ Visit
+
+Visit ||--o| VisitQrToken
+Visit ||--o{ Notification
+
+Category ||--o{ Staff
+Category ||--o{ Complaint
+Category ||--o{ AutoAssignmentRule
+
+Staff ||--o{ StaffAvailability
+Staff ||--o{ ComplaintAssignment
+Staff ||--o{ AutoAssignmentRule
+
+Complaint ||--o{ ComplaintAssignment
+Complaint ||--o{ ComplaintProgressLog
+Complaint ||--o{ ComplaintComment
+Complaint ||--o{ ComplaintEscalation
+Complaint ||--o| StaffAvailability
+Complaint ||--o{ Notification
+
+Amenity ||--o{ AmenitySlot
+
+AmenitySlot ||--o{ AmenityBooking
+
+AmenityBooking ||--o{ Notification
+
+NotificationTemplate ||--o{ Notification
+
+EmailTemplate ||--o{ EmailLog
+
+@enduml

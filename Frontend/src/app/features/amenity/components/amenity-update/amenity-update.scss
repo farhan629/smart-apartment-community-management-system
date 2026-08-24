@@ -1,0 +1,247 @@
+@use 'sass:color';
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/mixins' as *;
+
+.update-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.update-dialog-header {
+  border-bottom: 0.0625rem solid $color-border;
+  padding-bottom: $spacing-md;
+}
+
+.update-dialog-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: $color-text-primary;
+  margin: 0;
+}
+
+.amenity-form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-lg;
+
+  @media (max-width: $breakpoint-tablet) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+
+  &--full {
+    grid-column: 1 / -1;
+  }
+}
+
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: $color-text-primary;
+}
+
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: $spacing-sm $spacing-md;
+  border: 0.0625rem solid $color-border;
+  border-radius: $radius-sm;
+  font-family: $font-family-base;
+  font-size: 0.9rem;
+  color: $color-text-primary;
+  background-color: $color-surface;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 0.1875rem rgba($color-primary, 0.1);
+  }
+
+  &:disabled {
+    background-color: $color-background;
+    cursor: not-allowed;
+  }
+}
+
+.form-textarea {
+  min-height: 7.5rem;
+  resize: vertical;
+}
+
+.validation-error {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: $color-danger;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 0.125rem;
+
+  .material-icons {
+    font-size: 1rem;
+  }
+}
+
+/* Image Uploader Styles */
+.uploader-container {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.uploader-dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.125rem dashed $color-border;
+  border-radius: $radius-md;
+  padding: $spacing-xl;
+  cursor: pointer;
+  background-color: $color-background;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+
+  &:hover {
+    border-color: $color-primary;
+    background-color: rgba($color-primary, 0.02);
+  }
+
+  &__input {
+    display: none;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+
+  &__icon {
+    font-size: 2.5rem;
+    color: $color-text-secondary;
+    transition: color 0.2s ease;
+  }
+
+  &__text {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: $color-text-secondary;
+  }
+
+  &:hover &__icon {
+    color: $color-primary;
+  }
+}
+
+.uploader-preview {
+  position: relative;
+  width: 100%;
+  max-height: 12.5rem;
+  border-radius: $radius-md;
+  overflow: hidden;
+  border: 0.0625rem solid $color-border;
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__remove-btn {
+    position: absolute;
+    top: $spacing-sm;
+    right: $spacing-sm;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: $color-white;
+    text-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3);
+    padding: 0;
+    transition: transform 0.2s ease;
+
+    .material-icons {
+      font-size: 2rem;
+    }
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+}
+
+.uploader-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 0.1875rem solid rgba($color-primary, 0.2);
+  border-radius: 50%;
+  border-top-color: $color-primary;
+  animation: upload-spin 1s ease-in-out infinite;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-md;
+  margin-top: $spacing-md;
+  border-top: 0.0625rem solid $color-border;
+  padding-top: $spacing-lg;
+}
+
+.form-btn {
+  &.mat-mdc-button-base, &.mat-button-base, &.mat-mdc-button, &.mat-mdc-unelevated-button, &.mat-mdc-outlined-button, &.mat-mdc-stroked-button {
+    font-family: $font-family-base !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    padding: 0.625rem 1.5rem !important;
+    border-radius: $radius-md !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    height: auto !important;
+  }
+
+  &--cancel {
+    border: 0.0625rem solid $color-border !important;
+    background-color: $color-surface !important;
+    color: $color-text-primary !important;
+
+    &:hover:not(:disabled) {
+      border-color: $color-primary !important;
+      color: $color-primary !important;
+      background-color: rgba($color-primary, 0.04) !important;
+    }
+  }
+
+  &--submit {
+    background-color: $color-primary !important;
+    color: $color-white !important;
+
+    &:hover:not(:disabled) {
+      background-color: $color-primary-dark !important;
+      box-shadow: 0 0.25rem 0.75rem rgba($color-primary, 0.25) !important;
+      transform: translateY(-0.0625rem);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@keyframes upload-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

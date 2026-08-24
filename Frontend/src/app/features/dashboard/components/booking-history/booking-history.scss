@@ -1,0 +1,83 @@
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/mixins' as *;
+
+.booking-history {
+  &__header {
+    @include flex-between;
+    margin-bottom: $spacing-lg;
+  }
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  &__status {
+    text-align: center;
+    color: $color-text-secondary;
+    padding: $spacing-xl 0;
+
+    &--error {
+      color: $color-danger;
+    }
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th {
+      text-align: left;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: $color-text-muted;
+      padding: $spacing-sm $spacing-sm;
+      border-bottom: 0.0625rem solid $color-border;
+    }
+
+    td {
+      padding: $spacing-md $spacing-sm;
+      font-size: 0.8125rem;
+      color: $color-text-primary;
+      border-bottom: 0.0625rem solid $color-border;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  &__amenity {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    font-weight: 600;
+  }
+
+  &__amenity-icon {
+    font-size: 1.125rem;
+    width: 1.125rem;
+    height: 1.125rem;
+    color: $color-primary;
+  }
+
+  &__slot {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  &__date {
+    font-size: 0.8125rem;
+    color: $color-text-primary;
+  }
+
+  &__time {
+    font-size: 0.75rem;
+    color: $color-text-secondary;
+  }
+}

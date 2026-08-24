@@ -1,0 +1,168 @@
+<div class="create-complaint-page">
+  <div class="create-complaint-page__header">
+    <h2 class="create-complaint-page__title">
+      {{ strings.PAGE_TITLE }}
+    </h2>
+  </div>
+
+  <form class="create-complaint-card" [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="form-row">
+      <div class="form-field">
+        <label for="complaintTypeRefId">
+          {{ strings.COMPLAINT_TYPE_LABEL }}
+        </label>
+
+        <select
+          id="complaintTypeRefId"
+          formControlName="complaintTypeRefId"
+          [attr.disabled]="loadingLookups ? true : null"
+        >
+          <option value="" disabled>
+            {{ strings.COMPLAINT_TYPE_PLACEHOLDER }}
+          </option>
+
+          @for (type of typeOptions; track type.id) {
+            <option [value]="type.id">{{ type.label }}</option>
+          }
+        </select>
+
+        @if (form.controls.complaintTypeRefId.invalid && form.controls.complaintTypeRefId.touched) {
+          <span class="form-error">
+            {{ strings.COMPLAINT_TYPE_REQUIRED }}
+          </span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="categoryId">
+          {{ strings.CATEGORY_LABEL }}
+        </label>
+
+        <select
+          id="categoryId"
+          formControlName="categoryId"
+          [attr.disabled]="loadingLookups ? true : null"
+        >
+          <option value="" disabled>
+            {{ strings.CATEGORY_PLACEHOLDER }}
+          </option>
+
+          @for (category of categoryOptions; track category.id) {
+            <option [value]="category.id">{{ category.label }}</option>
+          }
+        </select>
+
+        @if (form.controls.categoryId.invalid && form.controls.categoryId.touched) {
+          <span class="form-error">
+            {{ strings.CATEGORY_REQUIRED }}
+          </span>
+        }
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label for="priorityRefId">
+          {{ strings.PRIORITY_LABEL }}
+        </label>
+
+        <select
+          id="priorityRefId"
+          formControlName="priorityRefId"
+          [attr.disabled]="loadingLookups ? true : null"
+        >
+          <option value="" disabled>
+            {{ strings.PRIORITY_PLACEHOLDER }}
+          </option>
+
+          @for (priority of priorityOptions; track priority.id) {
+            <option [value]="priority.id">{{ priority.label }}</option>
+          }
+        </select>
+
+        @if (form.controls.priorityRefId.invalid && form.controls.priorityRefId.touched) {
+          <span class="form-error">
+            {{ strings.PRIORITY_REQUIRED }}
+          </span>
+        }
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label for="description">
+        {{ strings.DESCRIPTION_LABEL }}
+      </label>
+
+      <textarea
+        id="description"
+        rows="4"
+        [attr.maxlength]="descriptionMaxLength"
+        formControlName="description"
+        [placeholder]="strings.DESCRIPTION_PLACEHOLDER"
+      ></textarea>
+
+      <div class="form-field__meta">
+        <span class="form-hint"> {{ descriptionLength }}/{{ descriptionMaxLength }} </span>
+      </div>
+
+      @if (form.controls.description.invalid && form.controls.description.touched) {
+        <span class="form-error">
+          @if (form.controls.description.hasError(validators.REQUIRED)) {
+            {{ strings.DESCRIPTION_REQUIRED }}
+          } @else if (form.controls.description.hasError(validators.MIN_LENGTH)) {
+            {{ strings.DESCRIPTION_MIN_LENGTH }}
+          }
+        </span>
+      }
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label for="preferredDate">
+          {{ strings.PREFERRED_DATE_LABEL }}
+        </label>
+
+        <input id="preferredDate" type="date" [min]="minDate" formControlName="preferredDate" />
+
+        @if (form.controls.preferredDate.invalid && form.controls.preferredDate.touched) {
+          <span class="form-error">
+            {{ strings.PREFERRED_DATE_REQUIRED }}
+          </span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="preferredTime">
+          {{ strings.PREFERRED_TIME_LABEL }}
+        </label>
+
+        <input id="preferredTime" type="time" formControlName="preferredTime" />
+      </div>
+    </div>
+
+    @if (errorMessage) {
+      <div class="form-banner form-banner--error">
+        {{ errorMessage }}
+      </div>
+    }
+
+    <div class="create-complaint-card__footer">
+      <app-action-button
+        [label]="strings.CANCEL"
+        variant="secondary"
+        type="button"
+        [disabled]="isSubmitting"
+        (clicked)="onCancel()"
+      >
+      </app-action-button>
+
+      <app-action-button
+        [label]="isSubmitting ? strings.SUBMITTING : strings.SUBMIT"
+        [icon]="icons.ADD"
+        variant="primary"
+        type="submit"
+      >
+      </app-action-button>
+    </div>
+  </form>
+</div>

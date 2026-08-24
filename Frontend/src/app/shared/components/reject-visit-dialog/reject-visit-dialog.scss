@@ -1,0 +1,11 @@
+@use '../../../shared/styles/variables' as *;
+
+.reject-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+
+  &__field {
+    width: 100%;
+  }
+}

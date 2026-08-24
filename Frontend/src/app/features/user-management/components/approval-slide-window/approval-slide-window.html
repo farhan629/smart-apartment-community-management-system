@@ -1,0 +1,40 @@
+<div class="asw-overlay" (click)="onClose()"></div>
+<div class="asw-panel">
+  <div class="asw-header">
+    <h3 class="asw-title">{{ strings.APPROVALS_TITLE }}</h3>
+    <button class="asw-close-btn" (click)="onClose()" type="button">
+      <mat-icon>{{ icons.CLOSE }}</mat-icon>
+    </button>
+  </div>
+
+  <div class="asw-list">
+    @if (loading()) {
+      <div class="asw-empty">{{ strings.LOADING }}</div>
+    } @else if (approvals().length === 0) {
+      <div class="asw-empty">{{ strings.NO_PENDING_APPROVALS }}</div>
+    } @else {
+      @for (approval of approvals(); track approval.id) {
+        <div class="asw-item">
+          <div class="asw-item-content">
+            <div class="asw-item-header">
+              <span class="asw-item-name">{{ approval.userName }}</span>
+            </div>
+            <div class="asw-item-detail">{{ approval.email }}</div>
+            <div class="asw-item-detail">
+              {{ strings.FLAT_LABEL }}: {{ approval.block }}-{{ approval.flatNumber }}
+            </div>
+          </div>
+          <button
+            class="asw-approve-btn"
+            (click)="onApprove(approval)"
+            type="button"
+            [title]="strings.APPROVE"
+          >
+            <mat-icon>{{ icons.CHECK }}</mat-icon>
+            {{ strings.APPROVE }}
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

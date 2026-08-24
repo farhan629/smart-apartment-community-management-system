@@ -1,0 +1,452 @@
+@startuml User_Management_API_Sequence_Diagrams
+
+skinparam sequenceArrowThickness 1.5
+skinparam roundcorner 8
+skinparam sequenceParticipantBorderColor #534AB7
+skinparam sequenceParticipantBackgroundColor #EEEDFE
+skinparam sequenceParticipantFontColor #3C3489
+skinparam sequenceActorBorderColor #0F6E56
+skinparam sequenceActorBackgroundColor #E1F5EE
+skinparam sequenceActorFontColor #085041
+skinparam noteBorderColor #BA7517
+skinparam noteBackgroundColor #FAEEDA
+skinparam noteFontColor #633806
+skinparam sequenceLifeLineBorderColor #AFA9EC
+skinparam sequenceDividerBackgroundColor #D3D1C7
+skinparam sequenceDividerFontColor #2C2C2A
+skinparam sequenceGroupBorderColor #B4B2A9
+skinparam sequenceGroupFontColor #2C2C2A
+
+' ─────────────────────────────────────
+' 1. AUTH — SIGNUP
+' ─────────────────────────────────────
+== Auth: POST /signup ==
+
+actor      Client
+participant "API Server"    as API
+participant "Auth Service"  as Auth
+database   "Database"       as DB
+
+Client -> API : POST /signup\n{firstName, lastName, email, password, phone}
+
+API -> Auth : Validate request fields
+alt Missing / invalid fields
+    Auth --> API : 400 Bad Request
+    API --> Client : 400 { error: "email is required" }
+else Fields valid
+    Auth -> DB : Check if email or phone exists
+    alt Email or phone already registered
+        DB --> Auth : Record found
+        Auth --> API : 409 Conflict
+        API --> Client : 409 { error: "User with this email already exists" }
+    else New user
+        DB --> Auth : No record
+        Auth -> DB : INSERT new user record
+        DB --> Auth : Success
+        Auth --> API : 201 Created
+        API --> Client : 201 { success: true, message: "User registered successfully" }
+    end
+end
+
+' ─────────────────────────────────────
+' 2. AUTH — LOGIN
+' ─────────────────────────────────────
+== Auth: POST /login ==
+
+Client -> API : POST /login\n{email, password}
+
+API -> Auth : Validate fields
+alt Missing email or password
+    Auth --> API : 400 Bad Request
+    API --> Client : 400 { error: "email and password are required" }
+else Fields present
+    Auth -> DB : Fetch user by email
+    alt User not found or wrong password
+        DB --> Auth : No match
+        Auth --> API : 401 Unauthorized
+        API --> Client : 401 { error: "Invalid email or password" }
+    else User found but inactive/blocked
+        DB --> Auth : User record (inactive)
+        Auth --> API : 403 Forbidden
+        API --> Client : 403 { error: "Your account has been deactivated" }
+    else Credentials valid, account active
+        DB --> Auth : User record (active)
+        Auth -> Auth : Generate JWT accessToken & refreshToken
+        Auth --> API : 200 OK + tokens
+        API --> Client : 200 { accessToken: "...", refreshToken: "..." }
+    end
+end
+
+' ─────────────────────────────────────
+' 3. AUTH — FORGOT PASSWORD FLOW
+' ─────────────────────────────────────
+== Auth: POST /auth/forgot-password/send-otp ==
+
+Client -> API : POST /auth/forgot-password/send-otp\n{email}
+
+API -> Auth : Validate email format
+alt Invalid email format
+    Auth --> API : 400 Bad Request
+    API --> Client : 400 { message: "Invalid email format" }
+else Valid format
+    Auth -> DB : Lookup user by email
+    alt Email not found
+        DB --> Auth : No record
+        Auth --> API : 404 Not Found
+        API --> Client : 404 { message: "Email not found" }
+    else Rate limit exceeded
+        Auth --> API : 429 Too Many Requests
+        API --> Client : 429 { message: "Too many OTP requests. Please try again later" }
+    else Email found, within limits
+        DB --> Auth : User record
+        Auth -> Auth : Generate 6-digit OTP & store with TTL
+        Auth -> Client : Send OTP email
+        Auth --> API : 200 OK
+        API --> Client : 200 { message: "OTP sent successfully" }
+    end
+end
+
+== Auth: POST /auth/forgot-password/verify-otp ==
+
+Client -> API : POST /auth/forgot-password/verify-otp\n{email, otp}
+
+API -> Auth : Validate email + 6-digit OTP format
+Auth -> DB : Lookup OTP record for email
+
+alt Email not found
+    DB --> Auth : No record
+    Auth --> API : 404 Not Found
+    API --> Client : 404 { message: "Email not found" }
+else OTP expired
+    DB --> Auth : Expired record
+    Auth --> API : 410 Gone
+    API --> Client : 410 { message: "OTP expired" }
+else OTP invalid or wrong
+    DB --> Auth : Mismatch
+    Auth --> API : 400 Bad Request
+    API --> Client : 400 { message: "Invalid OTP" }
+else Too many verification attempts
+    Auth --> API : 429 Too Many Requests
+    API --> Client : 429 { message: "Too many verification attempts. Please request a new OTP" }
+else OTP valid
+    DB --> Auth : Match
+    Auth -> Auth : Generate short-lived resetToken (JWT)
+    Auth --> API : 200 OK + resetToken
+    API --> Client : 200 { message: "OTP verified", resetToken: "..." }
+end
+
+== Auth: POST /auth/forgot-password/reset-password ==
+
+Client -> API : POST /auth/forgot-password/reset-password\n{resetToken, newPassword}
+
+API -> Auth : Validate resetToken & newPassword format
+alt Invalid / expired resetToken
+    Auth --> API : 400 / 401
+    API --> Client : 400 { message: "Invalid reset token" }\nor 401 { message: "Reset session expired" }
+else Weak password
+    Auth --> API : 422 Unprocessable
+    API --> Client : 422 { message: "Password must contain uppercase, lowercase, number, special char" }
+else Token valid & password strong
+    Auth -> DB : UPDATE user password (hashed)
+    DB --> Auth : Success
+    Auth -> DB : Invalidate / delete resetToken
+    Auth --> API : 200 OK
+    API --> Client : 200 { message: "Password reset successfully" }
+end
+
+== Auth: POST /auth/forgot-password/resend-otp ==
+
+Client -> API : POST /auth/forgot-password/resend-otp\n{email}
+
+API -> Auth : Validate email
+Auth -> DB : Lookup user by email
+
+alt Email not found
+    DB --> Auth : No record
+    Auth --> API : 404 Not Found
+    API --> Client : 404 { message: "Email not found" }
+else Rate limit exceeded
+    Auth --> API : 429 Too Many Requests
+    API --> Client : 429 { message: "Too many resend attempts. Please try again later" }
+else Within limits
+    DB --> Auth : User record
+    Auth -> Auth : Generate new OTP, replace old one
+    Auth -> Client : Send new OTP email
+    Auth --> API : 200 OK
+    API --> Client : 200 { message: "OTP resent successfully" }
+end
+
+' ─────────────────────────────────────
+' 4. USERS — READ, UPDATE, DELETE
+' ─────────────────────────────────────
+== Users: GET /user (list all or single) ==
+
+actor      AuthClient as "Client\n(Authenticated)"
+participant "API Server"   as API
+participant "Auth Middleware" as Middleware
+database   "Database"        as DB
+
+AuthClient -> API : GET /user?id=<uuid>&role=<role>\n[Authorization: Bearer <token>]
+
+API -> Middleware : Validate access token
+alt Token missing or invalid
+    Middleware --> API : 401 Unauthorized
+    API --> AuthClient : 401 { error: "Access token is missing or invalid" }
+else Insufficient permissions
+    Middleware --> API : 403 Forbidden
+    API --> AuthClient : 403 { error: "You do not have permission" }
+else Token valid
+    Middleware --> API : Proceed
+    API -> DB : Query users (with optional id / role filter)
+    alt Invalid UUID format
+        API --> AuthClient : 400 { error: "id must be a valid UUID" }
+    else id provided but not found
+        DB --> API : No record
+        API --> AuthClient : 404 { error: "User not found" }
+    else id omitted — return all
+        DB --> API : Array of UserDetail
+        API --> AuthClient : 200 [ ...UserDetail ]
+    else id provided and found
+        DB --> API : Single UserDetail
+        API --> AuthClient : 200 { UserDetail }
+    end
+end
+
+== Users: PUT /user/{id} (update) ==
+
+AuthClient -> API : PUT /user/{id}\n[Bearer token]\n{firstName?, lastName?, email?, phone?, role?, status?}
+
+API -> Middleware : Validate token
+alt Unauthorized / Forbidden
+    Middleware --> API : 401 / 403
+    API --> AuthClient : 401 or 403 error
+else Token valid
+    API -> DB : Find user by id
+    alt User not found
+        DB --> API : No record
+        API --> AuthClient : 404 { error: "User not found" }
+    else Email / phone conflicts with another user
+        DB --> API : Conflict detected
+        API --> AuthClient : 409 { error: "Email already in use" }
+    else Invalid field values
+        API --> AuthClient : 400 { error: "Invalid role value" }
+    else All checks pass
+        DB --> API : User record
+        API -> DB : UPDATE user fields
+        DB --> API : Success
+        API --> AuthClient : 200 { message: "Operation successful" }
+    end
+end
+
+== Users: DELETE /user/{id} ==
+
+AuthClient -> API : DELETE /user/{id}\n[Bearer token]
+
+API -> Middleware : Validate token
+alt Unauthorized / Forbidden
+    Middleware --> API : 401 / 403
+    API --> AuthClient : 401 or 403 error
+else Token valid
+    API -> DB : Find user by id
+    alt Not found
+        DB --> API : No record
+        API --> AuthClient : 404 { error: "User not found" }
+    else Found
+        DB --> API : User record
+        API -> DB : DELETE (or soft-delete) user
+        DB --> API : Success
+        API --> AuthClient : 200 { message: "Operation successful" }
+    end
+end
+
+' ─────────────────────────────────────
+' 5. REFERENCE TERMS
+' ─────────────────────────────────────
+== Reference Terms: POST /refterm (create) ==
+
+AuthClient -> API : POST /refterm\n[Bearer token]\n{termName, description?}
+
+API -> Middleware : Validate token
+alt Unauthorized / Forbidden
+    Middleware --> API : 401 / 403
+    API --> AuthClient : 401 or 403 error
+else Token valid
+    alt termName missing
+        API --> AuthClient : 400 { error: "termName is required" }
+    else Term name already exists
+        API -> DB : Check uniqueness
+        DB --> API : Conflict
+        API --> AuthClient : 409 { error: "Reference term with this name already exists" }
+    else Valid & unique
+        API -> DB : INSERT reference term
+        DB --> API : Success
+        API --> AuthClient : 201 { message: "Operation successful" }
+    end
+end
+
+== Reference Terms: PUT /refterm (update) ==
+
+AuthClient -> API : PUT /refterm\n[Bearer token]\n{id (required), termName?, description?}
+
+API -> Middleware : Validate token
+alt Unauthorized / Forbidden
+    Middleware --> API : 401 / 403
+    API --> AuthClient : 401 or 403 error
+else Token valid
+    alt id missing or invalid UUID
+        API --> AuthClient : 400 { error: "id must be a valid UUID" }
+    else Term not found
+        API -> DB : Lookup by id
+        DB --> API : No record
+        API --> AuthClient : 404 { error: "Reference term not found" }
+    else Name conflict
+        DB --> API : Conflict
+        API --> AuthClient : 409 { error: "Reference term name already exists" }
+    else All checks pass
+        API -> DB : UPDATE term fields
+        DB --> API : Success
+        API --> AuthClient : 200 { message: "Operation successful" }
+    end
+end
+
+' ─────────────────────────────────────
+' 6. NOTIFICATIONS
+' ─────────────────────────────────────
+== Notifications: GET /notification ==
+
+AuthClient -> API : GET /notification?userId=<uuid>&isRead=<bool>&page=1&limit=10\n[Bearer token]
+
+API -> Middleware : Validate token
+alt Unauthorized / Forbidden
+    Middleware --> API : 401 / 403
+    API --> AuthClient : 401 or 403 error
+else Token valid
+    alt Invalid userId format
+        API --> AuthClient : 400 { error: "userId must be a valid UUID" }
+    else No notifications found
+        API -> DB : Query notifications for userId
+        DB --> API : Empty set
+        API --> AuthClient : 404 { error: "No notifications found for this user" }
+    else Notifications exist
+        DB --> API : Paginated results
+        API --> AuthClient : 200 { totalNotifications, unreadCount, readCount, notifications: [...] }
+    end
+end
+
+== Notifications: PUT /notification/mark-all-read ==
+
+AuthClient -> API : PUT /notification/mark-all-read?userId=<uuid>\n[Bearer token]
+
+API -> Middleware : Validate token
+alt Unauthorized / Forbidden
+    Middleware --> API : 401 / 403
+    API --> AuthClient : 401 or 403 error
+else Token valid
+    alt Invalid userId
+        API --> AuthClient : 400 Bad Request
+    else No notifications
+        API -> DB : Check user notifications
+        DB --> API : Empty
+        API --> AuthClient : 404 Not Found
+    else Notifications found
+        API -> DB : UPDATE all notifications SET isRead=true
+        DB --> API : Success
+        API --> AuthClient : 200 { message: "All notifications marked as read" }
+    end
+end
+
+== Notifications: DELETE /notification/delete-all ==
+
+AuthClient -> API : DELETE /notification/delete-all?userId=<uuid>\n[Bearer token]
+
+API -> Middleware : Validate token
+alt Unauthorized / Forbidden
+    Middleware --> API : 401 / 403
+    API --> AuthClient : 401 or 403 error
+else Token valid
+    API -> DB : Check & delete all notifications for userId
+    alt None found
+        DB --> API : Empty
+        API --> AuthClient : 404 Not Found
+    else Deleted
+        DB --> API : Success
+        API --> AuthClient : 200 { message: "All notifications deleted successfully" }
+    end
+end
+
+== Notifications: PUT /notification/{id} (mark single read) ==
+
+AuthClient -> API : PUT /notification/{id}\n[Bearer token]
+
+API -> Middleware : Validate token
+alt Unauthorized / Forbidden
+    Middleware --> API : 401 / 403
+    API --> AuthClient : 401 or 403 error
+else Token valid
+    API -> DB : Find notification by id
+    alt Not found
+        DB --> API : No record
+        API --> AuthClient : 404 Not Found
+    else Already read
+        DB --> API : isRead=true
+        API --> AuthClient : 409 { error: "Notification is already marked as read" }
+    else Unread
+        API -> DB : UPDATE notification SET isRead=true
+        DB --> API : Success
+        API --> AuthClient : 200 { message: "Notification marked as read" }
+    end
+end
+
+== Notifications: DELETE /notification/{id} ==
+
+AuthClient -> API : DELETE /notification/{id}\n[Bearer token]
+
+API -> Middleware : Validate token
+alt Unauthorized / Forbidden
+    Middleware --> API : 401 / 403
+    API --> AuthClient : 401 or 403 error
+else Token valid
+    API -> DB : Find notification by id
+    alt Not found
+        DB --> API : No record
+        API --> AuthClient : 404 Not Found
+    else Found
+        API -> DB : DELETE notification
+        DB --> API : Success
+        API --> AuthClient : 200 { message: "Notification deleted successfully" }
+    end
+end
+
+' ─────────────────────────────────────
+' 7. REPORTS
+' ─────────────────────────────────────
+== Reports: POST /userreport ==
+
+AuthClient -> API : POST /userreport\n[Bearer token]\n{reportType, date?, week?, month?, year?, fromDate?, toDate?}
+
+API -> Middleware : Validate token
+alt Unauthorized / Forbidden
+    Middleware --> API : 401 / 403
+    API --> AuthClient : 401 or 403 error
+else Token valid
+    alt reportType missing or invalid
+        API --> AuthClient : 400 { error: "reportType must be DATE | WEEK | MONTH | CUSTOM" }
+    else fromDate after toDate (CUSTOM type)
+        API --> AuthClient : 422 { error: "fromDate must not be after toDate" }
+    else Valid request
+        API -> DB : Query visitor data for period
+        API -> DB : Query amenity bookings for period
+        API -> DB : Query complaints for period
+        DB --> API : Visitor records
+        DB --> API : Amenity usage records
+        DB --> API : Complaint records
+        alt No data found
+            API --> AuthClient : 404 { error: "No report data found for the given period" }
+        else Data found
+            API -> API : Aggregate: totals, uniques,\nbreakdowns, open/resolved counts
+            API --> AuthClient : 200 { UserReport:\n  generatedAt, reportType, period,\n  visitorReport {...},\n  amenitiesReport {...},\n  complaintReport {...} }
+        end
+    end
+end
+
+@enduml

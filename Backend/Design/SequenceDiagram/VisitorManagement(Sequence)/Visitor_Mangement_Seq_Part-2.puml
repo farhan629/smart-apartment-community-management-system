@@ -1,0 +1,174 @@
+@startuml Visitor_Management_Part2
+skinparam sequenceArrowThickness 1.2
+ 
+skinparam roundcorner 6
+ 
+skinparam sequenceBoxBorderColor #888
+ 
+skinparam sequenceLifeLineBorderColor #AAAAAA
+ 
+skinparam sequenceGroupBorderColor #888888
+ 
+skinparam sequenceGroupBackgroundColor #F5F5F5
+ 
+skinparam sequenceGroupFontSize 12
+ 
+skinparam noteFontSize 11
+ 
+skinparam sequenceParticipantFontSize 12
+ 
+skinparam sequenceParticipantBackgroundColor #EFEFEF
+ 
+skinparam sequenceParticipantBorderColor #888888
+actor Resident as RES
+ 
+actor "Admin/Manager" as ADM
+ 
+participant "Auth Middleware" as AUTH
+ 
+participant "Visit API" as VISAPI
+ 
+database "Database" as DB
+== 5. Update Pending Visit ==
+RES -> VISAPI : PUT /visits?id={visit_id}\n{ purpose_type_id?, start_date?, end_date? }\n[Authorization: Bearer token]
+ 
+VISAPI -> AUTH : Validate JWT
+ 
+AUTH --> VISAPI : Authorized
+alt Unauthorized
+ 
+AUTH --> VISAPI : 401 Unauthorized
+ 
+VISAPI --> RES : 401 Unauthorized
+ 
+else Forbidden
+ 
+VISAPI --> RES : 403 Forbidden\n[not the visit owner]
+ 
+else Not Found
+ 
+VISAPI --> RES : 404 Not Found
+ 
+else Not Pending
+ 
+VISAPI -> DB : Check visit status
+ 
+DB --> VISAPI : status != PENDING
+ 
+VISAPI --> RES : 422 Unprocessable Entity\n[visit is not in PENDING status]
+ 
+else Success
+ 
+VISAPI -> DB : Update visit details (only if status is PENDING)
+ 
+DB --> VISAPI : updated
+ 
+VISAPI --> RES : 200 OK\n{ id }
+ 
+end
+== 6. Cancel Visit ==
+RES -> VISAPI : DELETE /visits?id={visit_id}\n[Authorization: Bearer token]
+ 
+VISAPI -> AUTH : Validate JWT
+ 
+AUTH --> VISAPI : Authorized
+alt Unauthorized
+ 
+AUTH --> VISAPI : 401 Unauthorized
+ 
+VISAPI --> RES : 401 Unauthorized
+ 
+else Forbidden
+ 
+VISAPI --> RES : 403 Forbidden\n[not the visit owner]
+ 
+else Not Found
+ 
+VISAPI --> RES : 404 Not Found
+ 
+else Invalid Status
+ 
+VISAPI --> RES : 422 Unprocessable Entity\n[only PENDING or APPROVED visits can be cancelled]
+ 
+else Success
+ 
+VISAPI -> DB : Mark visit as CANCELLED and inactive
+ 
+DB --> VISAPI : cancelled
+ 
+VISAPI --> RES : 204 No Content
+ 
+end
+== 7. Approve Visit ==
+ADM -> VISAPI : PATCH /visits/{id}/approve\n[Authorization: Bearer token]
+ 
+VISAPI -> AUTH : Validate JWT — check Admin/Manager role
+ 
+AUTH --> VISAPI : Authorized
+alt Unauthorized
+ 
+AUTH --> VISAPI : 401 Unauthorized
+ 
+VISAPI --> ADM : 401 Unauthorized
+ 
+else Forbidden
+ 
+AUTH --> VISAPI : 403 Forbidden
+ 
+VISAPI --> ADM : 403 Forbidden\n[admin/manager role required]
+ 
+else Not Found
+ 
+VISAPI --> ADM : 404 Not Found
+ 
+else Not Pending
+ 
+VISAPI --> ADM : 422 Unprocessable Entity\n[visit is not in PENDING status]
+ 
+else Success
+ 
+VISAPI -> DB : Update visit status to APPROVED with approver and timestamp
+ 
+DB --> VISAPI : updated
+ 
+VISAPI --> ADM : 200 OK\n{ id, status: APPROVED }
+ 
+end
+== 8. Reject Visit ==
+ADM -> VISAPI : PATCH /visits/{id}/reject\n{ rejection_reason }\n[Authorization: Bearer token]
+ 
+VISAPI -> AUTH : Validate JWT — check Admin/Manager role
+ 
+AUTH --> VISAPI : Authorized
+alt Unauthorized
+ 
+AUTH --> VISAPI : 401 Unauthorized
+ 
+VISAPI --> ADM : 401 Unauthorized
+ 
+else Forbidden
+ 
+VISAPI --> ADM : 403 Forbidden\n[admin/manager role required]
+ 
+else Bad Request
+ 
+VISAPI --> ADM : 400 Bad Request\n[rejection_reason required]
+ 
+else Not Found
+ 
+VISAPI --> ADM : 404 Not Found
+ 
+else Not Pending
+ 
+VISAPI --> ADM : 422 Unprocessable Entity\n[visit is not in PENDING status]
+ 
+else Success
+ 
+VISAPI -> DB : Update visit status to REJECTED with rejection reason
+ 
+DB --> VISAPI : updated
+ 
+VISAPI --> ADM : 200 OK\n{ id, status: REJECTED }
+ 
+end
+@enduml

@@ -1,0 +1,215 @@
+@startuml Users_Part4
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
+skinparam sequenceBoxBorderColor #888
+skinparam sequenceLifeLineBorderColor #AAAAAA
+skinparam sequenceGroupBorderColor #888888
+skinparam sequenceGroupBackgroundColor #F5F5F5
+skinparam sequenceGroupFontSize 12
+skinparam noteFontSize 11
+skinparam sequenceParticipantFontSize 12
+skinparam sequenceParticipantBackgroundColor #EFEFEF
+skinparam sequenceParticipantBorderColor #888888
+
+actor Admin as ADM
+actor Resident as RES
+participant "Client App" as APP
+participant "API Gateway" as GW
+participant "User API" as API
+database "Database" as DB
+
+== 14. Get All Users (Admin only) ==
+ADM -> APP : Request user list
+APP -> GW : GET /user
+GW -> API : Forward request
+API -> DB : Fetch all users
+alt Unauthorized - missing token
+    API --> GW : 401 Unauthorized\n"Access token is missing or invalid"
+    GW --> APP : 401
+    APP --> ADM : Session expired, please login
+else Forbidden - insufficient permissions
+    API --> GW : 403 Forbidden\n"You do not have permission"
+    GW --> APP : 403
+    APP --> ADM : Access denied
+else Server error
+    API --> GW : 500 Internal Server Error
+    GW --> APP : 500
+    APP --> ADM : Something went wrong, try again
+else OK
+    API --> GW : 200 [UserDetail[]]
+    GW --> APP : 200 [UserDetail[]]
+    APP --> ADM : Display user list
+end
+
+== 15. Get User by ID ==
+ADM -> APP : Select user by ID
+APP -> GW : GET /user?id={uuid}
+GW -> API : Forward request
+API -> DB : Fetch user by ID
+alt Invalid UUID format
+    API --> GW : 400 Bad Request\n"id must be a valid UUID"
+    GW --> APP : 400
+    APP --> ADM : Invalid user ID format
+else Unauthorized - missing token
+    API --> GW : 401 Unauthorized\n"Access token is missing or invalid"
+    GW --> APP : 401
+    APP --> ADM : Session expired, please login
+else Forbidden - insufficient permissions
+    API --> GW : 403 Forbidden\n"You do not have permission"
+    GW --> APP : 403
+    APP --> ADM : Access denied
+else User not found
+    API --> GW : 404 Not Found\n"User not found"
+    GW --> APP : 404
+    APP --> ADM : User not found
+else Server error
+    API --> GW : 500 Internal Server Error
+    GW --> APP : 500
+    APP --> ADM : Something went wrong, try again
+else OK
+    API --> GW : 200 UserDetail
+    GW --> APP : 200 UserDetail
+    APP --> ADM : Display user details
+end
+
+== 16. Get Users by Role ==
+ADM -> APP : Filter by role
+APP -> GW : GET /user?role=security
+GW -> API : Forward request
+API -> DB : Filter by role
+alt Invalid role value
+    API --> GW : 400 Bad Request\n"role must be admin, resident, staff or security"
+    GW --> APP : 400
+    APP --> ADM : Invalid role value
+else Unauthorized - missing token
+    API --> GW : 401 Unauthorized\n"Access token is missing or invalid"
+    GW --> APP : 401
+    APP --> ADM : Session expired, please login
+else Forbidden - insufficient permissions
+    API --> GW : 403 Forbidden\n"You do not have permission"
+    GW --> APP : 403
+    APP --> ADM : Access denied
+else No users found for role
+    API --> GW : 404 Not Found\n"No users found for given role"
+    GW --> APP : 404
+    APP --> ADM : No users found for this role
+else Server error
+    API --> GW : 500 Internal Server Error
+    GW --> APP : 500
+    APP --> ADM : Something went wrong, try again
+else OK
+    API --> GW : 200 [UserDetail[]]
+    GW --> APP : 200 [UserDetail[]]
+    APP --> ADM : Display filtered users
+end
+
+== 17. Resident Views Own Profile ==
+RES -> APP : View my profile
+APP -> GW : GET /user?id={own uuid}
+GW -> API : Forward request
+API -> DB : Fetch own profile
+alt Invalid UUID format
+    API --> GW : 400 Bad Request\n"id must be a valid UUID"
+    GW --> APP : 400
+    APP --> RES : Invalid request
+else Unauthorized - missing token
+    API --> GW : 401 Unauthorized\n"Access token is missing or invalid"
+    GW --> APP : 401
+    APP --> RES : Session expired, please login
+else Forbidden - accessing another user's profile
+    API --> GW : 403 Forbidden\n"You do not have permission"
+    GW --> APP : 403
+    APP --> RES : Access denied
+else User not found
+    API --> GW : 404 Not Found\n"User not found"
+    GW --> APP : 404
+    APP --> RES : Profile not found
+else Server error
+    API --> GW : 500 Internal Server Error
+    GW --> APP : 500
+    APP --> RES : Something went wrong, try again
+else OK
+    API --> GW : 200 UserDetail
+    GW --> APP : 200 UserDetail
+    APP --> RES : Display profile
+end
+
+== 18. Update User ==
+ADM -> APP : Edit user details
+APP -> GW : PUT /user/{id}\n{firstName, lastName, email, role, status}
+GW -> API : Forward request
+API -> DB : Validate & update
+alt Invalid UUID format
+    API --> GW : 400 Bad Request\n"id must be a valid UUID"
+    GW --> APP : 400
+    APP --> ADM : Invalid user ID format
+else Invalid role value
+    API --> GW : 400 Bad Request\n"Invalid role value"
+    GW --> APP : 400
+    APP --> ADM : Invalid role selected
+else Invalid status value
+    API --> GW : 400 Bad Request\n"status must be active or inactive"
+    GW --> APP : 400
+    APP --> ADM : Invalid status value
+else Unauthorized - missing token
+    API --> GW : 401 Unauthorized\n"Access token is missing or invalid"
+    GW --> APP : 401
+    APP --> ADM : Session expired, please login
+else Forbidden - insufficient permissions
+    API --> GW : 403 Forbidden\n"You do not have permission"
+    GW --> APP : 403
+    APP --> ADM : Access denied
+else User not found
+    API --> GW : 404 Not Found\n"User not found"
+    GW --> APP : 404
+    APP --> ADM : User not found
+else Email already in use
+    API --> GW : 409 Conflict\n"Email already in use"
+    GW --> APP : 409
+    APP --> ADM : Email already registered
+else Phone already in use
+    API --> GW : 409 Conflict\n"Phone already in use"
+    GW --> APP : 409
+    APP --> ADM : Phone number already registered
+else Server error
+    API --> GW : 500 Internal Server Error
+    GW --> APP : 500
+    APP --> ADM : Something went wrong, try again
+else OK
+    API --> GW : 200 Updated
+    GW --> APP : 200
+    APP --> ADM : User updated successfully
+end
+
+== 19. Delete User ==
+ADM -> APP : Delete user
+APP -> GW : DELETE /user/{id}
+GW -> API : Forward request
+API -> DB : Delete record
+alt Invalid UUID format
+    API --> GW : 400 Bad Request\n"id must be a valid UUID"
+    GW --> APP : 400
+    APP --> ADM : Invalid user ID format
+else Unauthorized - missing token
+    API --> GW : 401 Unauthorized\n"Access token is missing or invalid"
+    GW --> APP : 401
+    APP --> ADM : Session expired, please login
+else Forbidden - insufficient permissions
+    API --> GW : 403 Forbidden\n"You do not have permission"
+    GW --> APP : 403
+    APP --> ADM : Access denied
+else User not found
+    API --> GW : 404 Not Found\n"User not found"
+    GW --> APP : 404
+    APP --> ADM : User not found
+else Server error
+    API --> GW : 500 Internal Server Error
+    GW --> APP : 500
+    APP --> ADM : Something went wrong, try again
+else OK
+    API --> GW : 200 Deleted
+    GW --> APP : 200
+    APP --> ADM : User deleted successfully
+end
+
+@enduml

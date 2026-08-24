@@ -1,0 +1,40 @@
+<div class="header">
+  <div class="header__brand">
+    <span class="header__brand-name">{{ strings.APP_NAME }}</span>
+  </div>
+
+  <div class="header__actions">
+    <button class="header__icon-btn header__icon-btn--notif" type="button" [attr.aria-label]="strings.NOTIFICATIONS_TITLE" (click)="toggleNotifications()">
+      <mat-icon>{{ icons.NOTIFICATIONS }}</mat-icon>
+      @if (hubService.connected()) {
+        <span class="header__hub-dot"></span>
+      }
+      @if (unreadCount() > 0) {
+        <span class="header__icon-btn-dot"></span>
+      }
+    </button>
+
+    @if (showNotifications()) {
+      <app-notification-slide-window (closed)="closeNotifications()" />
+    }
+
+    <div class="header__profile" (click)="goToSettings()">
+      @if (profilePhoto(); as photo) {
+        <img class="header__profile-avatar header__profile-avatar--img" [src]="photo" alt="Profile" />
+      } @else {
+        <mat-icon class="header__profile-avatar">{{ icons.PROFILE }}</mat-icon>
+      }
+      <div class="header__profile-info">
+        <span class="header__profile-name">{{ userName() }}</span>
+      </div>
+    </div>
+
+    <app-action-button
+      class="header__logout"
+      [label]="strings.LOGOUT"
+      [icon]="icons.LOGOUT"
+      variant="secondary"
+      (clicked)="logout()"
+    />
+  </div>
+</div>

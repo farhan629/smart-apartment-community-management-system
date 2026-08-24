@@ -1,0 +1,178 @@
+<app-popup-dialog [title]="strings.BOOK_VISITOR" width="34rem" (closed)="onClose()">
+  <form class="book-visit-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+    @if (errorMessage()) {
+      <div class="book-visit-form__banner">
+        <mat-icon>{{ icons.ERROR }}</mat-icon>
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <div class="book-visit-form__grid">
+      <div class="book-visit-form__field book-visit-form__field--relative">
+        <label class="book-visit-form__label">{{ strings.VISITOR_NAME_LABEL }}</label>
+        <input
+          #nameInput
+          class="book-visit-form__input"
+          type="text"
+          formControlName="name"
+          [placeholder]="strings.NAME_PLACEHOLDER"
+          autocomplete="off"
+          (focus)="onNameFocus()"
+          (blur)="onNameBlur()"
+        />
+
+        @if (isNameFocused() && !selectedVisitor() && form.controls.name.value.trim().length > 0) {
+          <div class="book-visit-form__suggestions">
+            @if (form.controls.name.value.trim().length < searchConfig.MIN_CHARS) {
+              <p class="book-visit-form__hint book-visit-form__suggestions-hint">
+                {{ vm.VISITOR_SEARCH_MIN_CHARS_HINT }}
+              </p>
+            } @else if (isSearchingVisitors()) {
+              <p class="book-visit-form__hint book-visit-form__suggestions-hint">
+                {{ strings.LOADING }}
+              </p>
+            } @else if (visitorSuggestions().length > 0) {
+              @for (visitor of visitorSuggestions(); track visitor.id) {
+                <button
+                  type="button"
+                  class="book-visit-form__suggestion"
+                  (mousedown)="onSelectVisitor(visitor)"
+                >
+                  <mat-icon>{{ icons.PERSON }}</mat-icon>
+                  <span class="book-visit-form__suggestion-text">
+                    <span class="book-visit-form__suggestion-name">{{ visitor.name }}</span>
+                    <span class="book-visit-form__suggestion-phone">{{ visitor.phoneNumber }}</span>
+                  </span>
+                </button>
+              }
+            } @else {
+              <p class="book-visit-form__hint book-visit-form__suggestions-hint">
+                {{ vm.VISITOR_SEARCH_NO_MATCHES }}
+              </p>
+            }
+          </div>
+        }
+
+        @if (selectedVisitor()) {
+          <div class="book-visit-form__selected-badge">
+            <mat-icon>{{ icons.VERIFIED }}</mat-icon>
+            {{ vm.EXISTING_VISITOR_SELECTED }}
+            <button type="button" (mousedown)="onClearSelectedVisitor()">
+              {{ vm.CLEAR_SELECTED_VISITOR }}
+            </button>
+          </div>
+        }
+
+        @if (form.controls.name.invalid && form.controls.name.touched) {
+          <span class="book-visit-form__error">{{ vm.NAME_REQUIRED }}</span>
+        }
+      </div>
+
+      <div class="book-visit-form__field">
+        <label class="book-visit-form__label">{{ strings.VISITOR_PHONE_LABEL }}</label>
+        <input
+          class="book-visit-form__input"
+          type="tel"
+          formControlName="phoneNumber"
+          [placeholder]="strings.PHONE_PLACEHOLDER"
+        />
+        @if (form.controls.phoneNumber.invalid && form.controls.phoneNumber.touched) {
+          <span class="book-visit-form__error">{{ vm.PHONE_REQUIRED }}</span>
+        }
+      </div>
+
+      <div class="book-visit-form__field book-visit-form__field--full">
+        <label class="book-visit-form__label">{{ strings.VISITOR_EMAIL_LABEL }}</label>
+        <input
+          class="book-visit-form__input"
+          type="email"
+          formControlName="email"
+          [placeholder]="strings.EMAIL_PLACEHOLDER"
+        />
+        @if (form.controls.email.invalid && form.controls.email.touched) {
+          <span class="book-visit-form__error">{{ vm.EMAIL_INVALID }}</span>
+        }
+      </div>
+
+      <div class="book-visit-form__field">
+        <label class="book-visit-form__label">{{ strings.VISITOR_TYPE_LABEL }}</label>
+        @if (isLoadingVisitorTypes()) {
+          <p class="book-visit-form__hint">{{ strings.LOADING }}</p>
+        } @else {
+          <select class="book-visit-form__select" formControlName="visitorTypeId">
+            <option value="" disabled>{{ vm.SELECT_PLACEHOLDER }}</option>
+            @for (type of visitorTypes(); track type.id) {
+              <option [value]="type.id">{{ type.name }}</option>
+            }
+          </select>
+          @if (visitorTypes().length === 0) {
+            <p class="book-visit-form__hint">{{ strings.VISITOR_TYPES_LOAD_FAILED }}</p>
+          }
+        }
+        @if (form.controls.visitorTypeId.invalid && form.controls.visitorTypeId.touched) {
+          <span class="book-visit-form__error">{{ vm.VISITOR_TYPE_REQUIRED }}</span>
+        }
+      </div>
+
+      <div class="book-visit-form__field">
+        <label class="book-visit-form__label">{{ strings.PURPOSE_TYPE_LABEL }}</label>
+        @if (isLoadingPurposeTypes()) {
+          <p class="book-visit-form__hint">{{ strings.LOADING }}</p>
+        } @else {
+          <select class="book-visit-form__select" formControlName="purposeTypeId">
+            <option value="" disabled>{{ vm.SELECT_PLACEHOLDER }}</option>
+            @for (purpose of purposeTypes(); track purpose.id) {
+              <option [value]="purpose.id">{{ purpose.name }}</option>
+            }
+          </select>
+        }
+        @if (form.controls.purposeTypeId.invalid && form.controls.purposeTypeId.touched) {
+          <span class="book-visit-form__error">{{ vm.PURPOSE_TYPE_REQUIRED }}</span>
+        }
+      </div>
+
+      <div class="book-visit-form__field">
+        <label class="book-visit-form__label">{{ strings.START_DATE_LABEL }}</label>
+        <input
+          class="book-visit-form__input"
+          type="date"
+          formControlName="startDate"
+          [min]="minDateStr"
+        />
+        @if (form.controls.startDate.invalid && form.controls.startDate.touched) {
+          <span class="book-visit-form__error">{{ vm.START_DATE_REQUIRED }}</span>
+        }
+      </div>
+
+      <div class="book-visit-form__field">
+        <label class="book-visit-form__label">{{ strings.END_DATE_LABEL }}</label>
+        <input
+          class="book-visit-form__input"
+          type="date"
+          formControlName="endDate"
+          [min]="minDateStr"
+        />
+        @if (form.controls.endDate.invalid && form.controls.endDate.touched) {
+          <span class="book-visit-form__error">{{ vm.END_DATE_REQUIRED }}</span>
+        }
+      </div>
+    </div>
+  </form>
+
+  <div dialogFooter>
+    <app-action-button
+      [label]="strings.CANCEL"
+      variant="secondary"
+      type="button"
+      [disabled]="isSubmitting()"
+      (clicked)="onClose()"
+    ></app-action-button>
+    <app-action-button
+      [label]="isSubmitting() ? strings.SAVING : strings.SUBMIT"
+      variant="primary"
+      type="submit"
+      [disabled]="isSubmitting()"
+      (clicked)="onSubmit()"
+    ></app-action-button>
+  </div>
+</app-popup-dialog>

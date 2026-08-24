@@ -1,0 +1,82 @@
+@startuml
+title Smart Apartment System - Amenities Module (1/3: AMENITY MANAGEMENT)
+
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 200
+skinparam dpi 75
+
+actor Admin as A
+actor Resident as R
+participant "Client App" as App
+participant "API Gateway" as Gateway
+participant "Amenities API" as API
+database "Database" as DB
+
+note over A, Gateway: Admin requests include: Authorization: Bearer {admin_token}
+note over R, Gateway: Resident requests include: Authorization: Bearer {resident_token}
+
+== ADMIN: CREATE AMENITY ==
+
+A -> App: Create new amenity
+App -> Gateway: POST /amenities\n{name, slotTypeId, statusId, location, rules, imageUrl}
+Gateway -> API: Forward with validation
+API -> DB: Insert new amenity (check duplicate name)
+DB --> API: amenity_id
+API --> Gateway: 201 Created {id, message}
+Gateway --> App: Success
+App --> A: "Swimming Pool created"
+
+== ADMIN: UPDATE AMENITY ==
+
+A -> App: Update amenity details
+App -> Gateway: PUT /amenities/{amenityId}\n{name, location, rules, isActive}
+Gateway -> API: Forward update
+API -> DB: Update amenity record
+DB --> API: Updated
+API --> Gateway: 200 OK {message}
+Gateway --> App: Success
+App --> A: "Amenity updated successfully"
+
+== ADMIN: VIEW ALL AMENITIES ==
+
+A -> App: View all amenities
+App -> Gateway: GET /amenities?pageNumber=1&pageSize=10&searchName=pool
+Gateway -> API: Forward request
+API -> DB: Fetch amenities filtered by name with pagination
+DB --> API: Amenities list with pagination info
+API --> Gateway: 200 OK {data, pagination}
+Gateway --> App: Display amenities
+App --> A: "Showing 10 amenities"
+
+== ADMIN: DELETE AMENITY ==
+
+A -> App: Delete amenity
+App -> Gateway: DELETE /amenities/{amenityId}
+Gateway -> API: Forward request
+API -> DB: Check if any slots exist for this amenity
+DB --> API: slot_count
+
+alt slot_count == 0
+    API -> DB: Delete amenity record
+    DB --> API: Deleted
+    API --> Gateway: 200 OK {message}
+    Gateway --> App: Success
+    App --> A: "Amenity deleted successfully"
+else slot_count > 0
+    API --> Gateway: 400 Bad Request\n"Cannot delete amenity with existing slots"
+    Gateway --> App: Error
+    App --> A: "Cannot delete: Delete slots first"
+end
+
+== RESIDENT: VIEW AVAILABLE AMENITIES ==
+
+R -> App: Browse amenities
+App -> Gateway: GET /amenities?pageNumber=1&pageSize=10
+Gateway -> API: Forward with role check
+API -> DB: Fetch all active amenities with pagination
+DB --> API: Active amenities list
+API --> Gateway: 200 OK {data, pagination}
+Gateway --> App: Display amenities
+App --> R: "Showing: Swimming Pool, Gym, Badminton Court..."
+
+@enduml

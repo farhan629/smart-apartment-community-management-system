@@ -1,0 +1,60 @@
+$font-family-base: var(--font-family-base, 'Inter', 'Roboto', sans-serif);
+
+$color-white: #ffffff;
+
+$color-primary: var(--color-primary, #0d7d6f);
+$color-primary-dark: var(--color-primary-dark, #0a5f54);
+$color-primary-light: var(--color-primary-light, #e3f3f0);
+
+$color-secondary: #6366f1;
+$color-warning: #d97706;
+$color-warning-light: #fef3e2;
+$color-danger: #dc2626;
+$color-danger-light: #fde8e8;
+$color-success: #16a34a;
+$color-success-light: #e6f7ec;
+$color-info: #2563eb;
+$color-info-light: #e5edfc;
+
+$color-background: var(--color-background, #f7f9f8);
+$color-surface: var(--color-surface, #ffffff);
+$color-sidebar: var(--color-sidebar, #ffffff);
+$color-border: var(--color-border, #e5e7eb);
+$color-text-primary: var(--color-text-primary, #111827);
+$color-text-secondary: var(--color-text-secondary, #6b7280);
+$color-text-muted: var(--color-text-muted, #9ca3af);
+
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-xxl: 48px;
+
+$radius-sm: 6px;
+$radius-md: 12px;
+$radius-lg: 20px;
+$radius-pill: 999px;
+
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+$shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+$breakpoint-mobile: 576px;
+$breakpoint-tablet: 768px;
+$breakpoint-desktop: 1024px;
+
+$lumina-emerald-900: #0a4a44;
+$lumina-emerald: #0f766e;
+$lumina-emerald-light: #14b8a6;
+$lumina-ink: #0b1620;
+$lumina-ink-soft: #45535c;
+$lumina-white: #ffffff;
+$lumina-gray-50: #f8faf9;
+$lumina-gray-100: #f1f4f3;
+$lumina-gray-200: #e6ebe9;
+$lumina-canvas-gradient-start: #fbfdfc;
+$lumina-canvas-gradient-end: #f3f7f6;
+$lumina-dot-red: #f3a4a4;
+$lumina-dot-yellow: #f6d29a;
+$lumina-dot-green: #9adfb7;

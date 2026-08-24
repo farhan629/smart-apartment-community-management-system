@@ -1,0 +1,150 @@
+<div class="register-page">
+  <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <h2>{{ strings.REGISTER_TITLE }}</h2>
+
+    <div class="register-page__field">
+      <label for="userName">{{ strings.USERNAME_LABEL }}</label>
+      <input id="userName" type="text" formControlName="userName" class="register-page__input" />
+      @if (registerForm.get('userName')?.invalid && registerForm.get('userName')?.touched) {
+        <span class="register-page__error">{{ strings.USERNAME_VALIDATION }}</span>
+      }
+    </div>
+
+    <div class="register-page__field">
+      <label for="email">{{ strings.EMAIL_LABEL }}</label>
+      <input id="email" type="email" formControlName="email" class="register-page__input" />
+      @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
+        @if (registerForm.get('email')?.errors?.['required']) {
+          <span class="register-page__error">{{ strings.EMAIL_REQUIRED }}</span>
+        } @else {
+          <span class="register-page__error">{{ strings.EMAIL_VALIDATION }}</span>
+        }
+      }
+    </div>
+
+    <div class="register-page__field">
+      <label for="password">{{ strings.PASSWORD_LABEL }}</label>
+      <input
+        id="password"
+        type="password"
+        formControlName="password"
+        class="register-page__input"
+      />
+      @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
+        @if (registerForm.get('password')?.errors?.['required']) {
+          <span class="register-page__error">{{ strings.PASSWORD_REQUIRED }}</span>
+        } @else {
+          <span class="register-page__error">{{ strings.PASSWORD_VALIDATION }}</span>
+        }
+      }
+    </div>
+
+    <div class="register-page__field">
+      <label for="phone">{{ strings.PHONE_LABEL }}</label>
+      <input id="phone" type="tel" formControlName="phone" class="register-page__input" />
+      @if (registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched) {
+        @if (registerForm.get('phone')?.errors?.['required']) {
+          <span class="register-page__error">{{ strings.PHONE_REQUIRED }}</span>
+        } @else {
+          <span class="register-page__error">{{ strings.PHONE_VALIDATION }}</span>
+        }
+      }
+    </div>
+
+    <div class="register-page__field">
+      <label>{{ strings.ROLE_LABEL }}</label>
+      @if (rolesLoading) {
+        <p class="register-page__loading">{{ strings.ROLES_LOADING }}</p>
+      } @else {
+        <div class="register-page__role-buttons">
+          @for (role of roles; track role.id) {
+            <button
+              type="button"
+              class="register-page__role-btn"
+              [class.register-page__role-btn--selected]="
+                registerForm.get('role_id')?.value === role.id
+              "
+              (click)="selectRole(role.id)"
+            >
+              {{ role.termValue }}
+            </button>
+          }
+        </div>
+      }
+      @if (registerForm.get('role_id')?.invalid && registerForm.get('role_id')?.touched) {
+        <span class="register-page__error">{{ strings.ROLE_REQUIRED }}</span>
+      }
+    </div>
+
+    <div class="register-page__field">
+      <label>{{ strings.FLAT_LABEL }}</label>
+      <div class="register-page__flat-search">
+        <input
+          type="text"
+          class="register-page__input"
+          placeholder="{{ strings.FLAT_SEARCH_PLACEHOLDER }}"
+          [value]="flatSearchText"
+          (input)="onFlatSearchInput($event)"
+          (focus)="toggleFlatDropdown()"
+          (blur)="closeFlatDropdown()"
+        />
+        @if (flatDropdownOpen && filteredFlats.length > 0) {
+          <div class="register-page__flat-dropdown">
+            @for (flat of filteredFlats; track flat.id) {
+              <button
+                type="button"
+                class="register-page__flat-option"
+                [class.register-page__flat-option--selected]="selectedFlat?.id === flat.id"
+                (mousedown)="selectFlat(flat)"
+              >
+                {{ flat.block }} - {{ flat.number }} (Floor {{ flat.floor }})
+              </button>
+            }
+          </div>
+        }
+        @if (flatDropdownOpen && filteredFlats.length === 0 && !flatsLoading) {
+          <div class="register-page__flat-dropdown">
+            <span class="register-page__flat-option register-page__flat-option--no-results">{{
+              strings.NO_FLATS_FOUND
+            }}</span>
+          </div>
+        }
+        @if (flatsLoading) {
+          <p class="register-page__loading">{{ strings.FLATS_LOADING }}</p>
+        }
+      </div>
+      @if (registerForm.get('flat_id')?.invalid && registerForm.get('flat_id')?.touched) {
+        <span class="register-page__error">{{ strings.FLAT_REQUIRED }}</span>
+      }
+    </div>
+
+    <div class="register-page__field">
+      <label for="photo">{{ strings.PHOTO_LABEL }}</label>
+      <input
+        id="photo"
+        type="file"
+        accept="image/*"
+        class="register-page__input"
+        (change)="onPhotoSelected($event)"
+      />
+    </div>
+
+    @if (errorMessage) {
+      <p class="register-page__message register-page__message--error">{{ errorMessage }}</p>
+    }
+    @if (successMessage) {
+      <p class="register-page__message register-page__message--success">{{ successMessage }}</p>
+    }
+
+    <button type="submit" class="register-page__button" [disabled]="isSubmitting">
+      {{ isSubmitting ? strings.REGISTERING : strings.REGISTER_TITLE }}
+    </button>
+
+    <div class="register-page__links">
+      <p>
+        {{ strings.ALREADY_HAVE_ACCOUNT }}
+        <a [routerLink]="['/', loginRoute]">{{ strings.LOGIN_LINK }}</a>
+      </p>
+    </div>
+  </form>
+</div>

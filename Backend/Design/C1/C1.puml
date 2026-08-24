@@ -1,0 +1,16 @@
+@startuml C1_SmartApartment_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+ 
+HIDE_STEREOTYPE()
+ 
+title C1-System Context View - Smart Apartment Community Management System
+ 
+Person(user, "User", "Admin who manages residents & system\nResident who books amenities & raises complaints\nSecurity who manages visitor gate entry\nMaintenance Staff who resolves complaints")
+ 
+System(sacms, "Smart Apartment\nCommunity Management System", "Handles resident management, visitor tracking,\ncomplaints, amenity bookings, and notifications")
+ 
+Rel(user, sacms, "Register / Approve / Book / Manage / View")
+ 
+@enduml
+ 
+

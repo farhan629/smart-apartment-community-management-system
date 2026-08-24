@@ -1,0 +1,44 @@
+<div class="scan-page">
+  <h2>{{ strings.SCAN_VISITOR_TITLE }}</h2>
+
+  <div class="scan-page__toggle">
+    <button
+      type="button"
+      [class.active]="direction() === directions.CHECK_IN"
+      (click)="onDirectionChange(directions.CHECK_IN)"
+    >
+      {{ strings.CHECK_IN }}
+    </button>
+    <button
+      type="button"
+      [class.active]="direction() === directions.CHECK_OUT"
+      (click)="onDirectionChange(directions.CHECK_OUT)"
+    >
+      {{ strings.CHECK_OUT }}
+    </button>
+  </div>
+
+  @if (cameraError()) {
+    <p class="scan-page__camera-error">{{ strings.CAMERA_PERMISSION_DENIED }}</p>
+  }
+
+  <ngx-scanner-qrcode
+    #scanner="scanner"
+    [style.display]="cameraError() ? 'none' : 'block'"
+    (event)="onScanSuccess($event)"
+  ></ngx-scanner-qrcode>
+
+  @if (isProcessing()) {
+    <p class="scan-page__state">{{ strings.LOADING }}</p>
+  }
+
+  @if (resultMessage()) {
+    <div
+      class="scan-page__result"
+      [class.scan-page__result--error]="resultIsError()"
+      [class.scan-page__result--success]="!resultIsError()"
+    >
+      {{ resultMessage() }}
+    </div>
+  }
+</div>

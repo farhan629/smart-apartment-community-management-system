@@ -1,0 +1,54 @@
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/mixins' as *;
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+
+  &__select {
+    appearance: none;
+    font-family: $font-family-base;
+    font-size: 0.8571rem;
+    font-weight: 500;
+    color: $color-text-primary;
+    background: $color-surface url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7280' stroke-width='1.5' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E")
+      no-repeat right $spacing-sm center;
+    border: 0.0714rem solid $color-border;
+    border-radius: $radius-pill;
+    padding: 0.5rem $spacing-lg 0.5rem $spacing-md;
+    min-width: 9.5rem;
+    cursor: pointer;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+
+    &:hover {
+      border-color: $color-primary;
+    }
+
+    &:focus-visible {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 0.1786rem $color-primary-light;
+    }
+  }
+
+  &__reset {
+    @include button-base;
+    background: transparent;
+    color: $color-text-secondary;
+    border: 0.0714rem dashed $color-border;
+    border-radius: $radius-pill;
+    padding: 0.5rem $spacing-md;
+    font-size: 0.8571rem;
+
+    &:hover {
+      color: $color-danger;
+      border-color: $color-danger;
+      background: $color-danger-light;
+    }
+  }
+}

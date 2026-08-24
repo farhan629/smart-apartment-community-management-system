@@ -1,0 +1,95 @@
+<app-popup-dialog [title]="strings.ADD_USER" (closed)="onCancel()">
+  <div class="add-user">
+    @if (error()) {
+      <div class="add-user__error">{{ error() }}</div>
+    }
+
+    <div class="add-user__field">
+      <label class="add-user__label">{{ strings.USERNAME_LABEL }}</label>
+      <input class="add-user__input" type="text" [(ngModel)]="userName" [placeholder]="strings.NAME_PLACEHOLDER" />
+    </div>
+
+    <div class="add-user__field">
+      <label class="add-user__label">{{ strings.EMAIL_LABEL }}</label>
+      <input class="add-user__input" type="email" [(ngModel)]="email" [placeholder]="strings.EMAIL_PLACEHOLDER" />
+    </div>
+
+    <div class="add-user__field">
+      <label class="add-user__label">{{ strings.PASSWORD_LABEL }}</label>
+      <input class="add-user__input" type="password" [(ngModel)]="password" [placeholder]="strings.PASSWORD_PLACEHOLDER" />
+    </div>
+
+    <div class="add-user__field">
+      <label class="add-user__label">{{ strings.PHONE_LABEL }}</label>
+      <input class="add-user__input" type="tel" [(ngModel)]="phone" [placeholder]="strings.PHONE_PLACEHOLDER" />
+    </div>
+
+    <div class="add-user__field">
+      <label class="add-user__label">{{ strings.SELECT_ROLE }}</label>
+      @if (loadingRoles()) {
+        <p class="add-user__hint">{{ strings.ROLES_LOADING }}</p>
+      } @else {
+        <div class="add-user__roles">
+          @for (role of roles(); track role.id) {
+            <button
+              type="button"
+              class="add-user__role-btn"
+              [class.add-user__role-btn--active]="selectedRole?.id === role.id"
+              (click)="onRoleSelect(role)"
+            >
+              {{ role.termValue }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    @if (selectedRole?.termValue === strings.ROLE_STAFF) {
+      <div class="add-user__field">
+        <label class="add-user__label">{{ strings.SELECT_CATEGORY }}</label>
+        @if (loadingCategories()) {
+          <p class="add-user__hint">{{ strings.LOADING_CATEGORIES }}</p>
+        } @else {
+          <select class="add-user__select" [(ngModel)]="selectedCategory">
+            <option [ngValue]="null" disabled>{{ strings.SELECT_CATEGORY }}</option>
+            @for (cat of categories(); track cat.id) {
+              <option [ngValue]="cat">{{ cat.name }}</option>
+            }
+          </select>
+        }
+      </div>
+    }
+
+    <div class="add-user__field">
+      <label class="add-user__label">{{ strings.PHOTO_LABEL }}</label>
+      <div class="add-user__photo">
+        @if (photoPreview) {
+          <div class="add-user__photo-preview">
+            <img [src]="photoPreview" alt="Preview" />
+            <button type="button" class="add-user__photo-remove" (click)="removePhoto()">
+              <mat-icon>{{ icons.CLOSE }}</mat-icon>
+            </button>
+          </div>
+        }
+        <label class="add-user__photo-btn">
+          <mat-icon>{{ icons.ADD }}</mat-icon>
+          <span>{{ photoPreview ? strings.CHANGE_PHOTO : strings.PHOTO_LABEL }}</span>
+          <input type="file" accept="image/*" (change)="onPhotoSelected($event)" hidden />
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div dialogFooter>
+    <app-action-button
+      [label]="strings.CANCEL"
+      variant="secondary"
+      (clicked)="onCancel()"
+    ></app-action-button>
+    <app-action-button
+      [label]="submitting() ? strings.SAVING : strings.SUBMIT"
+      [disabled]="submitting()"
+      (clicked)="onSubmit()"
+    ></app-action-button>
+  </div>
+</app-popup-dialog>

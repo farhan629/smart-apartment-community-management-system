@@ -1,0 +1,116 @@
+<div class="slots-container">
+  <div class="slots-header">
+    <h3 class="slots-header__title">{{ bookingStrings.TITLE }}</h3>
+    <p class="slots-header__subtitle">{{ selectedDate | date:'fullDate' }}</p>
+    
+    <div class="slots-legend">
+      <span class="slots-legend__item">
+        <span class="slots-legend__dot slots-legend__dot--booked"></span>
+        {{ bookingStrings.LEGEND_BOOKED }}
+      </span>
+      <span class="slots-legend__item">
+        <span class="slots-legend__circle slots-legend__circle--available"></span>
+        {{ bookingStrings.LEGEND_AVAILABLE }}
+      </span>
+    </div>
+  </div>
+
+  @if (loadingSlots) {
+    <div class="slots-loading">
+      <p>{{ bookingStrings.LOADING }}</p>
+    </div>
+  } @else {
+    <div class="session-section">
+      <h4 class="session-section__title">{{ bookingStrings.MORNING_TITLE }}</h4>
+      <div class="slots-grid">
+        @for (slot of morningSlots; track slot.slotId) {
+          @let isBooked = (slot.availableSpots !== undefined && slot.availableSpots <= 0);
+          @let isSelectedSlot = (selectedSlot?.slotId === slot.slotId);
+          
+          <button 
+            class="slot-card" 
+            [class.slot-card--selected]="isSelectedSlot" 
+            [class.slot-card--disabled]="isBooked"
+            [disabled]="isBooked"
+            (click)="selectSlot(slot)">
+            
+            <div class="slot-card__details">
+              <span class="slot-card__time">{{ slot.slotLabel }}</span>
+              <span class="slot-card__spots">
+                {{ isBooked ? bookingStrings.FULLY_BOOKED : (slot.availableSpots + bookingStrings.SPOTS_LEFT) }}
+              </span>
+            </div>
+
+            <span class="material-icons slot-card__icon">
+              {{ isSelectedSlot ? 'check_circle' : (isBooked ? 'lock' : '') }}
+            </span>
+          </button>
+        } @empty {
+          <p class="session-section__empty">{{ bookingStrings.EMPTY_MORNING }}</p>
+        }
+      </div>
+    </div>
+
+    <div class="session-section">
+      <h4 class="session-section__title">{{ bookingStrings.AFTERNOON_TITLE }}</h4>
+      <div class="slots-grid">
+        @for (slot of afternoonSlots; track slot.slotId) {
+          @let isBooked = (slot.availableSpots !== undefined && slot.availableSpots <= 0);
+          @let isSelectedSlot = (selectedSlot?.slotId === slot.slotId);
+
+          <button 
+            class="slot-card" 
+            [class.slot-card--selected]="isSelectedSlot" 
+            [class.slot-card--disabled]="isBooked"
+            [disabled]="isBooked"
+            (click)="selectSlot(slot)">
+            
+            <div class="slot-card__details">
+              <span class="slot-card__time">{{ slot.slotLabel }}</span>
+              <span class="slot-card__spots">
+                {{ isBooked ? bookingStrings.FULLY_BOOKED : (slot.availableSpots + bookingStrings.SPOTS_LEFT) }}
+              </span>
+            </div>
+
+            <span class="material-icons slot-card__icon">
+              {{ isSelectedSlot ? 'check_circle' : (isBooked ? 'lock' : '') }}
+            </span>
+          </button>
+        } @empty {
+          <p class="session-section__empty">{{ bookingStrings.EMPTY_AFTERNOON }}</p>
+        }
+      </div>
+    </div>
+
+    <div class="session-section">
+      <h4 class="session-section__title">{{ bookingStrings.EVENING_TITLE }}</h4>
+      <div class="slots-grid">
+        @for (slot of eveningSlots; track slot.slotId) {
+          @let isBooked = (slot.availableSpots !== undefined && slot.availableSpots <= 0);
+          @let isSelectedSlot = (selectedSlot?.slotId === slot.slotId);
+
+          <button 
+            class="slot-card" 
+            [class.slot-card--selected]="isSelectedSlot" 
+            [class.slot-card--disabled]="isBooked"
+            [disabled]="isBooked"
+            (click)="selectSlot(slot)">
+            
+            <div class="slot-card__details">
+              <span class="slot-card__time">{{ slot.slotLabel }}</span>
+              <span class="slot-card__spots">
+                {{ isBooked ? bookingStrings.FULLY_BOOKED : (slot.availableSpots + bookingStrings.SPOTS_LEFT) }}
+              </span>
+            </div>
+
+            <span class="material-icons slot-card__icon">
+              {{ isSelectedSlot ? 'check_circle' : (isBooked ? 'lock' : '') }}
+            </span>
+          </button>
+        } @empty {
+          <p class="session-section__empty">{{ bookingStrings.EMPTY_EVENING }}</p>
+        }
+      </div>
+    </div>
+  }
+</div>

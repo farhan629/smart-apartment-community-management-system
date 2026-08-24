@@ -1,0 +1,154 @@
+<div class="update-dialog-content">
+  <div class="update-dialog-header">
+    <h2 class="update-dialog-title">{{ updateStrings.PAGE_TITLE }}</h2>
+  </div>
+
+  <form class="amenity-form" (submit)="$event.preventDefault(); onSubmit()">
+    
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="updateAmenityName" class="form-label">{{ strings.LABEL_NAME }} *</label>
+        <input
+          type="text"
+          id="updateAmenityName"
+          name="name"
+          class="form-input"
+          [placeholder]="strings.PLACEHOLDER_NAME"
+          [ngModel]="name()"
+          (ngModelChange)="name.set($event)"
+          [disabled]="isSubmitting" />
+        @if (validationNameError()) {
+          <div class="validation-error">
+            <span class="material-icons">error_outline</span>
+            {{ validationNameError() }}
+          </div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="updateAmenityLocation" class="form-label">{{ strings.LABEL_LOCATION }} *</label>
+        <input
+          type="text"
+          id="updateAmenityLocation"
+          name="location"
+          class="form-input"
+          [placeholder]="strings.PLACEHOLDER_LOCATION"
+          [ngModel]="location()"
+          (ngModelChange)="location.set($event)"
+          [disabled]="isSubmitting" />
+        @if (validationLocationError()) {
+          <div class="validation-error">
+            <span class="material-icons">error_outline</span>
+            {{ validationLocationError() }}
+          </div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="updateSlotType" class="form-label">{{ strings.LABEL_SLOT_TYPE }} *</label>
+        <select
+          id="updateSlotType"
+          name="slotTypeId"
+          class="form-select"
+          [ngModel]="slotTypeId()"
+          (ngModelChange)="slotTypeId.set($event)"
+          [disabled]="isSubmitting">
+          @for (option of slotTypesList; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="updateAmenityStatus" class="form-label">{{ strings.LABEL_STATUS }} *</label>
+        <select
+          id="updateAmenityStatus"
+          name="statusId"
+          class="form-select"
+          [ngModel]="statusId()"
+          (ngModelChange)="statusId.set($event)"
+          [disabled]="isSubmitting">
+          @for (option of statusList; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group form-group--full">
+      <label for="updateAmenityRules" class="form-label">{{ strings.LABEL_RULES }}</label>
+      <textarea
+        id="updateAmenityRules"
+        name="rules"
+        class="form-textarea"
+        [placeholder]="strings.PLACEHOLDER_RULES"
+        [ngModel]="rules()"
+        (ngModelChange)="rules.set($event)"
+        [disabled]="isSubmitting"></textarea>
+    </div>
+
+    <div class="form-group form-group--full">
+      <label class="form-label">{{ strings.LABEL_IMAGE }}</label>
+      
+      <div class="uploader-container">
+        @if (imageUrl()) {
+          <div class="uploader-preview">
+            <img [src]="imageUrl()" alt="Amenity Preview" class="uploader-preview__img" />
+            <button type="button" mat-icon-button class="uploader-preview__remove-btn" (click)="imageUrl.set('')" [disabled]="isSubmitting">
+              <span class="material-icons">cancel</span>
+            </button>
+          </div>
+        } @else {
+          <label class="uploader-dropzone">
+            <input
+              type="file"
+              accept="image/*"
+              class="uploader-dropzone__input"
+              (change)="onFileSelected($event)"
+              [disabled]="isSubmitting || isUploading()" />
+            
+            <div class="uploader-dropzone__content">
+              @if (isUploading()) {
+                <div class="uploader-spinner"></div>
+                <span class="uploader-dropzone__text">{{ strings.LABEL_UPLOADING_IMAGE }}</span>
+              } @else {
+                <span class="material-icons uploader-dropzone__icon">cloud_upload</span>
+                <span class="uploader-dropzone__text">{{ strings.PLACEHOLDER_IMAGE }}</span>
+              }
+            </div>
+          </label>
+        }
+
+        @if (uploadError()) {
+          <div class="validation-error">
+            <span class="material-icons">error_outline</span>
+            {{ uploadError() }}
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button
+        type="button"
+        mat-stroked-button
+        class="form-btn form-btn--cancel"
+        (click)="onCancel()"
+        [disabled]="isSubmitting">
+        {{ strings.BTN_CANCEL }}
+      </button>
+      <button
+        type="submit"
+        mat-flat-button
+        class="form-btn form-btn--submit"
+        [disabled]="isSubmitting || isUploading()">
+        @if (isSubmitting) {
+          {{ updateStrings.BTN_SUBMITTING }}
+        } @else {
+          {{ updateStrings.BTN_SUBMIT }}
+        }
+      </button>
+    </div>
+
+  </form>
+</div>

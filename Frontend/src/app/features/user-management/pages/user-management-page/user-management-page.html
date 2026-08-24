@@ -1,0 +1,108 @@
+<div class="um-page">
+  <div class="um-page__header">
+    <h2 class="um-page__title">{{ strings.USER_MANAGEMENT_TITLE }}</h2>
+    <div class="um-page__header-actions">
+      <button
+        class="um-page__approval-btn"
+        (click)="toggleApprovalPanel()"
+        type="button"
+        [title]="strings.APPROVALS_TITLE"
+      >
+        <mat-icon>{{ icons.APPROVAL }}</mat-icon>
+      </button>
+      <app-action-button
+        [label]="strings.ADD_USER"
+        [icon]="icons.ADD"
+        variant="primary"
+        (clicked)="openAddDialog()"
+      ></app-action-button>
+    </div>
+
+    @if (showApprovalPanel()) {
+      <app-approval-slide-window (closed)="closeApprovalPanel()" />
+    }
+  </div>
+
+  <div class="um-page__toolbar">
+    <app-search-bar
+      [placeholder]="strings.SEARCH_USER_PLACEHOLDER"
+      (searchChange)="onSearchChange($event)"
+    ></app-search-bar>
+
+    <div class="um-page__toolbar-item">
+      <mat-icon class="um-page__toolbar-icon">{{ icons.FILTER }}</mat-icon>
+      <select
+        class="um-page__select"
+        [value]="selectedRoleId()"
+        (change)="onRoleFilterChange($event)"
+      >
+        <option value="">{{ strings.FILTER_BY_ROLE }}</option>
+        @for (role of roles(); track role.id) {
+          <option [value]="role.id">{{ role.termValue }}</option>
+        }
+      </select>
+    </div>
+
+  </div>
+
+  @if (error()) {
+    <div class="um-page__error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="um-page__loading">{{ strings.LOADING }}</div>
+  } @else if (users().length === 0) {
+    <app-empty-state
+      [icon]="icons.PERSON"
+      [message]="strings.NO_USERS_FOUND"
+    ></app-empty-state>
+  } @else {
+    <div class="um-page__card">
+      <div class="um-page__table-wrap">
+      <table class="um-page__table">
+        <thead>
+          <tr>
+            <th class="um-page__th-name">{{ strings.USERNAME_LABEL }}</th>
+            <th>{{ strings.EMAIL_LABEL }}</th>
+            <th>{{ strings.PHONE_LABEL }}</th>
+            <th>{{ strings.ROLE_LABEL }}</th>
+            <th>{{ strings.ACTIONS }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user.id) {
+            <tr class="um-page__row" (click)="openViewDialog(user)">
+              <td class="um-page__name">{{ user.userName | capitalizeFirst }}</td>
+              <td class="um-page__email">{{ user.email }}</td>
+              <td>{{ user.phone }}</td>
+              <td>
+                <span class="um-page__role">{{ user.role }}</span>
+              </td>
+              <td class="um-page__actions" (click)="$event.stopPropagation()">
+                <app-action-button
+                  [showDropdown]="true"
+                  [menuItems]="getActionMenuItems(user)"
+                  variant="secondary"
+                  [icon]="icons.MORE"
+                  (menuAction)="onMenuAction(user, $event)"
+                ></app-action-button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <mat-paginator
+      class="um-page__paginator"
+      [length]="total()"
+      [pageSize]="pageSize()"
+      [pageIndex]="page()"
+      [pageSizeOptions]="pagination.PAGE_SIZE_OPTIONS"
+      [showFirstLastButtons]="true"
+      (page)="onPageChange($event)"
+    >
+    </mat-paginator>
+  }
+</div>

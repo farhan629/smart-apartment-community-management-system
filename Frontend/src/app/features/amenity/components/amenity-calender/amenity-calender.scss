@@ -1,0 +1,127 @@
+@use 'sass:color';
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/mixins' as *;
+
+.calendar-card {
+  @include card;
+  border: 0.0625rem solid $color-border;
+  padding: $spacing-lg;
+  width: 100%;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-lg;
+  }
+
+  &__title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+
+  &__nav-btn {
+    &.mat-mdc-icon-button {
+      width: 2rem !important;
+      height: 2rem !important;
+      padding: 0.25rem !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $color-text-secondary;
+      transition: background-color 0.2s ease, color 0.2s ease;
+
+      &:hover {
+        background-color: $color-background;
+        color: $color-primary;
+      }
+
+      &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__month-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: $color-text-primary;
+    min-width: 6.25rem;
+    text-align: center;
+  }
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  text-align: center;
+  justify-items: center;
+
+  &__weekday {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: $color-text-secondary;
+    padding-bottom: $spacing-sm;
+    width: 100%;
+    text-align: center;
+  }
+
+  &__day {
+    &.calendar-grid__day--blank {
+      width: 2.25rem;
+      height: 2.25rem;
+      display: block;
+    }
+
+    &.mat-mdc-button {
+      min-width: 0 !important;
+      width: 2.25rem !important;
+      height: 2.25rem !important;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      font-family: $font-family-base;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: $color-text-primary;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+
+      &:hover:not(:disabled) {
+        background-color: $color-primary-light !important;
+        color: $color-primary !important;
+      }
+
+      &.calendar-grid__day--today {
+        border: 0.09375rem solid $color-primary !important;
+        color: $color-primary !important;
+      }
+
+      &.calendar-grid__day--selected {
+        background-color: $color-primary !important;
+        color: $color-white !important;
+        font-weight: 700;
+        box-shadow: 0 0.25rem 0.625rem rgba($color-primary, 0.2) !important;
+      }
+
+      &.calendar-grid__day--disabled {
+        color: $color-text-secondary !important;
+        opacity: 0.4;
+        cursor: not-allowed;
+        background: none !important;
+      }
+    }
+  }
+}

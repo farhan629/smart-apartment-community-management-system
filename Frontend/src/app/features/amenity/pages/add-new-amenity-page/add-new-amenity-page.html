@@ -1,0 +1,16 @@
+<div class="add-page">
+  <div class="add-header">
+    <h1 class="add-header__title">{{ pageStrings.PAGE_TITLE }}</h1>
+    <p class="add-header__subtitle">
+      {{ pageStrings.PAGE_SUBTITLE }}
+    </p>
+  </div>
+
+  <div class="add-content">
+    <app-add-new-amenity
+      [isSubmitting]="isSubmitting()"
+      (submitAmenity)="onSubmitAmenity($event)"
+      (back)="goBack()">
+    </app-add-new-amenity>
+  </div>
+</div>

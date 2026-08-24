@@ -1,0 +1,75 @@
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/mixins' as *;
+
+.staff-stat-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+
+  @media (max-width: $breakpoint-tablet) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.stat-card {
+  @include card;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+
+  &__icon {
+    @include flex-center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: $radius-pill;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 1.375rem;
+      width: 1.375rem;
+      height: 1.375rem;
+    }
+
+    &--success {
+      background: $color-success-light;
+      color: $color-success;
+    }
+
+    &--info {
+      background: $color-secondary;
+      color: $color-white;
+    }
+
+    &--danger {
+      background: $color-danger-light;
+      color: $color-danger;
+    }
+
+    &--warning {
+      background: $color-warning-light;
+      color: $color-warning;
+    }
+
+    &--primary {
+      background: $color-primary-light;
+      color: $color-primary;
+    }
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    color: $color-text-secondary;
+    margin-bottom: 0.125rem;
+  }
+
+  &__value {
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: $color-text-primary;
+  }
+}

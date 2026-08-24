@@ -1,0 +1,60 @@
+@startuml C3_Component
+ 
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+ 
+LAYOUT_TOP_DOWN()
+ 
+title Smart Apartment Management System - C3_Component Diagram
+ 
+Person(user, "User", "Resident / Staff / Admin")
+ 
+System_Boundary(system, "Smart Apartment Management System") {
+ 
+    Component(ui, "Angular Web UI", "Angular", "Resident, Staff and Admin Portal")
+ 
+    Component(gateway, "API Gateway", "Ocelot", "Routes requests to microservices")
+ 
+    Container_Boundary(services, "Microservice APIs") {
+ 
+        Component(identityApi, "Identity & Shared Service API", "ASP.NET Core", "Authentication, Users, Roles, Notifications and Emails")
+ 
+        Component(residentApi, "Resident & Visitor Service API", "ASP.NET Core", "Residents, Flats, Occupancy and Visitors")
+ 
+        Component(complaintApi, "Service & Complaint Service API", "ASP.NET Core", "Complaints, Staff Assignment and Escalations")
+ 
+        Component(amenityApi, "Amenity Service API", "ASP.NET Core", "Amenities, Slots and Bookings")
+ 
+    }
+ 
+    ComponentDb(identityDb, "Identity DB", "PostgreSQL", "Users, Roles, Notifications")
+ 
+    ComponentDb(residentDb, "Resident & Visitor DB", "PostgreSQL", "Residents, Flats and Visitors")
+ 
+    ComponentDb(complaintDb, "Complaint DB", "PostgreSQL", "Complaints and Staff")
+ 
+    ComponentDb(amenityDb, "Amenity DB", "PostgreSQL", "Amenities and Bookings")
+
+}
+ 
+Rel(user, ui, "Uses", "HTTPS / JWT")
+ 
+Rel(ui, gateway, "API Calls")
+ 
+Rel(gateway, identityApi, "Identity Routes")
+
+Rel(gateway, residentApi, "Resident Routes")
+
+Rel(gateway, complaintApi, "Complaint Routes")
+
+Rel(gateway, amenityApi, "Amenity Routes")
+ 
+Rel(identityApi, identityDb, "Reads & Writes")
+
+Rel(residentApi, residentDb, "Reads & Writes")
+
+Rel(complaintApi, complaintDb, "Reads & Writes")
+
+Rel(amenityApi, amenityDb, "Reads & Writes")
+ 
+@enduml
+ 

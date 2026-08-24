@@ -1,0 +1,258 @@
+@use 'sass:color';
+@use '../../../../shared/styles/variables' as *;
+@use '../../../../shared/styles/mixins' as *;
+
+.um-page {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+
+  &__header {
+    @include flex-between;
+  }
+
+  &__header-actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+
+  &__approval-btn {
+    @include button-base;
+    background: $color-primary;
+    color: $color-white;
+
+    &:hover {
+      background: $color-primary-dark;
+    }
+
+    mat-icon {
+      font-size: 1.4286rem;
+      width: 1.4286rem;
+      height: 1.4286rem;
+    }
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    flex-wrap: wrap;
+  }
+
+  &__toolbar-item {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    background: $color-surface;
+    border: 0.0714rem solid $color-border;
+    border-radius: $radius-sm;
+    padding: 0.5714rem $spacing-md;
+    cursor: pointer;
+    font-family: $font-family-base;
+    font-size: 0.8125rem;
+    color: $color-text-primary;
+    transition: border-color 0.15s;
+
+    &:focus-within {
+      border-color: $color-primary;
+    }
+  }
+
+  &__toolbar-icon {
+    color: $color-text-muted;
+    font-size: 1.25rem;
+    height: 1.25rem;
+    width: 1.25rem;
+  }
+
+  &__select {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: $font-family-base;
+    font-size: 0.8125rem;
+    color: $color-text-primary;
+    cursor: pointer;
+    min-width: 10rem;
+    padding: 0;
+    line-height: 1.4;
+
+    option {
+      background: $color-surface;
+      color: $color-text-primary;
+    }
+  }
+
+  &__error {
+    padding: 0.625rem 0.875rem;
+    background: $color-danger-light;
+    color: $color-danger;
+    border-radius: $radius-sm;
+    font-size: 0.8125rem;
+    font-size: 0.8125rem;
+  }
+
+  &__loading {
+    text-align: center;
+    color: $color-text-muted;
+    font-size: 0.875rem;
+    padding: $spacing-xl 0;
+  }
+
+  &__card {
+    @include card;
+    padding: 0;
+  }
+
+  &__table-wrap {
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+
+    thead {
+      background: $color-background;
+    }
+
+    th {
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: $color-text-muted;
+      text-transform: uppercase;
+      padding: $spacing-xs $spacing-sm;
+      border-bottom: 0.0625rem solid $color-border;
+
+      &:last-child {
+        text-align: right;
+        width: 3.75rem;
+      }
+    }
+
+    td {
+      padding: $spacing-sm $spacing-sm;
+      font-size: 0.875rem;
+      color: $color-text-primary;
+      border-bottom: 0.0625rem solid $color-border;
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  &__row {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+
+    &:hover td {
+      background: $color-primary-light;
+    }
+
+    &:active td {
+      background: color-mix(in srgb, $color-primary-light, black 3%);
+    }
+  }
+
+  &__name {
+    font-weight: 600;
+    color: $color-text-primary;
+  }
+
+  &__email {
+    color: $color-text-secondary;
+    font-size: 0.8125rem;
+    font-size: 0.8125rem;
+  }
+
+  &__role {
+    display: inline-block;
+    padding: 0.1875rem 0.75rem;
+    padding: 0.1875rem 0.75rem;
+    border-radius: $radius-pill;
+    font-size: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: $color-primary-light;
+    color: $color-primary;
+  }
+
+  &__actions {
+    text-align: right;
+    width: 3.75rem;
+    overflow: visible;
+  }
+
+  &__paginator {
+    background: transparent;
+    color: $color-text-primary;
+
+    ::ng-deep .mat-mdc-paginator-container {
+      justify-content: center;
+      position: relative;
+    }
+
+    ::ng-deep .mat-mdc-paginator-page-size {
+      position: absolute;
+      left: 0;
+      z-index: 1;
+      color: $color-text-primary;
+
+      .mat-mdc-select-trigger {
+        color: $color-text-primary;
+      }
+
+      .mat-mdc-select-arrow {
+        color: $color-text-muted;
+      }
+
+      .mat-mdc-select-value-text {
+        color: $color-text-primary;
+      }
+    }
+
+    ::ng-deep .mat-mdc-paginator-range-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      position: relative;
+    }
+
+    ::ng-deep .mat-mdc-paginator-range-label {
+      position: absolute;
+      right: 0;
+      color: $color-text-secondary;
+      white-space: nowrap;
+    }
+
+    ::ng-deep .mat-mdc-paginator-navigation-first,
+    ::ng-deep .mat-mdc-paginator-navigation-previous,
+    ::ng-deep .mat-mdc-paginator-navigation-next,
+    ::ng-deep .mat-mdc-paginator-navigation-last {
+      color: $color-text-primary;
+
+      &[disabled] {
+        color: $color-text-muted;
+      }
+
+      .mat-mdc-paginator-icon {
+        fill: currentColor;
+      }
+    }
+  }
+
+}

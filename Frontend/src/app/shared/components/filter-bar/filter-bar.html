@@ -1,0 +1,21 @@
+<div class="filter-bar">
+  <select
+    class="filter-bar__select"
+    *ngFor="let dropdown of dropdowns"
+    (change)="onDropdownChange(dropdown.key, $any($event.target).value)"
+  >
+    <option value="">{{ dropdown.placeholder }}</option>
+    <option *ngFor="let option of dropdown.options" [value]="option.value">
+      {{ option.label }}
+    </option>
+  </select>
+
+  <button
+    *ngIf="dropdowns.length"
+    type="button"
+    class="filter-bar__reset"
+    (click)="onReset()"
+  >
+    {{ strings.RESET }}
+  </button>
+</div>

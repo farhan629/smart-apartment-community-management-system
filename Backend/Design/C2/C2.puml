@@ -1,0 +1,24 @@
+@startuml C2_SmartApartment_Container_Overview
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+ 
+LAYOUT_TOP_DOWN()
+ 
+title C2-System Container View: Smart Apartment Community Management System
+ 
+Person(user, "User", "Admin who manages residents & configurations\nResident who registers visitors & books amenities\nSecurity who manages visitor gate entry\nMaintenance Staff who resolves complaints")
+ 
+System_Boundary(sacms, "Smart Apartment Community Management System") {
+ 
+    Container(frontend, "UI", "Angular 17+, TypeScript", "Allows users to login, register visitors,\nraise complaints, book amenities,\nview dashboards and manage the community.\nSends API requests to the backend.")
+ 
+    Container(backend, "Backend", "ASP.NET Core Web API, C#", "Handles business logic for visitor approvals,\nresident management, complaint workflows,\namenity bookings, authentication\nand notification delivery.")
+ 
+    ContainerDb(database, "Database", "PostgreSQL", "Stores resident profiles, visitor records,\ncomplaint details, amenity bookings,\nuser credentials and notification logs.")
+ 
+}
+ 
+Rel(user, frontend, "Registers visitors, books amenities,\nraises complaints, manages residents", "HTTPS")
+Rel(frontend, backend, "Sends API requests", "REST / HTTPS")
+Rel(backend, database, "Reads from and writes to", "EF Core")
+ 
+@enduml

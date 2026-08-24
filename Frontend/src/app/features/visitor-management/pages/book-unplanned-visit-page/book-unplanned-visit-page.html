@@ -1,0 +1,132 @@
+<div class="unplanned-visit-page">
+  <h2>{{ strings.BOOK_UNPLANNED_VISITOR_TITLE }}</h2>
+
+  <form class="unplanned-visit-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="form-row">
+      <div class="form-field">
+        <label for="blockNumber">{{ strings.BLOCK_NUMBER_LABEL }}</label>
+        <select id="blockNumber" formControlName="blockNumber">
+          <option value="" disabled>
+            {{ isLoadingFlats() ? strings.LOADING : strings.SELECT_BLOCK }}
+          </option>
+          @for (block of blocks(); track block) {
+            <option [value]="block">{{ block }}</option>
+          }
+        </select>
+        @if (form.controls.blockNumber.invalid && form.controls.blockNumber.touched) {
+          <span class="form-error">{{ strings.BLOCK_NUMBER_REQUIRED }}</span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="flatNumber">{{ strings.FLAT_NUMBER_LABEL }}</label>
+        <select
+          id="flatNumber"
+          formControlName="flatNumber"
+          [disabled]="!form.controls.blockNumber.value"
+        >
+          <option value="" disabled>
+            {{ form.controls.blockNumber.value ? strings.SELECT_FLAT : strings.SELECT_BLOCK_FIRST }}
+          </option>
+          @for (flat of flatsInSelectedBlock(); track flat.id) {
+            <option [value]="flat.number">{{ flat.number }}</option>
+          }
+        </select>
+        @if (form.controls.flatNumber.invalid && form.controls.flatNumber.touched) {
+          <span class="form-error">{{ strings.FLAT_NUMBER_REQUIRED }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label for="name">{{ strings.VISITOR_NAME_LABEL }}</label>
+      <input id="name" type="text" formControlName="name" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <span class="form-error">{{ strings.VISITOR_NAME_REQUIRED }}</span>
+      }
+    </div>
+
+    <div class="form-field">
+      <label for="phoneNumber">{{ strings.VISITOR_PHONE_LABEL }}</label>
+      <input id="phoneNumber" type="tel" formControlName="phoneNumber" />
+      @if (form.controls.phoneNumber.invalid && form.controls.phoneNumber.touched) {
+        <span class="form-error">{{ strings.VISITOR_PHONE_INVALID }}</span>
+      }
+    </div>
+
+    <div class="form-field">
+      <label for="email">{{ strings.VISITOR_EMAIL_LABEL }}</label>
+      <input id="email" type="email" formControlName="email" />
+      @if (form.controls.email.invalid && form.controls.email.touched) {
+        <span class="form-error">{{ strings.VISITOR_EMAIL_INVALID }}</span>
+      }
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label for="visitorTypeId">{{ strings.VISITOR_TYPE_LABEL }}</label>
+        <select id="visitorTypeId" formControlName="visitorTypeId">
+          <option value="" disabled>
+            {{ isLoadingVisitorTypes() ? strings.LOADING : strings.SELECT_VISITOR_TYPE }}
+          </option>
+          @for (type of visitorTypes(); track type.id) {
+            <option [value]="type.id">{{ type.name }}</option>
+          }
+        </select>
+        @if (form.controls.visitorTypeId.invalid && form.controls.visitorTypeId.touched) {
+          <span class="form-error">{{ strings.VISITOR_TYPE_REQUIRED }}</span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="purposeTypeId">{{ strings.PURPOSE_TYPE_LABEL }}</label>
+        <select id="purposeTypeId" formControlName="purposeTypeId">
+          <option value="" disabled>
+            {{ isLoadingPurposeTypes() ? strings.LOADING : strings.SELECT_PURPOSE_TYPE }}
+          </option>
+          @for (purpose of purposeTypes(); track purpose.id) {
+            <option [value]="purpose.id">{{ purpose.name }}</option>
+          }
+        </select>
+        @if (form.controls.purposeTypeId.invalid && form.controls.purposeTypeId.touched) {
+          <span class="form-error">{{ strings.PURPOSE_TYPE_REQUIRED }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label for="startDate">{{ strings.START_DATE_LABEL }}</label>
+        <input id="startDate" type="date" [min]="minDate" formControlName="startDate" />
+      </div>
+      <div class="form-field">
+        <label for="endDate">{{ strings.END_DATE_LABEL }}</label>
+        <input id="endDate" type="date" [min]="minDate" formControlName="endDate" />
+      </div>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="form-banner form-banner--error">{{ errorMessage() }}</div>
+    }
+    @if (successMessage()) {
+      <div class="form-banner form-banner--success">{{ successMessage() }}</div>
+    }
+
+    <div class="unplanned-visit-form__actions">
+      <app-action-button
+        [label]="strings.CANCEL"
+        variant="secondary"
+        type="button"
+        [disabled]="isSubmitting()"
+        (clicked)="onCancel()"
+      ></app-action-button>
+      <app-action-button
+        [label]="isSubmitting() ? strings.SAVING : strings.SUBMIT"
+        variant="primary"
+        type="submit"
+        [disabled]="isSubmitting()"
+        (clicked)="onSubmit()"
+      ></app-action-button>
+    </div>
+  </form>
+</div>

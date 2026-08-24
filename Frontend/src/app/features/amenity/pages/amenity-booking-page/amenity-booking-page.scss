@@ -1,0 +1,98 @@
+@use 'sass:color';
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/mixins' as *;
+
+.booking-page {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xl;
+  padding: $spacing-md 0 6.25rem 0; // Padding bottom to avoid content overlapping with the fixed bottom bar
+  max-width: 75rem;
+  margin: 0 auto;
+  position: relative;
+}
+
+app-amenity-calender {
+  display: block;
+  width: 100%;
+}
+
+.booking-header {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+
+  &__title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 0.95rem;
+    color: $color-text-secondary;
+    margin: 0;
+  }
+}
+
+.booking-layout {
+  display: grid;
+  grid-template-columns: 21.875rem 1fr;
+  gap: $spacing-xl;
+
+  @media (max-width: $breakpoint-tablet) {
+    grid-template-columns: 1fr;
+  }
+
+  &__left {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-lg;
+  }
+
+  &__right {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* Policy Card Styles */
+.policy-card {
+  @include card;
+  border-left: 0.25rem solid $color-primary;
+  background-color: $color-primary-light;
+  padding: $spacing-md;
+  display: flex;
+  gap: $spacing-md;
+
+  &__icon-wrapper {
+    color: $color-primary;
+    
+    .material-icons {
+      font-size: 1.5rem;
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: $color-primary-dark;
+    margin: 0;
+  }
+
+  &__text {
+    font-size: 0.8rem;
+    color: $color-text-primary;
+    line-height: 1.4;
+    margin: 0;
+  }
+}
+
+

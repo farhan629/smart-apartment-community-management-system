@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+option csharp_namespace = "ComplaintMaintenanceService.Infrastructure.Protos";
+
+package cms;
+
+// CmsService exposes category validation and staff creation to IdentityService via gRPC
+service CmsService {
+  // GetCategory returns category details by ID for Identity to validate and store
+  rpc GetCategory (GetCategoryRequest) returns (GetCategoryResponse);
+  // CreateStaff saves a new staff profile in CMS after Identity creates the user
+  rpc CreateStaff (CreateStaffRequest) returns (CreateStaffResponse);
+}
+
+message GetCategoryRequest {
+  string category_id = 1;
+}
+
+message GetCategoryResponse {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string img = 4;
+  bool found = 5;
+}
+
+message CreateStaffRequest {
+  string user_id = 1;
+  string category_id = 2;
+  string description = 3;
+  string details = 4;
+}
+
+message CreateStaffResponse {
+  string staff_id = 1;
+  bool success = 2;
+  string message = 3;
+}

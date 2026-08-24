@@ -1,0 +1,172 @@
+<div class="visits-page">
+  <div class="visits-page__header">
+    <div>
+      <h2 class="visits-page__title">{{ vm.PAGE_TITLE }}</h2>
+      <p class="visits-page__subtitle">{{ totalCount() }} {{ vm.RESULTS_COUNT_LABEL }}</p>
+    </div>
+    <app-action-button
+      [label]="strings.BOOK_VISITOR"
+      [icon]="icons.ADD"
+      variant="primary"
+      (clicked)="onBookVisitor()"
+    ></app-action-button>
+  </div>
+
+  <mat-tab-group (selectedIndexChange)="onTabChange($event)" class="visits-page__tabs">
+    <mat-tab [label]="vm.UPCOMING_TAB"></mat-tab>
+    <mat-tab [label]="vm.HISTORY_TAB"></mat-tab>
+  </mat-tab-group>
+  <div class="visits-page__toolbar">
+    <form [formGroup]="filterForm" class="visits-page__filters">
+      <div class="visits-page__filter-field">
+        <label class="visits-page__filter-label">{{ vm.STATUS_FILTER_LABEL }}</label>
+        <select
+          class="visits-page__filter-select"
+          formControlName="status"
+          (change)="onApplyFilters()"
+        >
+          @for (option of statusOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="visits-page__filter-field">
+        <label class="visits-page__filter-label">{{ vm.FROM_DATE_LABEL }}</label>
+        <input
+          type="date"
+          class="visits-page__filter-input"
+          formControlName="fromDate"
+          (change)="onApplyFilters()"
+        />
+      </div>
+
+      <div class="visits-page__filter-field">
+        <label class="visits-page__filter-label">{{ vm.TO_DATE_LABEL }}</label>
+        <input
+          type="date"
+          class="visits-page__filter-input"
+          formControlName="toDate"
+          (change)="onApplyFilters()"
+        />
+      </div>
+
+      <button type="button" class="visits-page__clear" (click)="onClearFilters()">
+        <mat-icon>{{ icons.CLEAR }}</mat-icon>
+        {{ vm.CLEAR_FILTERS }}
+      </button>
+    </form>
+  </div>
+
+  @if (isLoading()) {
+    <div class="visits-page__state"></div>
+  } @else if (errorMessage()) {
+    <div class="visits-page__state visits-page__state--error">
+      <mat-icon>{{ icons.ERROR }}</mat-icon>
+      <p>{{ errorMessage() }}</p>
+      <app-action-button
+        [label]="vm.RETRY"
+        variant="secondary"
+        (clicked)="loadVisits()"
+      ></app-action-button>
+    </div>
+  } @else if (displayedVisits().length === 0) {
+    <div class="visits-page__state">
+      <mat-icon>{{
+        totalCount() > 0
+          ? icons.EMPTY_RESULTS
+          : activeTab() === tabs.UPCOMING
+            ? icons.EMPTY_UPCOMING
+            : icons.EMPTY_HISTORY
+      }}</mat-icon>
+      @if (totalCount() > 0) {
+        <h3>{{ vm.NO_RESULTS_TITLE }}</h3>
+        <p>{{ vm.NO_RESULTS_MESSAGE }}</p>
+      } @else if (activeTab() === tabs.UPCOMING) {
+        <h3>{{ vm.NO_UPCOMING_VISITS_TITLE }}</h3>
+        <p>{{ vm.NO_UPCOMING_VISITS_MESSAGE }}</p>
+      } @else {
+        <h3>{{ vm.NO_HISTORY_VISITS_TITLE }}</h3>
+        <p>{{ vm.NO_HISTORY_VISITS_MESSAGE }}</p>
+      }
+    </div>
+  } @else {
+    <div class="visits-page__grid">
+      @for (visit of displayedVisits(); track visit.id) {
+        <div
+          class="visit-card"
+          role="button"
+          tabindex="0"
+          (click)="onViewDetail(visit)"
+          (keydown.enter)="onViewDetail(visit)"
+        >
+          <div class="visit-card__header">
+            <span class="visit-card__name">
+              <mat-icon>{{ icons.PERSON }}</mat-icon>
+              {{ visit.visitorName }}
+            </span>
+            <app-status-badge [status]="getStatusLabel(visit.status)"></app-status-badge>
+          </div>
+
+          <p class="visit-card__detail">
+            <mat-icon>{{ icons.PURPOSE }}</mat-icon> {{ visit.purpose }}
+          </p>
+          <p class="visit-card__detail">
+            <mat-icon>{{ icons.CALENDAR }}</mat-icon> {{ visit.startDate }} &ndash;
+            {{ visit.endDate }}
+          </p>
+          <p class="visit-card__detail">
+            <mat-icon>{{ icons.PHONE }}</mat-icon> {{ visit.visitorPhoneNumber }}
+          </p>
+
+          <div class="visit-card__actions">
+            @if (canUpdate(visit)) {
+              <app-action-button
+                [label]="strings.UPDATE"
+                [icon]="icons.UPDATE"
+                variant="secondary"
+                (click)="$event.stopPropagation()"
+                (clicked)="onUpdateVisitor(visit)"
+              ></app-action-button>
+            }
+
+            @if (canApprove(visit)) {
+              <app-action-button
+                [label]="strings.APPROVE"
+                [icon]="icons.APPROVE"
+                variant="primary"
+                (click)="$event.stopPropagation()"
+                (clicked)="onApproveVisit(visit)"
+              ></app-action-button>
+              <app-action-button
+                [label]="strings.REJECT"
+                [icon]="icons.REJECT"
+                variant="danger"
+                (click)="$event.stopPropagation()"
+                (clicked)="onRejectVisit(visit)"
+              ></app-action-button>
+            }
+            @if (canCancel(visit)) {
+              <app-action-button
+                [label]="strings.CANCEL"
+                [icon]="icons.CANCEL_VISIT"
+                variant="danger"
+                (click)="$event.stopPropagation()"
+                (clicked)="onCancelVisit(visit)"
+              ></app-action-button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <mat-paginator
+      [length]="totalCount()"
+      [pageSize]="pageSize()"
+      [pageIndex]="pageIndex()"
+      [hidePageSize]="true"
+      (page)="onPageChange($event)"
+      class="visits-page__paginator"
+    ></mat-paginator>
+  }
+</div>

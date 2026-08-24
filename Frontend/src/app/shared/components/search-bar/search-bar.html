@@ -1,0 +1,10 @@
+<div class="search-bar">
+  <mat-icon class="search-bar__icon">{{ icons.SEARCH }}</mat-icon>
+  <input
+    class="search-bar__input"
+    type="text"
+    [placeholder]="placeholder"
+    [(ngModel)]="term"
+    (ngModelChange)="onInput()"
+  />
+</div>

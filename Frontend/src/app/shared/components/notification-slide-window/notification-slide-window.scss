@@ -1,0 +1,211 @@
+@use 'sass:color';
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/mixins' as *;
+
+.nsw-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 999;
+}
+
+.nsw-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 420px;
+  height: 100vh;
+  background: $color-surface;
+  box-shadow: $shadow-lg;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.25s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.nsw-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-lg;
+  border-bottom: 1px solid $color-border;
+}
+
+.nsw-title {
+  margin: 0;
+  font-size: 1.2857rem;
+  font-weight: 600;
+  color: $color-text-primary;
+}
+
+.nsw-close-btn {
+  @include flex-center;
+  width: 2.2857rem;
+  height: 2.2857rem;
+  border: none;
+  background: transparent;
+  color: $color-text-muted;
+  cursor: pointer;
+  border-radius: $radius-sm;
+
+  &:hover {
+    background: $color-background;
+    color: $color-text-primary;
+  }
+
+  mat-icon {
+    font-size: 1.4286rem;
+    width: 1.4286rem;
+    height: 1.4286rem;
+  }
+}
+
+.nsw-actions {
+  display: flex;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-lg;
+  border-bottom: 1px solid $color-border;
+}
+
+.nsw-action-btn {
+  @include flex-center;
+  gap: $spacing-xs;
+  padding: 6px 12px;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  background: $color-surface;
+  color: $color-text-secondary;
+  font-size: 0.8571rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: $font-family-base;
+  transition: background 0.15s;
+
+  &:hover {
+    background: $color-background;
+  }
+
+  mat-icon {
+    font-size: 1.1429rem;
+    width: 1.1429rem;
+    height: 1.1429rem;
+  }
+
+  &--danger {
+    color: $color-danger;
+    border-color: $color-danger-light;
+
+    &:hover {
+      background: $color-danger-light;
+    }
+  }
+}
+
+.nsw-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.nsw-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xxl;
+  color: $color-text-muted;
+  font-size: 0.9286rem;
+}
+
+.nsw-item {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 1px solid $color-border;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: $color-background;
+  }
+
+  &--unread {
+    background: $color-background;
+
+    &:hover {
+      background: color-mix(in srgb, $color-background, black 2%);
+    }
+  }
+}
+
+.nsw-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.nsw-item-header {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: 2px;
+}
+
+.nsw-item-title {
+  font-size: 0.9286rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nsw-item-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: $radius-pill;
+  background: $color-primary;
+  flex-shrink: 0;
+}
+
+.nsw-item-message {
+  margin: 0;
+  font-size: 0.8571rem;
+  color: $color-text-secondary;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.nsw-item-delete {
+  @include flex-center;
+  width: 1.7143rem;
+  height: 1.7143rem;
+  border: none;
+  background: transparent;
+  color: $color-text-muted;
+  cursor: pointer;
+  border-radius: $radius-sm;
+  flex-shrink: 0;
+  margin-top: 2px;
+
+  &:hover {
+    background: $color-danger-light;
+    color: $color-danger;
+  }
+
+  mat-icon {
+    font-size: 1.1429rem;
+    width: 1.1429rem;
+    height: 1.1429rem;
+  }
+}

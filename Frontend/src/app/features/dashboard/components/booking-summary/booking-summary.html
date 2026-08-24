@@ -1,0 +1,49 @@
+@if (summary) {
+<div class="booking-summary">
+  <div class="booking-summary__header">
+    <h3 class="booking-summary__title">Booking Overview</h3>
+  </div>
+
+  <div class="booking-summary__donut">
+    <svg viewBox="0 0 100 100" class="booking-summary__svg">
+      @for (seg of segments; track seg.label) {
+        <circle
+          class="booking-summary__segment"
+          cx="50" cy="50" r="40"
+          [attr.stroke]="seg.color"
+          [attr.stroke-dasharray]="seg.dash + ' ' + (circumference - (+seg.dash))"
+          [attr.stroke-dashoffset]="seg.offset"
+          transform="rotate(-90 50 50)"
+        />
+      }
+      <circle class="booking-summary__track" cx="50" cy="50" r="40" />
+    </svg>
+    <div class="booking-summary__center">
+      <span class="booking-summary__center-value">{{ summary.utilizationRate }}%</span>
+      <span class="booking-summary__center-label">Utilization</span>
+    </div>
+  </div>
+
+  <div class="booking-summary__legend">
+    <div class="booking-summary__legend-row">
+      <span class="booking-summary__dot booking-summary__dot--active"></span>
+      <span class="booking-summary__legend-label">Active</span>
+      <span class="booking-summary__legend-value">{{ summary.activeBookings }}</span>
+    </div>
+    <div class="booking-summary__legend-row">
+      <span class="booking-summary__dot booking-summary__dot--cancelled"></span>
+      <span class="booking-summary__legend-label">Cancelled</span>
+      <span class="booking-summary__legend-value">{{ summary.cancelledBookings }}</span>
+    </div>
+    <div class="booking-summary__legend-row">
+      <span class="booking-summary__dot booking-summary__dot--completed"></span>
+      <span class="booking-summary__legend-label">Completed</span>
+      <span class="booking-summary__legend-value">{{ summary.completedBookings }}</span>
+    </div>
+    <div class="booking-summary__legend-row booking-summary__legend-row--total">
+      <span class="booking-summary__legend-label">Total</span>
+      <span class="booking-summary__legend-value booking-summary__legend-value--total">{{ summary.totalBookings }}</span>
+    </div>
+  </div>
+</div>
+}

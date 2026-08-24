@@ -1,0 +1,61 @@
+@use 'sass:color';
+@use '../../../../shared/styles/variables' as *;
+@use '../../../../shared/styles/mixins' as *;
+
+.perm-page {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+
+  &__header {
+    @include flex-between;
+    padding-bottom: $spacing-sm;
+    border-bottom: 1px solid $color-border;
+  }
+
+  &__title {
+    font-size: 22px;
+    font-weight: 700;
+    color: $color-text-primary;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  &__card {
+    @include card;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-lg;
+  }
+
+  &__user-info {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    padding: $spacing-md;
+    background: linear-gradient(135deg, $color-primary-light, color-mix(in srgb, $color-primary-light, white 2%));
+    border-radius: $radius-sm;
+    border-left: 4px solid $color-primary;
+
+    mat-icon {
+      color: $color-primary;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    strong {
+      font-size: 15px;
+      font-weight: 600;
+      color: $color-text-primary;
+    }
+  }
+
+  &__user-email {
+    display: block;
+    font-size: 12px;
+    color: $color-text-secondary;
+    margin-top: 2px;
+  }
+}

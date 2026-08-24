@@ -1,0 +1,44 @@
+<app-popup-dialog [title]="strings.UPDATE_PERMISSIONS" (closed)="onCancel()">
+  <div class="upd-perm">
+    @if (loading()) {
+      <p class="upd-perm__state">{{ strings.LOADING }}</p>
+    } @else {
+      @if (error()) {
+        <div class="upd-perm__error">{{ error() }}</div>
+      }
+      @if (success()) {
+        <div class="upd-perm__success">{{ success() }}</div>
+      }
+
+      <div class="upd-perm__grid">
+        @for (perm of permissionsList; track perm) {
+          <div class="upd-perm__item">
+            <span class="upd-perm__label">{{ permissionLabel(perm) }}</span>
+            <label class="toggle" [class.toggle--on]="permissionState()[perm]">
+              <input
+                type="checkbox"
+                class="toggle__input"
+                [checked]="permissionState()[perm]"
+                (change)="onToggle(perm)"
+              />
+              <span class="toggle__slider"></span>
+            </label>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <div dialogFooter>
+    <app-action-button
+      [label]="strings.CANCEL"
+      variant="secondary"
+      (clicked)="onCancel()"
+    ></app-action-button>
+    <app-action-button
+      [label]="saving() ? strings.SAVING : strings.SAVE"
+      [disabled]="saving() || !hasChanges()"
+      (clicked)="onSave()"
+    ></app-action-button>
+  </div>
+</app-popup-dialog>

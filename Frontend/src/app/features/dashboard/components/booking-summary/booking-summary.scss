@@ -1,0 +1,109 @@
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/mixins' as *;
+
+.booking-summary {
+  &__header {
+    margin-bottom: $spacing-md;
+  }
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  &__donut {
+    position: relative;
+    width: 9rem;
+    height: 9rem;
+    margin: 0 auto $spacing-md auto;
+  }
+
+  &__svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(0deg);
+  }
+
+  &__track {
+    fill: none;
+    stroke: $color-border;
+    stroke-width: 8;
+  }
+
+  &__segment {
+    fill: none;
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.3s ease;
+  }
+
+  &__center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  &__center-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: $color-text-primary;
+  }
+
+  &__center-label {
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $color-text-secondary;
+  }
+
+  &__legend {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  &__legend-row {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    font-size: 0.75rem;
+
+    &--total {
+      margin-top: $spacing-xs;
+      padding-top: $spacing-xs;
+      border-top: 0.0625rem solid $color-border;
+    }
+  }
+
+  &__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: $radius-pill;
+    flex-shrink: 0;
+
+    &--active { background: #22c55e; }
+    &--cancelled { background: #ef4444; }
+    &--completed { background: #3b82f6; }
+  }
+
+  &__legend-label {
+    flex: 1;
+    color: $color-text-secondary;
+  }
+
+  &__legend-value {
+    font-weight: 600;
+    color: $color-text-primary;
+
+    &--total {
+      font-size: 0.875rem;
+    }
+  }
+}

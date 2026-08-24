@@ -1,0 +1,44 @@
+<div class="booking-report">
+  <div class="booking-report__header">
+    <h3 class="booking-report__title">{{ strings.LATEST_BOOKINGS_TITLE }}</h3>
+  </div>
+
+  @if (loading) {
+    <p class="booking-report__status">{{ strings.LOADING }}</p>
+  } @else if (error) {
+    <p class="booking-report__status booking-report__status--error">{{ strings.NO_DATA }}</p>
+  } @else if (bookings.length === 0) {
+    <p class="booking-report__status">{{ strings.NO_DATA }}</p>
+  } @else {
+    <table class="booking-report__table">
+      <thead>
+        <tr>
+          <th>{{ strings.AMENITY_LABEL }}</th>
+          <th>{{ strings.STATUS_LABEL }}</th>
+          <th>{{ strings.TIME_SLOT_LABEL }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (b of bookings; track b.bookingId) {
+          <tr>
+            <td>
+              <div class="booking-report__amenity">
+                <mat-icon class="booking-report__amenity-icon">{{ icons.AMENITIES }}</mat-icon>
+                <span>{{ b.amenityName }}</span>
+              </div>
+            </td>
+            <td>
+              <app-status-badge [status]="b.status ?? ''" />
+            </td>
+            <td>
+              <div class="booking-report__slot">
+                <span class="booking-report__date">{{ b.slotDate | date: 'mediumDate' }}</span>
+                <span class="booking-report__time">{{ b.startTime }} - {{ b.endTime }}</span>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

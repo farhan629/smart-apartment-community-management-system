@@ -1,0 +1,30 @@
+NotificationType,Title,MessageTemplate
+VISITOR_REGISTERED,New Visitor Registration,Dear {{ResidentName}} your visitor {{VisitorName}} has been registered for {{VisitDate}}.
+VISITOR_APPROVED,Visitor Approved,Your visitor {{VisitorName}} has been approved. A QR pass has been generated.
+VISITOR_REJECTED,Visitor Request Rejected,Your visitor {{VisitorName}} visit request has been rejected.
+VISITOR_CHECKED_IN,Visitor Checked In,{{VisitorName}} has checked in at the gate at {{CheckInTime}}.
+VISITOR_CHECKED_OUT,Visitor Checked Out,{{VisitorName}} has checked out at {{CheckOutTime}}.
+VISITOR_AT_GATE,Visitor Awaiting Approval,Your visitor {{VisitorName}} is at the gate and awaiting your approval.
+COMPLAINT_RAISED,Complaint Received,Your complaint #{{ComplaintId}} has been registered. We will get back to you shortly.
+COMPLAINT_ASSIGNED,Complaint Assigned,Your complaint #{{ComplaintId}} has been assigned to {{StaffName}}.
+COMPLAINT_IN_PROGRESS,Complaint In Progress,Work has started on your complaint #{{ComplaintId}}.
+COMPLAINT_RESOLVED,Complaint Resolved,Your complaint #{{ComplaintId}} has been resolved. Please review and close if satisfied.
+COMPLAINT_CLOSED,Complaint Closed,Your complaint #{{ComplaintId}} has been closed.
+COMPLAINT_ESCALATED,Complaint Escalated,Your complaint #{{ComplaintId}} has been escalated due to no resolution within the expected time.
+COMPLAINT_CANCELLED,Complaint Cancelled,Your complaint #{{ComplaintId}} has been cancelled successfully.
+BOOKING_CREATED,Booking Request Received,Your booking request for {{AmenityName}} on {{BookingDate}} has been received.
+BOOKING_APPROVED,Booking Confirmed,Your booking for {{AmenityName}} on {{BookingDate}} at {{TimeSlot}} is confirmed.
+BOOKING_CANCELLED,Booking Cancelled,Your booking for {{AmenityName}} on {{BookingDate}} has been cancelled.
+BOOKING_REMINDER,Upcoming Booking Reminder,Reminder: You have a booking for {{AmenityName}} tomorrow at {{TimeSlot}}.
+GENERAL_ALERT,Community Alert,{{Message}}
+COMPLAINT_ACCEPTED,Staff Accepted Your Complaint,Staff has accepted complaint #{{ComplaintId}}. Work will begin shortly.
+COMPLAINT_DENIED,Staff Denied Your Complaint,Staff denied complaint #{{ComplaintId}}. A reassignment will follow.
+COMPLAINT_RATING_SUBMITTED,Resident Submitted a Rating,Resident rated staff for complaint #{{ComplaintId}}.
+COMPLAINT_RATING_REQUEST,Please Rate Your Staff,Your complaint #{{ComplaintId}} is resolved. Please rate the staff who handled it.
+booking_confirmed,Booking Confirmed,Your booking for {{AmenityName}} has been successfully reserved.
+booking_cancelled,Booking Cancelled,Your booking for {{AmenityName}} has been cancelled.
+booking_reminder,Booking Reminder,Reminder: Your booking for {{AmenityName}} starts in 1 hour.
+admin_booking_notification,New Booking Notification,User {{UserId}} booked {{AmenityName}}.
+admin_booking_cancelled,Booking Cancelled Notification,User {{UserId}} cancelled booking for {{AmenityName}}.
+admin_complaint_cancelled,Complaint Cancelled by Resident,Complaint #{{ComplaintId}} raised by {{ResidentName}} has been cancelled. Reason: {{Reason}}.
+GENERAL_ALERT,Community Alert,{{Message}}

@@ -1,0 +1,38 @@
+<div class="amenity-dashboard">
+  <div class="amenity-header">
+    <div class="amenity-header__title-container">
+      <h1 class="amenity-header__title">{{ dashboardStrings.PAGE_TITLE }}</h1>
+      <p class="amenity-header__subtitle">
+        {{ dashboardStrings.PAGE_SUBTITLE }}
+      </p>
+    </div>
+    @if (isAdmin()) {
+      <button mat-flat-button class="amenity-header__add-btn" (click)="navigateToAddAmenity()">
+        <span class="material-icons">add</span>
+        {{ dashboardStrings.ADD_AMENITY_BUTTON }}
+      </button>
+    }
+  </div>
+
+  <div class="amenity-banner">
+    <div class="amenity-banner__content">
+      <span class="amenity-banner__badge">{{ dashboardStrings.BANNER_BADGE }}</span>
+      <h2 class="amenity-banner__title">{{ dashboardStrings.BANNER_TITLE_1 }}<br />{{ dashboardStrings.BANNER_TITLE_2 }}</h2>
+      <p class="amenity-banner__description">
+        {{ dashboardStrings.BANNER_DESCRIPTION }}
+      </p>
+      <button mat-flat-button class="amenity-banner__btn" (click)="scrollToAmenities()">{{ dashboardStrings.EXPLORE_BUTTON }}</button>
+    </div>
+    <div class="amenity-banner__graphic-container">
+      <img src="/community_banner.png" [alt]="dashboardStrings.BANNER_ALT" class="amenity-banner__graphic-img" />
+    </div>
+  </div>
+
+  <div class="amenity-dashboard__section" id="amenities-list">
+    <app-amenity-cards></app-amenity-cards>
+  </div>
+
+  <div class="amenity-dashboard__section">
+    <app-amenity-booking-history [limit]="historyLimit"></app-amenity-booking-history>
+  </div>
+</div>

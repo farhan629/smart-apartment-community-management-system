@@ -1,0 +1,80 @@
+<app-popup-dialog [title]="strings.USER_DETAIL_TITLE" (closed)="onClose()">
+  @if (loading()) {
+    <div class="vud__loading">{{ strings.LOADING }}</div>
+  } @else if (error()) {
+    <div class="vud__error">{{ error() }}</div>
+  } @else if (user(); as u) {
+    <div class="vud__content">
+      <div class="vud__photo">
+        @if (u.photoUrl) {
+          <img [src]="resolvePhotoUrl(u.photoUrl)" [alt]="u.userName" class="vud__photo-img" />
+        } @else {
+          <mat-icon class="vud__photo-placeholder">{{ icons.PERSON }}</mat-icon>
+        }
+      </div>
+      <div class="vud__fields">
+        <div class="vud__field">
+          <span class="vud__label">{{ strings.USERNAME_LABEL }}</span>
+          <span class="vud__value">{{ u.userName }}</span>
+        </div>
+        <div class="vud__field">
+          <span class="vud__label">{{ strings.EMAIL_LABEL }}</span>
+          <span class="vud__value">{{ u.email }}</span>
+        </div>
+        <div class="vud__field">
+          <span class="vud__label">{{ strings.PHONE_LABEL }}</span>
+          <span class="vud__value">{{ u.phone || '-' }}</span>
+        </div>
+        <div class="vud__field">
+          <span class="vud__label">{{ strings.ROLE_LABEL }}</span>
+          <span class="vud__value">{{ u.role || '-' }}</span>
+        </div>
+        @if (shouldShowFlat()) {
+          <div class="vud__field">
+            <span class="vud__label">{{ strings.FLAT_ID_LABEL }}</span>
+            @if (flatLoading()) {
+              <span class="vud__value">{{ strings.LOADING }}</span>
+            } @else if (flat(); as f) {
+              <span class="vud__value">{{ f.number }} - {{ f.block }}/{{ f.floor }}</span>
+            } @else {
+              <span class="vud__value">{{ u.flatId || '-' }}</span>
+            }
+          </div>
+        }
+        <div class="vud__field">
+          <span class="vud__label">{{ strings.CREATED_AT_LABEL }}</span>
+          <span class="vud__value">{{ u.createdAt | date: dateFormats.DATE_TIME }}</span>
+        </div>
+        <div class="vud__field">
+          <span class="vud__label">{{ strings.STATUS_LABEL }}</span>
+          <span class="vud__value" [class.vud__value--active]="u.isActive" [class.vud__value--inactive]="!u.isActive">
+            {{ u.isActive ? strings.USER_STATUS_ACTIVE : strings.USER_STATUS_INACTIVE }}
+          </span>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div dialogFooter>
+    <div class="vud__footer-actions">
+      <app-action-button
+        [label]="strings.EDIT_USER"
+        [icon]="icons.EDIT"
+        variant="secondary"
+        (clicked)="onEdit()"
+      ></app-action-button>
+      <app-action-button
+        [label]="strings.UPDATE_USER_PERMISSION"
+        [icon]="icons.SETTINGS"
+        variant="secondary"
+        (clicked)="onPermission()"
+      ></app-action-button>
+      <app-action-button
+        [label]="strings.DELETE_USER"
+        [icon]="icons.DELETE"
+        variant="danger"
+        (clicked)="onDelete()"
+      ></app-action-button>
+    </div>
+  </div>
+</app-popup-dialog>

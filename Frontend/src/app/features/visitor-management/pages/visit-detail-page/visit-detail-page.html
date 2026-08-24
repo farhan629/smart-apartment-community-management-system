@@ -1,0 +1,146 @@
+<div class="visit-detail-page">
+  <button type="button" class="visit-detail-page__back" (click)="onBack()">
+    <mat-icon>arrow_back</mat-icon>
+    <span>{{ strings.MY_VISITS_TITLE }}</span>
+  </button>
+
+  @if (isLoading()) {
+    <p class="visit-detail-page__state">{{ strings.LOADING }}</p>
+  } @else if (errorMessage() && !visit()) {
+    <p class="visit-detail-page__state visit-detail-page__state--error">{{ errorMessage() }}</p>
+  } @else if (visit(); as visit) {
+    <div class="visit-detail-card">
+      <div class="visit-detail-card__header">
+        <h2 class="visit-detail-card__name">{{ visit.visitorName }}</h2>
+        <app-status-badge [status]="getStatusLabel(visit.status)"></app-status-badge>
+      </div>
+
+      <div class="visit-detail-card__section">
+        <p>
+          <strong>{{ strings.VISITOR_PHONE_LABEL }}:</strong> {{ visit.visitorPhoneNumber }}
+        </p>
+        @if (visit.visitorEmail) {
+          <p>
+            <strong>{{ strings.VISITOR_EMAIL_LABEL }}:</strong> {{ visit.visitorEmail }}
+          </p>
+        }
+        <p>
+          <strong>{{ strings.VISITOR_TYPE_LABEL }}:</strong> {{ visit.visitorType }}
+        </p>
+      </div>
+
+      @if (errorMessage()) {
+        <p class="visit-detail-page__state visit-detail-page__state--error">{{ errorMessage() }}</p>
+      }
+
+      @if (!isEditing()) {
+        <div class="visit-detail-card__section">
+          <p>
+            <strong>{{ strings.PURPOSE_TYPE_LABEL }}:</strong> {{ visit.purpose }}
+          </p>
+          <p>
+            <strong>{{ strings.START_DATE_LABEL }}:</strong> {{ visit.startDate }}
+          </p>
+          <p>
+            <strong>{{ strings.END_DATE_LABEL }}:</strong> {{ visit.endDate }}
+          </p>
+
+          @if (visit.rejectionReason) {
+            <p>
+              <strong>{{ strings.REJECTION_REASON_LABEL }}:</strong> {{ visit.rejectionReason }}
+            </p>
+          }
+
+          @if (qrSent()) {
+            <p class="visit-detail-card__qr">
+              <mat-icon>mail</mat-icon>
+              {{ strings.QR_SENT_LABEL }}
+            </p>
+          }
+        </div>
+
+        <div class="visit-detail-card__actions">
+          <app-action-button
+            [label]="strings.UPDATE"
+            icon="edit"
+            variant="secondary"
+            (clicked)="onUpdateVisitor()"
+          ></app-action-button>
+
+          @if (canApprove()) {
+            <app-action-button
+              [label]="strings.APPROVE"
+              variant="primary"
+              (clicked)="onApproveVisit()"
+            ></app-action-button>
+            <app-action-button
+              [label]="strings.REJECT"
+              variant="danger"
+              (clicked)="onRejectVisit()"
+            ></app-action-button>
+          }
+
+          @if (canEdit()) {
+            <app-action-button
+              [label]="strings.EDIT"
+              icon="edit_calendar"
+              variant="secondary"
+              (clicked)="onStartEdit()"
+            ></app-action-button>
+          }
+          @if (canCancel()) {
+            <app-action-button
+              [label]="strings.CANCEL_VISIT_TITLE"
+              icon="cancel"
+              variant="danger"
+              (clicked)="onCancelVisit()"
+            ></app-action-button>
+          }
+        </div>
+      } @else {
+        <form [formGroup]="editForm" class="visit-detail-form">
+          <mat-form-field appearance="outline" class="visit-detail-form__field">
+            <mat-label>{{ strings.PURPOSE_TYPE_LABEL }}</mat-label>
+            <mat-select formControlName="purposeTypeId">
+              @for (purpose of purposeTypes(); track purpose.id) {
+                <mat-option [value]="purpose.id">{{ purpose.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="visit-detail-form__field">
+            <mat-label>{{ strings.START_DATE_LABEL }}</mat-label>
+            <input matInput [matDatepicker]="startPicker" formControlName="startDate" />
+            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="visit-detail-form__field">
+            <mat-label>{{ strings.END_DATE_LABEL }}</mat-label>
+            <input matInput [matDatepicker]="endPicker" formControlName="endDate" />
+            <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+          </mat-form-field>
+
+          @if (errorMessage()) {
+            <p class="visit-detail-form__error">{{ errorMessage() }}</p>
+          }
+
+          <div class="visit-detail-card__actions">
+            <app-action-button
+              [label]="strings.CANCEL"
+              variant="secondary"
+              (clicked)="onCancelEdit()"
+            ></app-action-button>
+            <app-action-button
+              [label]="strings.SAVE"
+              variant="primary"
+              [disabled]="isSaving()"
+              (clicked)="onSaveEdit()"
+            ></app-action-button>
+          </div>
+        </form>
+      }
+    </div>
+  }
+</div>

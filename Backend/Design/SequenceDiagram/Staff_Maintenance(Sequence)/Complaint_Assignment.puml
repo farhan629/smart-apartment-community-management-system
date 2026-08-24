@@ -1,0 +1,63 @@
+@startuml part1_complaint_assignment_flow
+actor Resident
+actor Staff
+participant API
+database DB
+
+== 1. Complaint submission ==
+Resident -> API: POST /complaints
+alt missing required fields
+  API --> Resident: 400 Missing/malformed fields
+else valid
+  API -> DB: Save new complaint with status Open
+  API -> DB: Record progress log entry for Open status
+end
+
+== 2. Auto-assignment ==
+alt no assignment rule found or invalid refs
+  API --> Resident: 422 Validation failed (invalid refs)
+else slot available
+  API -> DB: Create assignment record with Pending Acceptance status
+  API -> DB: Send notification to primary staff
+  API --> Resident: 201 Created (status=Open, assignmentStatus=Pending Acceptance)
+else no slot available
+  API -> DB: Create escalation record for the complaint
+  API -> DB: Mark complaint status as Escalated
+  API -> DB: Record progress log entry for Escalated status
+  API --> Resident: 201 Created (status=Escalated)
+end
+
+== 3. Staff accepts ==
+Staff -> API: PATCH /complaints/{id}/assignments/{aid}/accept
+alt assignment not Pending Acceptance
+  API --> Staff: 422 Assignment no longer Pending Acceptance
+else assignment not owned by staff
+  API --> Staff: 403 Assignment does not belong to staff
+else valid
+  API -> DB: Mark assignment as Active and record accepted date
+  API -> DB: Mark availability slot as booked
+  API -> DB: Update complaint status to Assigned
+  API -> DB: Record progress log entry for Assigned status
+  API -> DB: Notify resident and admin
+  API --> Staff: 200 OK
+end
+
+== 4. Staff denies → fallback / escalation ==
+Staff -> API: PATCH /complaints/{id}/assignments/{aid}/deny
+alt assignment not Pending Acceptance
+  API --> Staff: 422 Assignment no longer Pending Acceptance
+else valid
+  API -> DB: Mark assignment as Denied and save denial reason
+  alt fallback_staff_id exists & has free slot
+    API -> DB: Create new assignment for fallback staff with Pending Acceptance status
+    API -> DB: Notify fallback staff
+    API --> Staff: 200 OK (Offer sent to fallback staff)
+  else fallback also denied / unavailable
+    API -> DB: Create escalation record for the complaint
+    API -> DB: Mark complaint status as Escalated
+    API -> DB: Record progress log entry for Escalated status
+    API -> DB: Notify senior admin and resident
+    API --> Staff: 200 OK (Escalated — no staff accepted)
+  end
+end
+@enduml

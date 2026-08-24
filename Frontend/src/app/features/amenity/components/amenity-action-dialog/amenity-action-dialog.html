@@ -1,0 +1,97 @@
+@if (isInline) {
+  <div class="dialog-card dialog-card--inline">
+    <ng-container *ngTemplateOutlet="cardContent"></ng-container>
+  </div>
+} @else {
+  <div class="dialog-overlay" (click)="onBack()">
+    <div class="dialog-card" (click)="$event.stopPropagation()">
+      <ng-container *ngTemplateOutlet="cardContent"></ng-container>
+    </div>
+  </div>
+}
+
+<ng-template #cardContent>
+  <div class="dialog-card__header">
+    <h2 class="dialog-card__title">{{ title() }}</h2>
+    @if (!isInline) {
+      <button mat-icon-button class="dialog-card__close-btn" (click)="onBack()" [disabled]="isSubmitting">
+        <span class="material-icons">close</span>
+      </button>
+    }
+  </div>
+  
+  <p class="dialog-card__subtitle">{{ subtitle() }}</p>
+
+  <div class="dialog-card__details">
+    <div class="detail-grid">
+      <div class="detail-item">
+        <span class="detail-item__label">{{ labelAmenity }}</span>
+        <span class="detail-item__value">{{ bookingDetails.amenityName }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-item__label">{{ labelDate }}</span>
+        <span class="detail-item__value">{{ bookingDetails.slotDate | date:'mediumDate' }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-item__label">{{ labelSlot }}</span>
+        <span class="detail-item__value">{{ bookingDetails.slotLabel }}</span>
+      </div>
+      @if (mode === 'cancel') {
+        <div class="detail-item">
+          <span class="detail-item__label">{{ labelStatus }}</span>
+          <span class="detail-item__value detail-item__value--status">
+            {{ bookingDetails.status || 'Booked' }}
+          </span>
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (mode === 'cancel') {
+    <div class="dialog-form-group">
+      <label for="cancellationReason" class="dialog-form-label">
+        {{ labelReason }}
+      </label>
+      <textarea
+        id="cancellationReason"
+        name="cancellationReason"
+        class="dialog-textarea"
+        [placeholder]="placeholderReason"
+        [ngModel]="reason()"
+        (ngModelChange)="reason.set($event)"
+        [disabled]="isSubmitting">
+      </textarea>
+      @if (validationError()) {
+        <div class="dialog-error-msg">
+          <span class="material-icons">error_outline</span>
+          {{ validationError() }}
+        </div>
+      }
+    </div>
+  }
+
+  <div class="dialog-actions">
+    <button 
+      type="button" 
+      mat-stroked-button
+      class="dialog-btn dialog-btn--cancel" 
+      (click)="onBack()"
+      [disabled]="isSubmitting">
+      {{ btnBackLabel() }}
+    </button>
+    <button 
+      type="button" 
+      mat-flat-button
+      class="dialog-btn" 
+      [class.dialog-btn--confirm-green]="mode === 'confirm'"
+      [class.dialog-btn--confirm-red]="mode === 'cancel'"
+      (click)="onSubmit()"
+      [disabled]="isSubmitting">
+      @if (isSubmitting) {
+        {{ btnSubmittingLabel() }}
+      } @else {
+        {{ btnConfirmLabel() }}
+      }
+    </button>
+  </div>
+</ng-template>

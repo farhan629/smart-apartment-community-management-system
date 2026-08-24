@@ -1,0 +1,23 @@
+Id,RoleId,PermissionCode,Description,IsAllowed
+affbef80-ffb9-45c3-a416-169c5db948ef,cccccccc-cccc-cccc-cccc-cccccccccccc,visitor:view,View visitor records,true
+24251f9d-a45f-4004-9a1a-2d47b3fcde16,cccccccc-cccc-cccc-cccc-cccccccccccc,visitor:manage,Create and update visitor records,true
+8aabf0d9-ba7a-45ce-a357-d34f7a6935bd,cccccccc-cccc-cccc-cccc-cccccccccccc,visitor:delete,Soft-delete visitor records,true
+656d5a78-1f6e-49ee-a9e5-5f6a23a758a4,cccccccc-cccc-cccc-cccc-cccccccccccc,visit:view,View all visits,true
+5cff0b03-404c-4ca6-953e-6b31069f01de,cccccccc-cccc-cccc-cccc-cccccccccccc,visit:register,Register a visit,true
+2afa5cce-bcfa-4e4b-a8b9-675205db2d75,cccccccc-cccc-cccc-cccc-cccccccccccc,visit:manage,Update and cancel visits,true
+983c84c1-46b3-44d0-a673-cf10827b9b8f,cccccccc-cccc-cccc-cccc-cccccccccccc,visit:approve,Approve or reject visits,true
+4755c3a4-fea5-4ce7-b970-e1930b81b01e,cccccccc-cccc-cccc-cccc-cccccccccccc,visit:checkin,Check-in and check-out visitors,true
+e2109d90-2b88-4ffb-9f93-05d0f12a15ea,cccccccc-cccc-cccc-cccc-cccccccccccc,qr:generate,Generate QR pass for a visit,true
+a36e1e53-bb42-4798-9db5-f865fe1976b0,cccccccc-cccc-cccc-cccc-cccccccccccc,qr:validate,Validate QR pass at the gate,true
+0c78f03c-6a6e-4880-b0a7-8df3f2e80bda,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa,visitor:view,View visitor records,true
+a1452a29-c371-4b74-8de9-382102b803e2,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa,visitor:manage,Create and update visitor records,true
+2f5b9f17-02ae-448c-8de6-c4efef96b0ba,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa,visit:view,View own visits,true
+ec728da8-aada-4e89-94c3-7b11da30c663,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa,visit:register,Register a planned visit,true
+eb6e8dd6-b2e4-4311-a415-5e80b26f66ce,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa,visit:manage,Update and cancel own visits,true
+569afcf4-196c-479e-9383-4244c3c1460d,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa,visit:approve,Approve or reject unplanned visits posted by Security,true
+c15b13f9-460e-4a7e-8255-6f5aead92abf,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa,qr:generate,Generate QR pass for approved visit,true
+c8c7b596-3fa1-48a6-9717-43982466b51d,eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee,visitor:view,View visitor records,true
+eca1e441-4a80-4c18-b139-846dcdadd452,eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee,visit:view,View all visits,true
+eae197d2-7b72-40d8-a14d-df673c7563cc,eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee,visit:register,Register a walk-in visit,true
+44801aa5-8d7d-4669-851d-3f7c3cdf9bb5,eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee,visit:checkin,Check-in and check-out visitors,true
+2694d11b-9c2b-4d11-8681-731d8bb1e8de,eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee,qr:validate,Validate QR pass at the gate,true

@@ -1,0 +1,84 @@
+<div class="assign-dialog">
+  <h2 class="assign-dialog__title">
+    {{ dialogTitle }}
+  </h2>
+
+  @if (category) {
+    <p class="assign-dialog__subtitle">
+      {{ strings.SHOWING_STAFF_IN_PREFIX }}
+      <strong>{{ category }}</strong>
+      @if (staff().length && visibleStaff().length === staff().length && !showAllCategories()) {
+        {{ strings.NO_EXACT_MATCH_NOTE }}
+      }
+    </p>
+  }
+
+  @if (loading()) {
+    <div class="assign-dialog__state">{{ strings.LOADING_STAFF }}</div>
+  } @else if (loadError()) {
+    <div class="assign-dialog__state assign-dialog__state--error">
+      {{ strings.LOAD_ERROR }}
+    </div>
+  } @else {
+    <div class="assign-dialog__staff-list">
+      @for (member of visibleStaff(); track member.staffId) {
+        <label
+          class="staff-option"
+          [class.staff-option--selected]="selectedStaffId() === member.staffId"
+        >
+          <input
+            type="radio"
+            name="staffId"
+            [value]="member.staffId"
+            [checked]="selectedStaffId() === member.staffId"
+            (change)="selectStaff(member.staffId)"
+          />
+          <div class="staff-option__info">
+            <span class="staff-option__name">{{ member.categoryName }} {{ strings.STAFF_SUFFIX }}</span>
+            <span class="staff-option__desc">{{ member.description }}</span>
+          </div>
+        </label>
+      } @empty {
+        <div class="assign-dialog__state">{{ strings.NO_STAFF_FOUND }}</div>
+      }
+    </div>
+
+    @if (category && !showAllCategories()) {
+      <button type="button" class="assign-dialog__toggle" (click)="showAllCategories.set(true)">
+        {{ strings.SHOW_ALL_CATEGORIES }}
+      </button>
+    }
+
+    <div class="form-field">
+      <label for="dueDate">{{ strings.DUE_DATE_LABEL }}</label>
+      <input
+        id="dueDate"
+        type="date"
+        [min]="minDate"
+        [ngModel]="dueDate()"
+        (ngModelChange)="dueDate.set($event)"
+      />
+    </div>
+
+    @if (submitError()) {
+      <span class="form-error">{{ submitError() }}</span>
+    }
+  }
+
+  <div class="assign-dialog__footer">
+    <app-action-button
+      [label]="strings.CANCEL"
+      variant="secondary"
+      [disabled]="isSubmitting()"
+      (clicked)="cancel()"
+    >
+    </app-action-button>
+    <app-action-button
+      [label]="confirmLabel()"
+      variant="primary"
+      [disabled]="isSubmitting() || loading() || !!loadError()"
+      (clicked)="confirm()"
+    >
+    </app-action-button>
+  </div>
+</div>

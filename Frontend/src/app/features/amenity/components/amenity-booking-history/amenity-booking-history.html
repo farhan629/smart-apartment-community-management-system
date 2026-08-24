@@ -1,0 +1,164 @@
+<div class="history-container">
+  @if (isAdmin) {
+    <div class="history-tabs">
+      <button 
+        class="history-tab" 
+        [class.history-tab--active]="viewMode() === 'mine'" 
+        (click)="showMine()">
+        {{ historyStrings.TAB_MY_BOOKINGS }}
+      </button>
+      <button 
+        class="history-tab" 
+        [class.history-tab--active]="viewMode() === 'all'" 
+        (click)="showAll()">
+        {{ historyStrings.TAB_ALL_BOOKINGS }}
+      </button>
+    </div>
+  }
+
+  <div class="history-header">
+    <h2 class="history-header__title">
+      {{ viewMode() === 'all' ? historyStrings.TITLE_ALL_BOOKINGS : historyStrings.TITLE_MY_BOOKINGS }}
+    </h2>
+    @if (limit) {
+      <a href="javascript:void(0)" (click)="navigateToAllHistory()" class="history-header__link">{{ historyStrings.VIEW_ALL_LINK }}</a>
+    }
+  </div>
+
+  <!-- Filters Bar -->
+  @if (!limit) {
+    <div class="history-filters">
+      <div class="history-filters__group">
+        <label for="statusFilter" class="history-filters__label">{{ historyStrings.FILTER_STATUS }}</label>
+        <select 
+          id="statusFilter" 
+          class="history-filters__select" 
+          [ngModel]="filterStatus()" 
+          (ngModelChange)="onStatusFilterChange($event)">
+          <option value="">{{historyStrings. STATUS_ALL}}</option>
+          <option value="BOOKED">{{historyStrings.STATUS_BOOKED}}</option>
+          <option value="COMPLETED">{{historyStrings.STATUS_COMPLETED}}</option>
+          <option value="CANCELLED">{{historyStrings.STATUS_CANCELLED}}</option>
+        </select>
+      </div>
+
+      <div class="history-filters__group">
+        <label for="fromDateFilter" class="history-filters__label">{{ historyStrings.FILTER_FROM_DATE }}</label>
+        <input 
+          id="fromDateFilter" 
+          type="date" 
+          class="history-filters__input" 
+          [ngModel]="filterFromDate()" 
+          (ngModelChange)="onFromDateFilterChange($event)">
+      </div>
+
+      <div class="history-filters__group">
+        <label for="toDateFilter" class="history-filters__label">{{ historyStrings.FILTER_TO_DATE }}</label>
+        <input 
+          id="toDateFilter" 
+          type="date" 
+          class="history-filters__input" 
+          [ngModel]="filterToDate()" 
+          (ngModelChange)="onToDateFilterChange($event)">
+      </div>
+
+      <button 
+        class="history-filters__reset-btn" 
+        (click)="resetFilters()">
+        <span class="material-icons">restart_alt</span>
+        {{ historyStrings.FILTER_RESET }}
+      </button>
+    </div>
+  }
+
+  @if (displayedBookings().length > 0) {
+    <div class="history-table-wrapper">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>{{ historyStrings.COL_AMENITY }}</th>
+            <th>{{ historyStrings.COL_DATE }}</th>
+            <th>{{ historyStrings.COL_TIME_SLOT }}</th>
+            <th>{{ historyStrings.COL_GUESTS }}</th>
+            <th>{{ historyStrings.COL_STATUS }}</th>
+            <th class="history-table__header--action">{{ historyStrings.COL_ACTION }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (booking of displayedBookings(); track booking.bookingId) {
+            @let iconDetails = getAmenityIcon(booking.amenityName);
+            <tr>
+              <td>
+                <div class="history-table__amenity">
+                  <div 
+                    class="history-table__amenity-icon-wrapper" 
+                    [style.background-color]="iconDetails.bg">
+                    <span class="material-icons history-table__amenity-icon">
+                      {{ iconDetails.icon }}
+                    </span>
+                  </div>
+                  <span class="history-table__amenity-name">
+                    {{ booking.amenityName }}
+                  </span>
+                </div>
+              </td>
+              <td>{{ booking.slotDate | date:'mediumDate' }}</td>
+              <td>{{ booking.slotLabel || 'N/A' }}</td>
+              <td>{{ formatGuests(booking.peopleCount) }}</td>
+              <td>
+                <span class="history-badge" [ngClass]="getStatusClass(booking.status)">
+                  {{ booking.status }}
+                </span>
+              </td>
+              <td class="history-table__cell--action">
+                <button 
+                  class="history-action-btn" 
+                  (click)="toggleMenu(booking.bookingId, $event)">
+                  <span class="material-icons">more_vert</span>
+                </button>
+                @if (openMenuId() === booking.bookingId) {
+                  <div class="history-action-menu">
+                    @if (canCancel(booking.status)) {
+                      <button 
+                        class="history-action-menu__item history-action-menu__item--danger" 
+                        (click)="cancelBooking(booking.bookingId)">
+                        <span class="material-icons">cancel</span> {{ historyStrings.CANCEL_BOOKING }}
+                      </button>
+                    } @else {
+                      <span class="history-action-menu__text">{{ historyStrings.NO_ACTIONS }}</span>
+                    }
+                  </div>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (!limit && totalPages() > 1) {
+      <div class="history-pagination">
+        <button 
+          class="history-pagination__btn" 
+          [disabled]="pageNumber() === 1" 
+          (click)="goToPage(pageNumber() - 1)">
+          <span class="material-icons">chevron_left</span>
+        </button>
+        <span class="history-pagination__info">
+          {{ historyStrings.PAGE_LABEL }} {{ pageNumber() }} {{ historyStrings.OF_LABEL }} {{ totalPages() }}
+        </span>
+        <button 
+          class="history-pagination__btn" 
+          [disabled]="pageNumber() === totalPages()" 
+          (click)="goToPage(pageNumber() + 1)">
+          <span class="material-icons">chevron_right</span>
+        </button>
+      </div>
+    }
+  } @else {
+    <div class="history-empty-state">
+      <span class="material-icons history-empty-state__icon">history</span>
+      <p class="history-empty-state__text">{{ historyStrings.EMPTY_STATE }}</p>
+    </div>
+  }
+</div>

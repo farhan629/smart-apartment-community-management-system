@@ -1,0 +1,32 @@
+<div class="cancellation-page">
+  <div class="cancellation-header">
+    <h1 class="cancellation-header__title">{{ pageStrings.PAGE_TITLE }}</h1>
+    <p class="cancellation-header__subtitle">{{ pageStrings.SUBTITLE }}</p>
+  </div>
+
+  <div class="cancellation-content">
+    @if (loading()) {
+      <div class="cancellation-loading">
+        <div class="cancellation-spinner"></div>
+        <p>{{ pageStrings.LOADING_DETAILS }}</p>
+      </div>
+    } @else if (error() || !booking()) {
+      <div class="cancellation-error">
+        <span class="material-icons">error</span>
+        <p>{{ pageStrings.ERROR_LOAD }}</p>
+        <button class="cancellation-back-btn" (click)="goBack()">
+          {{ pageStrings.BTN_BACK }}
+        </button>
+      </div>
+    } @else {
+      <app-amenity-action-dialog
+        mode="cancel"
+        [bookingDetails]="bookingDetailsForDialog"
+        [isInline]="true"
+        [isSubmitting]="isSubmitting()"
+        (confirm)="onConfirmCancel($event)"
+        (close)="goBack()">
+      </app-amenity-action-dialog>
+    }
+  </div>
+</div>

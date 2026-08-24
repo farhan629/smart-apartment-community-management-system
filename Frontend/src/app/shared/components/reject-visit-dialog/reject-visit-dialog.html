@@ -1,0 +1,23 @@
+<app-popup-dialog [title]="data.title!" width="30rem" (closed)="onCancel()">
+  <form [formGroup]="form" class="reject-dialog">
+    <mat-form-field appearance="outline" class="reject-dialog__field">
+      <mat-label>{{ strings.REJECTION_REASON_LABEL }}</mat-label>
+      <mat-icon matPrefix>{{ icons.REJECT }}</mat-icon>
+      <textarea
+        matInput
+        formControlName="rejectionReason"
+        rows="4"
+        [maxlength]="maxLength"
+      ></textarea>
+      <mat-hint align="end">{{ charCount }} / {{ maxLength }}</mat-hint>
+      @if (form.controls.rejectionReason.invalid && form.controls.rejectionReason.touched) {
+        <mat-error>{{ strings.REJECTION_REASON_REQUIRED }}</mat-error>
+      }
+    </mat-form-field>
+  </form>
+
+  <div dialogFooter>
+    <app-action-button [label]="strings.CANCEL" variant="secondary" (clicked)="onCancel()"></app-action-button>
+    <app-action-button [label]="strings.REJECT" [icon]="icons.REJECT" variant="danger" (clicked)="onConfirm()"></app-action-button>
+  </div>
+</app-popup-dialog>

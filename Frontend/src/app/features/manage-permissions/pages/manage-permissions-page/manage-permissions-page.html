@@ -1,0 +1,41 @@
+<div class="perm-page">
+  <div class="perm-page__header">
+    <h2 class="perm-page__title">{{ strings.MANAGE_PERMISSIONS_TITLE }}</h2>
+  </div>
+
+  <div class="perm-page__card">
+    <app-user-search
+      [selectedUser]="selectedUser()"
+      (userSelected)="onUserSelected($event)"
+      (cleared)="onCleared()">
+    </app-user-search>
+
+    @if (selectedUser()) {
+      <div class="perm-page__user-info">
+        <mat-icon>{{ icons.PERSON }}</mat-icon>
+        <div>
+          <strong>{{ selectedUser()?.userName }}</strong>
+          <span class="perm-page__user-email">{{ selectedUser()?.email }}</span>
+        </div>
+      </div>
+    }
+
+    @if (!selectedUser()) {
+      <app-empty-state
+        [icon]="icons.PERSON"
+        [message]="strings.SELECT_USER_TO_MANAGE">
+      </app-empty-state>
+    } @else {
+      <app-permission-list
+        [permissionState]="permissionState()"
+        [loading]="loading()"
+        [saving]="saving()"
+        [error]="error()"
+        [success]="success()"
+        [hasChanges]="hasChanges()"
+        (toggle)="onToggle($event)"
+        (update)="onUpdate()">
+      </app-permission-list>
+    }
+  </div>
+</div>

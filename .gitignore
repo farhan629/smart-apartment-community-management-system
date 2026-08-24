@@ -1,0 +1,86 @@
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# Compiled output
+/dist
+/tmp
+/out-tsc
+/bazel-out
+/bin
+bin/
+obj/
+/obj
+
+# Test and coverage
+/TestResults/
+/CoverageReport/
+*.cobertura.xml
+coverage.json
+/coverage
+
+# Logs
+logs/
+*.log
+npm-debug.log
+yarn-error.log
+testem.log
+log-*.txt
+/libpeerconnection.log
+
+# Node
+/node_modules
+
+# NuGet packages
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+nuget.config.user
+
+# IDEs and editors
+.idea/
+.vs/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.user
+*.suo
+*.userprefs
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/mcp.json
+.history/*
+
+# Miscellaneous
+/.angular/cache
+.sass-cache/
+/connect.lock
+/typings
+__screenshots__/
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment and config
+.env
+.env.*
+appsettings.Development.json
+appsettings.Local.json
+docker-compose.override.yml
+
+# Others
+*.zip
+**/wwwroot/uploads/profiles/
+Backend/NotificationService/task.md
+Frontend/.angular
+Frontend/node_modules
+Frontend/.vscode

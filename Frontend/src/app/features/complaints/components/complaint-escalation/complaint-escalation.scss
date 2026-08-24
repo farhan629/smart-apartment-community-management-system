@@ -1,0 +1,142 @@
+@use '../../../../shared/styles/variables' as *;
+@use '../../../../shared/styles/mixins' as *;
+
+.escalation-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  padding-top: $spacing-lg;
+  margin-top: $spacing-lg;
+  border-top: 0.0625rem solid $color-border;
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  &__state {
+    @include flex-center;
+    padding: $spacing-lg 0;
+    color: $color-text-secondary;
+    font-size: 0.875rem;
+
+    &--error {
+      color: $color-danger;
+    }
+  }
+
+  &__empty {
+    font-size: 0.875rem;
+    color: $color-text-secondary;
+    margin: 0;
+  }
+}
+
+.escalation-card {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-sm;
+  background: $color-background;
+
+  &__meta {
+    @include flex-between;
+  }
+
+  &__date {
+    font-size: 0.75rem;
+    color: $color-text-muted;
+  }
+
+  &__reason {
+    margin: 0;
+    font-size: 0.875rem;
+    color: $color-text-primary;
+    white-space: pre-wrap;
+  }
+
+  &__resolution {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: $color-text-secondary;
+  }
+}
+
+.escalation-badge {
+  @include badge($color-danger-light, $color-danger);
+
+  &--resolved {
+    @include badge($color-success-light, $color-success);
+  }
+
+  &--unresolved {
+    @include badge($color-danger-light, $color-danger);
+  }
+}
+
+.escalation-form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding-top: $spacing-sm;
+  border-top: 0.0625rem solid $color-border;
+
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+    font-size: 0.75rem;
+    color: $color-text-secondary;
+    max-width: 12rem;
+
+    input {
+      padding: $spacing-sm;
+      border-radius: $radius-sm;
+      border: 0.0625rem solid $color-border;
+      font-family: $font-family-base;
+      font-size: 0.8125rem;
+      color: $color-text-primary;
+
+      &:focus {
+        outline: none;
+        border-color: $color-primary;
+      }
+    }
+  }
+
+  textarea {
+    width: 100%;
+    resize: vertical;
+    padding: $spacing-sm;
+    border-radius: $radius-sm;
+    border: 0.0625rem solid $color-border;
+    font-family: $font-family-base;
+    font-size: 0.875rem;
+    color: $color-text-primary;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+.form-error {
+  font-size: 0.75rem;
+  color: $color-danger;
+}

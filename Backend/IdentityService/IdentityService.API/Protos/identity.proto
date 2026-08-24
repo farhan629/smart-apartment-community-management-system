@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+option csharp_namespace = "IdentityService.Infrastructure.Protos";
+
+package identity;
+
+// IdentityService exposes user lookup to other microservices via gRPC
+service IdentityGrpc {
+  // GetUserById returns user email and name by userId
+  rpc GetUserById (GetUserByIdRequest) returns (GetUserByIdResponse);
+  
+  // GetUsersByRole returns all active users with a given role code
+  rpc GetUsersByRole (GetUsersByRoleRequest) returns (GetUsersByRoleResponse);
+}
+
+// Request for GetUserById
+message GetUserByIdRequest {
+  string user_id = 1;
+}
+
+// Response for GetUserById
+message GetUserByIdResponse {
+  bool found = 1;
+  string user_id = 2;
+  string email = 3;
+  string name = 4;
+  string role_code = 5;
+}
+
+// Request for GetUsersByRole
+message GetUsersByRoleRequest {
+  string role_code = 1;
+}
+
+// Response for GetUsersByRole
+message GetUsersByRoleResponse {
+  repeated UserSummary users = 1;
+}
+
+// User summary information
+message UserSummary {
+  string user_id = 1;
+  string email = 2;
+  string name = 3;
+}

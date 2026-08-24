@@ -1,0 +1,215 @@
+<div class="visits-page">
+  <div class="visits-page__header">
+    <div>
+      <h2 class="visits-page__title">{{ vm.SECURITY_PAGE_TITLE }}</h2>
+      @if (level() === 'visits') {
+        <p class="visits-page__subtitle">
+          {{ vm.BLOCK_LABEL }} {{ selectedBlock() }} &middot; {{ selectedFlat()?.number }}
+        </p>
+      } @else {
+        <p class="visits-page__subtitle">{{ vm.SECURITY_PAGE_SUBTITLE }}</p>
+      }
+    </div>
+  </div>
+
+  @if (level() !== 'blocks') {
+    <div class="crumbs">
+      <button type="button" class="crumbs__link" (click)="onBackToBlocks()">
+        <mat-icon>{{ icons.BACK }}</mat-icon>
+        {{ vm.BACK_TO_BLOCKS }}
+      </button>
+      @if (level() === 'visits') {
+        <mat-icon class="crumbs__sep">{{ icons.CHEVRON_RIGHT }}</mat-icon>
+        <button type="button" class="crumbs__link" (click)="onBackToFlats()">
+          {{ vm.BLOCK_LABEL }} {{ selectedBlock() }}
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Level 1: Blocks -->
+  @if (level() === 'blocks') {
+    @if (isLoadingFlats()) {
+      <div class="visits-page__state">
+        <mat-spinner diameter="36"></mat-spinner>
+        <p>{{ vm.LOADING_BLOCKS }}</p>
+      </div>
+    } @else if (errorMessage()) {
+      <div class="visits-page__state visits-page__state--error">
+        <mat-icon>{{ icons.ERROR }}</mat-icon>
+        <p>{{ errorMessage() }}</p>
+      </div>
+    } @else if (blocks().length === 0) {
+      <div class="visits-page__state">
+        <mat-icon>{{ icons.EMPTY_RESULTS }}</mat-icon>
+        <p>{{ vm.NO_BLOCKS_TITLE }}</p>
+      </div>
+    } @else {
+      <div class="tile-grid">
+        @for (block of blocks(); track block.name) {
+          <div
+            class="tile"
+            role="button"
+            tabindex="0"
+            (click)="onSelectBlock(block)"
+            (keydown.enter)="onSelectBlock(block)"
+          >
+            <mat-icon class="tile__icon">{{ icons.BLOCK }}</mat-icon>
+            <div class="tile__body">
+              <span class="tile__title">{{ vm.BLOCK_LABEL }} {{ block.name }}</span>
+              <span class="tile__meta">{{ block.flatCount }} houses</span>
+            </div>
+            <mat-icon class="tile__chevron">{{ icons.CHEVRON_RIGHT }}</mat-icon>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- Level 2: Flats within a block -->
+  @if (level() === 'flats') {
+    @if (flatsInSelectedBlock().length === 0) {
+      <div class="visits-page__state">
+        <mat-icon>{{ icons.EMPTY_RESULTS }}</mat-icon>
+        <p>{{ vm.NO_HOUSES_TITLE }}</p>
+      </div>
+    } @else {
+      <div class="tile-grid">
+        @for (flat of flatsInSelectedBlock(); track flat.id) {
+          <div
+            class="tile"
+            role="button"
+            tabindex="0"
+            (click)="onSelectFlat(flat)"
+            (keydown.enter)="onSelectFlat(flat)"
+          >
+            <mat-icon class="tile__icon">{{ icons.HOUSE }}</mat-icon>
+            <div class="tile__body">
+              <span class="tile__title">{{ flat.number }}</span>
+              <span class="tile__meta">{{ vm.FLOOR_LABEL }} {{ flat.floor }}</span>
+            </div>
+            <mat-icon class="tile__chevron">{{ icons.CHEVRON_RIGHT }}</mat-icon>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- Level 3: Visits for the selected flat -->
+  @if (level() === 'visits') {
+    <div class="visits-page__tabs visits-page__tabs--plain">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.tab-btn--active]="activeTab() === tabs.UPCOMING"
+        (click)="onTabChange(tabs.UPCOMING)"
+      >
+        {{ vm.UPCOMING_TAB }}
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.tab-btn--active]="activeTab() === tabs.HISTORY"
+        (click)="onTabChange(tabs.HISTORY)"
+      >
+        {{ vm.HISTORY_TAB }}
+      </button>
+    </div>
+
+    @if (isLoadingVisits()) {
+      <div class="visits-page__state">
+        <mat-spinner diameter="36"></mat-spinner>
+        <p>{{ vm.LOADING_VISITS }}</p>
+      </div>
+    } @else if (errorMessage()) {
+      <div class="visits-page__state visits-page__state--error">
+        <mat-icon>{{ icons.ERROR }}</mat-icon>
+        <p>{{ errorMessage() }}</p>
+        <app-action-button
+          [label]="vm.RETRY"
+          variant="secondary"
+          (clicked)="loadVisitsForFlat()"
+        ></app-action-button>
+      </div>
+    } @else if (visits().length === 0) {
+      <div class="visits-page__state">
+        <mat-icon>{{
+          activeTab() === tabs.UPCOMING ? icons.EMPTY_UPCOMING : icons.EMPTY_HISTORY
+        }}</mat-icon>
+        <p>
+          {{
+            activeTab() === tabs.UPCOMING ? vm.NO_UPCOMING_VISITS_TITLE : vm.NO_HISTORY_VISITS_TITLE
+          }}
+        </p>
+      </div>
+    } @else {
+      <div class="visits-page__grid">
+        @for (visit of visits(); track visit.id) {
+          <div
+            class="visit-card"
+            role="button"
+            tabindex="0"
+            (click)="onViewDetail(visit)"
+            (keydown.enter)="onViewDetail(visit)"
+          >
+            <div class="visit-card__header">
+              <span class="visit-card__name">
+                <mat-icon>{{ icons.PERSON }}</mat-icon>
+                {{ visit.visitorName }}
+              </span>
+              <app-status-badge [status]="getStatusLabel(visit.status)"></app-status-badge>
+            </div>
+
+            <p class="visit-card__detail">
+              <mat-icon>{{ icons.PURPOSE }}</mat-icon> {{ visit.purpose }}
+            </p>
+            <p class="visit-card__detail">
+              <mat-icon>{{ icons.CALENDAR }}</mat-icon> {{ visit.startDate }} &ndash;
+              {{ visit.endDate }}
+            </p>
+            <p class="visit-card__detail">
+              <mat-icon>{{ icons.PHONE }}</mat-icon> {{ visit.visitorPhoneNumber }}
+            </p>
+
+            <div class="visit-card__actions">
+              @if (canUpdate(visit)) {
+                <app-action-button
+                  [label]="strings.UPDATE"
+                  [icon]="icons.UPDATE"
+                  variant="secondary"
+                  (click)="$event.stopPropagation()"
+                  (clicked)="onUpdateVisitor(visit)"
+                ></app-action-button>
+              }
+              @if (canApprove(visit)) {
+                <app-action-button
+                  [label]="strings.APPROVE"
+                  [icon]="icons.APPROVE"
+                  variant="primary"
+                  (click)="$event.stopPropagation()"
+                  (clicked)="onApproveVisit(visit)"
+                ></app-action-button>
+                <app-action-button
+                  [label]="strings.REJECT"
+                  [icon]="icons.REJECT"
+                  variant="danger"
+                  (click)="$event.stopPropagation()"
+                  (clicked)="onRejectVisit(visit)"
+                ></app-action-button>
+              }
+              @if (canCancel(visit)) {
+                <app-action-button
+                  [label]="strings.CANCEL"
+                  [icon]="icons.CANCEL_VISIT"
+                  variant="danger"
+                  (click)="$event.stopPropagation()"
+                  (clicked)="onCancelVisit(visit)"
+                ></app-action-button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

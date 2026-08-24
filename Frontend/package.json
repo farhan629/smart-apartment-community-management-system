@@ -1,0 +1,53 @@
+{
+  "name": "frontend",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "npm@10.9.8",
+  "engines": {
+    "node": "24.18.0",
+    "npm": "11.16.0"
+  },
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test --watch=false --browsers=ChromeHeadless"
+  },
+  "dependencies": {
+    "@angular/animations": "21.2.0",
+    "@angular/cdk": "^21.2.0",
+    "@angular/common": "21.2.0",
+    "@angular/compiler": "21.2.0",
+    "@angular/core": "21.2.0",
+    "@angular/forms": "21.2.0",
+    "@angular/material": "^21.2.0",
+    "@angular/platform-browser": "21.2.0",
+    "@angular/router": "21.2.0",
+    "@microsoft/signalr": "10.0.0",
+    "apexcharts": "^5.10.3",
+    "gsap": "3.15.0",
+    "material-design-icons-iconfont": "^6.7.0",
+    "ng-apexcharts": "^2.4.0",
+    "ngx-scanner-qrcode": "1.8.1",
+    "rxjs": "7.8.2",
+    "tslib": "2.3.0",
+    "zone.js": "0.16.2"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "21.2.16",
+    "@angular/build": "21.2.16",
+    "@angular/cli": "21.2.16",
+    "@angular/compiler-cli": "21.2.0",
+    "@types/jasmine": "6.0.0",
+    "jasmine-core": "6.3.0",
+    "karma": "6.4.4",
+    "karma-chrome-launcher": "3.2.0",
+    "karma-coverage": "2.2.1",
+    "karma-jasmine": "5.1.0",
+    "karma-jasmine-html-reporter": "2.2.0",
+    "openapi-typescript-codegen": "0.31.0",
+    "prettier": "3.8.1",
+    "typescript": "5.9.2"
+  }
+}

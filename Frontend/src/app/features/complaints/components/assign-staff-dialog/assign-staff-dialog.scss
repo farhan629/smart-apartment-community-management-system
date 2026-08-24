@@ -1,0 +1,128 @@
+@use '../../../../shared/styles/variables' as *;
+@use '../../../../shared/styles/mixins' as *;
+
+.assign-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  padding: $spacing-lg;
+
+  &__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 0.8125rem;
+    color: $color-text-secondary;
+    margin: 0;
+  }
+
+  &__state {
+    @include flex-center;
+    padding: $spacing-lg 0;
+    color: $color-text-secondary;
+    font-size: 0.875rem;
+
+    &--error {
+      color: $color-danger;
+    }
+  }
+
+  &__staff-list {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+    max-height: 16rem;
+    overflow-y: auto;
+  }
+
+  &__toggle {
+    align-self: flex-start;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: $font-family-base;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $color-primary;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-sm;
+    padding-top: $spacing-md;
+    border-top: 0.0625rem solid $color-border;
+  }
+}
+
+.staff-option {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm;
+  border: 0.0625rem solid $color-border;
+  border-radius: $radius-sm;
+  cursor: pointer;
+
+  &--selected {
+    border-color: $color-primary;
+    background: $color-primary-light;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  &__name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: $color-text-primary;
+  }
+
+  &__desc {
+    font-size: 0.75rem;
+    color: $color-text-secondary;
+  }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+
+  label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $color-text-primary;
+  }
+
+  input {
+    padding: $spacing-sm;
+    border-radius: $radius-sm;
+    border: 0.0625rem solid $color-border;
+    font-family: $font-family-base;
+    font-size: 0.875rem;
+    color: $color-text-primary;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+    }
+  }
+}
+
+.form-error {
+  font-size: 0.75rem;
+  color: $color-danger;
+}

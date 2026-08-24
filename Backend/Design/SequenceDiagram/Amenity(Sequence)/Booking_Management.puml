@@ -1,0 +1,194 @@
+@startuml
+title Smart Apartment System - Amenities Module (3/3: BOOKING MANAGEMENT)
+
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 200
+skinparam dpi 75
+
+actor Admin as A
+actor Resident as R
+participant "Client App" as App
+participant "API Gateway" as Gateway
+participant "Amenities API" as API
+database "Database" as DB
+
+note over A, Gateway: Admin requests include: Authorization: Bearer {admin_token}
+note over R, Gateway: Resident requests include: Authorization: Bearer {resident_token}
+
+== RESIDENT: BOOK A SLOT ==
+
+R -> App: Book slot
+App -> Gateway: POST /bookings {slotId, peopleCount: 2}
+Gateway -> API: Forward booking request
+
+API -> DB: Begin transaction\nLock slot row for update
+DB --> API: {slotType, maxCapacity, slotDate}
+
+alt slotDate < CURRENT_DATE
+    API -> DB: Rollback
+    API --> Gateway: 422 Unprocessable Entity\n"Cannot book past slot"
+    Gateway --> App: Error
+    App --> R: "Cannot book a past slot"
+
+else slotType == 'TIME'
+    API -> DB: Check if slot already has an active booking
+    DB --> API: bookingCount
+
+    alt bookingCount == 0
+        API -> API: Force peopleCount = 1
+        API -> DB: Insert booking record\nUpdate slot current bookings to 1\nCommit transaction
+        DB --> API: booking_id
+        API --> Gateway: 201 Created {bookingId}
+        Gateway --> App: Booking confirmed
+        App --> R: "Booking successful! ID: {bookingId}"
+    else bookingCount > 0
+        API -> DB: Rollback
+        API --> Gateway: 409 Conflict - Slot already booked
+        Gateway --> App: Error
+        App --> R: "Slot already booked"
+    end
+
+else slotType == 'TIME_COUNT'
+    API -> DB: Fetch total people already booked in this slot
+    DB --> API: totalPeople
+
+    alt totalPeople + peopleCount <= maxCapacity
+        API -> DB: Insert booking record\nIncrement slot current bookings by peopleCount\nCommit transaction
+        DB --> API: booking_id
+        API --> Gateway: 201 Created {bookingId}
+        Gateway --> App: Booking confirmed
+        App --> R: "Booking successful! ID: {bookingId}"
+    else totalPeople + peopleCount > maxCapacity
+        API -> DB: Rollback
+        API --> Gateway: 409 Conflict - Not enough capacity
+        Gateway --> App: Error
+        App --> R: "Not enough capacity available"
+    end
+end
+
+== RESIDENT: VIEW BOOKING HISTORY ==
+
+R -> App: View my bookings
+App -> Gateway: GET /bookings\n?status=BOOKED&fromDate=2024-07-01&toDate=2024-07-31\n&pageNumber=1&pageSize=10
+Gateway -> API: Forward with user context
+API -> DB: Fetch bookings for current user filtered by status and date range
+DB --> API: Bookings list with amenity and slot details
+API --> Gateway: 200 OK {data, pagination}
+Gateway --> App: Display booking history
+App --> R: "Showing 2 active bookings"
+
+R -> App: Filter bookings by CANCELLED status
+App -> Gateway: GET /bookings?status=CANCELLED&pageNumber=1&pageSize=10
+Gateway -> API: Forward request
+API -> DB: Fetch cancelled bookings for current user
+DB --> API: Cancelled bookings list
+API --> Gateway: 200 OK {data, pagination}
+Gateway --> App: Display cancelled bookings
+App --> R: "Showing 1 cancelled booking"
+
+== RESIDENT: CANCEL BOOKING ==
+
+R -> App: Cancel booking
+App -> Gateway: DELETE /bookings/{bookingId}
+Gateway -> API: Forward cancellation
+
+API -> DB: Begin transaction\nLock booking row for update
+DB --> API: {status, slotDate, slotType, peopleCount}
+
+alt status == 'CANCELLED'
+    API -> DB: Rollback
+    API --> Gateway: 400 Bad Request - Booking already cancelled
+    Gateway --> App: Error
+    App --> R: "Booking already cancelled"
+
+else slotDate < CURRENT_DATE
+    API -> DB: Rollback
+    API --> Gateway: 400 Bad Request - Cannot cancel past booking
+    Gateway --> App: Error
+    App --> R: "Cannot cancel past booking"
+
+else status == 'BOOKED'
+    API -> DB: Update booking status to CANCELLED
+    DB --> API: Updated
+
+    alt slotType == 'TIME_COUNT'
+        API -> DB: Decrease slot current bookings by peopleCount
+        DB --> API: Updated
+        note right: Released {peopleCount} spots back to pool
+    else slotType == 'TIME'
+        API -> DB: Reset slot current bookings to 0
+        DB --> API: Updated
+        note right: Released the single spot back
+    end
+
+    API -> DB: Commit botransaction
+    API --> Gateway: 200 OK {message: "Booking cancelled successfully"}
+    Gateway --> App: Cancellation confirmed
+    App --> R: "Booking cancelled. Spots released."
+end
+
+== CONCURRENT BOOKING SCENARIO (TIME_COUNT SLOT) ==
+
+note over R: Two residents booking the same TIME_COUNT slot simultaneously
+
+R -> App: Resident A books 3 people
+App -> Gateway: POST /bookings {slotId: "gym-slot", peopleCount: 3}
+Gateway -> API: Forward Booking A
+
+API -> DB: Begin transaction - Lock slot row
+DB --> API: {maxCapacity: 10, currentBookings: 2}
+note right: Lock acquired by Booking A
+
+R -> App: Resident B books 4 people at the same time
+App -> Gateway: POST /bookings {slotId: "gym-slot", peopleCount: 4}
+Gateway -> API: Forward Booking B
+API -> DB: Attempt to lock same slot row
+note right: Booking B waits - lock held by A
+
+API -> API: Validate: 2 + 3 = 5 is within capacity 10
+API -> DB: Insert Booking A\nUpdate currentBookings to 5\nCommit - lock released
+DB --> API: Success
+API --> Gateway: 201 Created - Booking A success
+Gateway --> App: Booking A confirmed
+App --> R: "Booking A successful"
+
+API -> DB: Lock acquired by Booking B\nReads updated currentBookings = 5
+API -> API: Validate: 5 + 4 = 9 is within capacity 10
+API -> DB: Insert Booking B\nUpdate currentBookings to 9\nCommit transaction
+DB --> API: Success
+API --> Gateway: 201 Created - Booking B success
+Gateway --> App: Booking B confirmed
+App --> R: "Booking B successful"
+note over R: Both succeeded - total (9) is within capacity (10)
+
+== BOOKING FAILURE - CAPACITY EXCEEDED ==
+
+R -> App: Book when capacity is nearly full
+App -> Gateway: POST /bookings {slotId: "full-slot", peopleCount: 3}
+Gateway -> API: Forward request
+
+API -> DB: Begin transaction - Lock slot row
+DB --> API: {maxCapacity: 10, currentBookings: 9}
+API -> API: Validate: 9 + 3 = 12 exceeds capacity 10
+
+API -> DB: Rollback
+API --> Gateway: 409 Conflict\n"Not enough capacity (only 1 spot left)"
+Gateway --> App: Error
+App --> R: "Sorry, only 1 spot remaining"
+
+== ADMIN: BOOKING REPORT ==
+
+A -> App: Generate booking report
+App -> Gateway: GET /reports/bookings
+Gateway -> API: Forward request
+
+API -> DB: Fetch booking statistics
+DB --> API: Report data
+
+API -> API: Calculate utilization
+
+API --> Gateway: 200 OK {report}
+Gateway --> App: Display report
+App --> A: "150 bookings, 68.5% utilization"
+
+@enduml

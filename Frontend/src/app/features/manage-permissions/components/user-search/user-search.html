@@ -1,0 +1,39 @@
+<div class="user-search">
+  <div class="user-search__input-wrap">
+    <mat-icon class="user-search__icon">{{ icons.SEARCH }}</mat-icon>
+    <input
+      class="user-search__input"
+      type="text"
+      [placeholder]="strings.SEARCH_USERS_PLACEHOLDER"
+      [ngModel]="searchTerm"
+      (ngModelChange)="onSearchInput($event)"
+    />
+    @if (selectedUser) {
+      <button class="user-search__clear" (click)="clearSelection()">
+        <mat-icon>{{ icons.CLOSE }}</mat-icon>
+      </button>
+    }
+  </div>
+
+  @if (searching() && searchTerm.trim()) {
+    <div class="user-search__results user-search__results--loading">{{ strings.SEARCHING }}</div>
+  }
+
+  @if (searchResults().length > 0) {
+    <div class="user-search__results">
+      @for (user of searchResults(); track user.id) {
+        <button
+          class="user-search__item"
+          [class.user-search__item--active]="selectedUser?.id === user.id"
+          (click)="selectUser(user)"
+        >
+          <mat-icon>{{ icons.PERSON }}</mat-icon>
+          <div class="user-search__info">
+            <span class="user-search__name">{{ user.userName }}</span>
+            <span class="user-search__email">{{ user.email }}</span>
+          </div>
+        </button>
+      }
+    </div>
+  }
+</div>

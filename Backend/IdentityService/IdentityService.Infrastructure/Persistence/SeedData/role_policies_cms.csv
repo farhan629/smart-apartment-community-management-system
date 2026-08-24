@@ -1,0 +1,17 @@
+Id,RoleId,PermissionCode,Description,IsAllowed
+b1a00001-0000-0000-0000-000000000001,cccccccc-cccc-cccc-cccc-cccccccccccc,complaint:view,Admin can view complaints and related data,true
+b1a00002-0000-0000-0000-000000000002,cccccccc-cccc-cccc-cccc-cccccccccccc,complaint:manage,Admin can update escalation details,true
+b1a00003-0000-0000-0000-000000000003,cccccccc-cccc-cccc-cccc-cccccccccccc,complaint:assign,Admin can assign or reassign a complaint to staff,true
+b1a00004-0000-0000-0000-000000000004,cccccccc-cccc-cccc-cccc-cccccccccccc,staff:view,Admin can view all staff profiles,true
+b1a00005-0000-0000-0000-000000000005,cccccccc-cccc-cccc-cccc-cccccccccccc,staff:manage,Admin can create or update any staff profile,true
+b1a00006-0000-0000-0000-000000000006,cccccccc-cccc-cccc-cccc-cccccccccccc,staff:availability:view,Admin can view staff availability slots,true
+b1a00007-0000-0000-0000-000000000007,cccccccc-cccc-cccc-cccc-cccccccccccc,staff:availability:manage,Admin can create or delete availability slots,true
+b1a00008-0000-0000-0000-000000000008,cccccccc-cccc-cccc-cccc-cccccccccccc,report:view,Admin can access all reports,true
+b1a00009-0000-0000-0000-000000000009,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa,complaint:submit,Resident can submit a new complaint,true
+b1a00010-0000-0000-0000-000000000010,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa,complaint:cancel,Resident can cancel their own complaint,true
+b1a00011-0000-0000-0000-000000000011,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa,complaint:comment,Resident can add follow-up comments on their own complaint,true
+b1a00012-0000-0000-0000-000000000012,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa,complaint:escalate,Resident can re-escalate an unresolved complaint,true
+b1a00013-0000-0000-0000-000000000013,dddddddd-dddd-dddd-dddd-dddddddddddd,complaint:view,Staff can view complaints and related data,true
+b1a00014-0000-0000-0000-000000000014,dddddddd-dddd-dddd-dddd-dddddddddddd,complaint:manage,Staff can accept or deny assignments and update complaint status,true
+b1a00015-0000-0000-0000-000000000015,dddddddd-dddd-dddd-dddd-dddddddddddd,staff:self,Staff can update their own profile only,true
+b1a00016-0000-0000-0000-000000000016,dddddddd-dddd-dddd-dddd-dddddddddddd,staff:availability:view,Staff can view their own availability slots,true

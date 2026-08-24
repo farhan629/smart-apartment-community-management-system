@@ -1,0 +1,182 @@
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/mixins' as *;
+
+.slots-container {
+  @include card;
+  border: 0.0625rem solid $color-border;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xl;
+  width: 100%;
+}
+
+.slots-header {
+  border-bottom: 0.0625rem solid $color-border;
+  padding-bottom: $spacing-md;
+  position: relative;
+
+  &__title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: $color-text-primary;
+    margin: 0 0 0.125rem 0;
+  }
+
+  &__subtitle {
+    font-size: 0.85rem;
+    color: $color-text-secondary;
+    margin: 0;
+  }
+}
+
+.slots-legend {
+  position: absolute;
+  right: 0;
+  bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+
+  @media (max-width: $breakpoint-mobile) {
+    position: static;
+    margin-top: $spacing-sm;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $color-text-secondary;
+  }
+
+  &__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: $radius-pill;
+    
+    &--booked {
+      background-color: $color-border;
+    }
+  }
+
+  &__circle {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: $radius-pill;
+    border: 0.09375rem solid $color-primary;
+    background-color: transparent;
+  }
+}
+
+.slots-loading {
+  padding: $spacing-xxl;
+  text-align: center;
+  color: $color-text-secondary;
+}
+
+.session-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+
+  &__title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: $color-text-secondary;
+    letter-spacing: 0.05em;
+    margin: 0;
+    border-bottom: 0.0625rem solid $color-border;
+    padding-bottom: 0.25rem;
+  }
+
+  &__empty {
+    font-size: 0.85rem;
+    color: $color-text-muted;
+    margin: 0;
+    font-style: italic;
+  }
+}
+
+.slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13.75rem, 1fr));
+  gap: $spacing-md;
+}
+
+.slot-card {
+  background-color: $color-surface;
+  border: 0.0625rem solid $color-border;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  cursor: pointer;
+  font-family: $font-family-base;
+  transition: all 0.2s ease;
+  width: 100%;
+
+  &:hover:not(:disabled) {
+    border-color: $color-primary;
+    box-shadow: $shadow-sm;
+  }
+
+  &__details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  &__time {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: $color-text-primary;
+  }
+
+  &__spots {
+    font-size: 0.75rem;
+    color: $color-text-secondary;
+  }
+
+  &__icon {
+    font-size: 1.25rem;
+    color: $color-text-muted;
+  }
+
+  &--selected {
+    background-color: $color-primary !important;
+    border-color: $color-primary !important;
+    color: $color-white !important;
+    box-shadow: 0 0.25rem 0.75rem rgba($color-primary, 0.2);
+
+    .slot-card__time {
+      color: $color-white !important;
+    }
+    .slot-card__spots {
+      color: rgba($color-white, 0.85) !important;
+    }
+    .slot-card__icon {
+      color: $color-white !important;
+    }
+  }
+
+  &--disabled {
+    background-color: #f3f4f6 !important;
+    border-color: $color-border !important;
+    cursor: not-allowed;
+    pointer-events: none;
+
+    .slot-card__time {
+      color: $color-text-muted !important;
+    }
+    .slot-card__spots {
+      color: $color-text-muted !important;
+    }
+    .slot-card__icon {
+      color: $color-text-muted !important;
+    }
+  }
+}

@@ -1,0 +1,114 @@
+@if (hasContent()) {
+  <div class="escalation-section">
+    <h3 class="escalation-section__title">{{ escalationStrings.SECTION_TITLE }}</h3>
+
+    @if (loading()) {
+      <div class="escalation-section__state">{{ strings.LOADING }}</div>
+    } @else if (loadError()) {
+      <div class="escalation-section__state escalation-section__state--error">
+        {{ escalationStrings.LOAD_ERROR }}
+      </div>
+    } @else {
+      @if (escalation(); as current) {
+        <div class="escalation-card">
+          <div class="escalation-card__meta">
+            <span
+              class="escalation-badge"
+              [class.escalation-badge--resolved]="current.resolvedAfterEscalation"
+              [class.escalation-badge--unresolved]="!current.resolvedAfterEscalation"
+            >
+              {{
+                current.resolvedAfterEscalation
+                  ? escalationStrings.RESOLVED_BADGE_LABEL
+                  : escalationStrings.UNRESOLVED_BADGE_LABEL
+              }}
+            </span>
+
+            <span class="escalation-card__date">
+              {{ escalationStrings.ESCALATED_ON_LABEL }}
+              {{ current.escalationDate | date: dateTimeFormat }}
+            </span>
+          </div>
+
+          <p class="escalation-card__reason">
+            <strong>{{ escalationStrings.REASON_LABEL }}:</strong> {{ current.escalationReason }}
+          </p>
+
+          @if (current.resolvedAfterEscalation && current.resolutionDate) {
+            <p class="escalation-card__resolution">
+              {{ escalationStrings.RESOLUTION_DATE_LABEL }}:
+              {{ current.resolutionDate | date: dateFormat }}
+            </p>
+          }
+        </div>
+
+        @if (canManage && !current.resolvedAfterEscalation) {
+          <div class="escalation-form">
+            <h4 class="escalation-form__title">{{ escalationStrings.MARK_RESOLVED_TITLE }}</h4>
+
+            <label class="escalation-form__field">
+              <span>{{ escalationStrings.RESOLUTION_DATE_INPUT_LABEL }}</span>
+              <input
+                type="date"
+                [max]="today"
+                [ngModel]="resolutionDate()"
+                (ngModelChange)="resolutionDate.set($event)"
+              />
+            </label>
+
+            @if (updateError()) {
+              <span class="form-error">{{ updateError() }}</span>
+            }
+
+            <div class="escalation-form__actions">
+              <app-action-button
+                [label]="
+                  isUpdating()
+                    ? escalationStrings.MARKING_RESOLVED_LABEL
+                    : escalationStrings.MARK_RESOLVED_SUBMIT_LABEL
+                "
+                [icon]="icons.CHECK"
+                variant="primary"
+                [disabled]="isUpdating()"
+                (clicked)="submitResolution()"
+              >
+              </app-action-button>
+            </div>
+          </div>
+        }
+      } @else {
+        <p class="escalation-section__empty">{{ escalationStrings.NOT_ESCALATED_MESSAGE }}</p>
+      }
+
+      @if (canShowEscalateForm()) {
+        <div class="escalation-form">
+          <h4 class="escalation-form__title">{{ escalationStrings.ESCALATE_FORM_TITLE }}</h4>
+
+          <textarea
+            rows="3"
+            [maxlength]="reasonMaxLength"
+            [ngModel]="reason()"
+            (ngModelChange)="reason.set($event)"
+            [placeholder]="escalationStrings.REASON_PLACEHOLDER"
+          >
+          </textarea>
+
+          @if (escalateError()) {
+            <span class="form-error">{{ escalateError() }}</span>
+          }
+
+          <div class="escalation-form__actions">
+            <app-action-button
+              [label]="isEscalating() ? escalationStrings.ESCALATING_LABEL : escalateSubmitLabel()"
+              [icon]="icons.ESCALATION"
+              variant="danger"
+              [disabled]="isEscalating()"
+              (clicked)="submitEscalation()"
+            >
+            </app-action-button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+}

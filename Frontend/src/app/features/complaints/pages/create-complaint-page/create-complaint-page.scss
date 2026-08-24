@@ -1,0 +1,111 @@
+@use '../../../../shared/styles/variables' as *;
+@use '../../../../shared/styles/mixins' as *;
+
+.create-complaint-page {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg; 
+
+  &__header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    padding: 1.5rem 1.5rem 0;  }
+
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: $color-text-primary;
+    margin: 0;
+  }
+}
+
+.create-complaint-card {
+  @include card;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-sm;
+    margin-top: $spacing-sm;
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: $spacing-md;
+
+  .form-field {
+    flex: 1;
+  }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+
+  label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $color-text-secondary;
+  }
+
+  select,
+  input,
+  textarea {
+    font-family: $font-family-base;
+    font-size: 0.875rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: $radius-sm;
+    border: 0.0625rem solid $color-border;
+    background: $color-surface;
+    color: $color-text-primary;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 6rem;
+    font-family: $font-family-base;
+  }
+
+  &__meta {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+.form-hint {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+}
+
+.form-error {
+  font-size: 0.75rem;
+  color: $color-danger;
+}
+
+.form-banner {
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-sm;
+  font-size: 0.8125rem;
+
+  &--error {
+    background: $color-danger-light;
+    color: $color-danger;
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .form-row {
+    flex-direction: column;
+  }
+}

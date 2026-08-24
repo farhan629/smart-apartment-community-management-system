@@ -1,0 +1,80 @@
+@use 'app/shared/styles/variables' as *;
+@use 'app/shared/styles/mixins' as *;
+
+.bookings-page {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+  padding: $spacing-md 0;
+  max-width: 75rem;
+  margin: 0 auto;
+
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    font-size: 0.85rem;
+    color: $color-text-secondary;
+  }
+
+  &__breadcrumb-item {
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: $color-primary;
+    }
+
+    &--active {
+      color: $color-text-primary;
+      font-weight: 550;
+      cursor: default;
+      pointer-events: none;
+    }
+  }
+
+  &__breadcrumb-separator {
+    font-size: 1rem;
+    color: $color-border;
+  }
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $spacing-xs;
+  }
+
+  &__back-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: $color-primary;
+    padding: $spacing-xs 0;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: translateX(-0.25rem);
+    }
+
+    .material-icons {
+      font-size: 1.1rem;
+    }
+  }
+
+  &__title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  &__content {
+    margin-top: $spacing-sm;
+  }
+}
